@@ -124,6 +124,21 @@ export function DashboardClient() {
         </div>
       </section>
 
+      <section className="mt-10">
+        <Link
+          href="/estudiar?start=10"
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "inline-flex w-full justify-center sm:w-auto",
+          )}
+        >
+          Empezar 10 flashcards
+        </Link>
+        <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+          Un clic crea el mazo y te pone la primera carta.
+        </p>
+      </section>
+
       {overview?.activeSessions?.length ? (
         <section className="mt-8">
           <h2 className="font-display text-xl font-semibold">
@@ -160,21 +175,6 @@ export function DashboardClient() {
           </ul>
         </section>
       ) : null}
-
-      <section className="mt-10">
-        <Link
-          href="/estudiar?start=10"
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            "inline-flex w-full justify-center sm:w-auto",
-          )}
-        >
-          Empezar 10 flashcards
-        </Link>
-        <p className="mt-2 text-xs text-[var(--foreground-muted)]">
-          Happy path: un clic crea la sesión y te pone la primera carta.
-        </p>
-      </section>
 
       <section className="mt-8 grid gap-4 sm:grid-cols-3">
         {[

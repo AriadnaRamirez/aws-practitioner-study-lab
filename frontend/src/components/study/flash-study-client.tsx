@@ -44,8 +44,8 @@ const VARIANT_LABEL: Record<string, string> = {
   NAME_FOCUS: "Enfoque en el nombre",
 };
 
-const AUTO_NEXT_CORRECT_MS = 650;
-const AUTO_NEXT_WRONG_MS = 1400;
+const AUTO_NEXT_CORRECT_MS = 900;
+const AUTO_NEXT_WRONG_MS = 1600;
 
 export function FlashStudyClient() {
   const router = useRouter();
@@ -79,6 +79,9 @@ export function FlashStudyClient() {
   const summaryRef = useRef<StudySessionSummary | null>(null);
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bootOnce = useRef(false);
+  /** Sync lock — React state `pending` is too slow to stop double-clicks. */
+  const answeringRef = useRef(false);
+  const currentQueueIdRef = useRef<string | null>(null);
 
   const applyView = useCallback(
     (view: {
@@ -92,6 +95,7 @@ export function FlashStudyClient() {
     }) => {
       setSessionId(view.sessionId);
       setPrompt(view.current);
+      currentQueueIdRef.current = view.current?.queueItemId ?? null;
       setRemaining(view.remaining);
       setSessionStreak(view.sessionStreak);
       setAnswered(view.answered);
@@ -101,6 +105,7 @@ export function FlashStudyClient() {
       setSummary(null);
       summaryRef.current = null;
       nextPromptRef.current = null;
+      answeringRef.current = false;
       setSelectedChoice(null);
       startedAt.current = Date.now();
       setPhase(view.current ? "card" : "summary");
@@ -193,6 +198,7 @@ export function FlashStudyClient() {
   }, []);
 
   const goNext = useCallback(() => {
+    if (answeringRef.current) return;
     if (autoTimer.current) {
       clearTimeout(autoTimer.current);
       autoTimer.current = null;
@@ -206,29 +212,46 @@ export function FlashStudyClient() {
     const next = nextPromptRef.current;
     setFeedback(null);
     setSelectedChoice(null);
+    setError(null);
     startedAt.current = Date.now();
+    answeringRef.current = false;
     if (next) {
       setPrompt(next);
+      currentQueueIdRef.current = next.queueItemId;
       nextPromptRef.current = null;
       setPhase("card");
     } else {
       setPrompt(null);
+      currentQueueIdRef.current = null;
       setPhase("summary");
     }
   }, []);
 
   const onAnswer = useCallback(
     async (choiceIndex: 0 | 1 | 2 | 3) => {
-      if (!sessionId || !prompt || pending || phase === "feedback") return;
+      if (!sessionId || !prompt) return;
+      if (answeringRef.current || phase !== "card") return;
+      const queueItemId = prompt.queueItemId;
+      if (
+        currentQueueIdRef.current &&
+        queueItemId !== currentQueueIdRef.current
+      ) {
+        return;
+      }
+      answeringRef.current = true;
       setSelectedChoice(choiceIndex);
       setPending(true);
       setError(null);
       try {
         const res = await answerStudy(sessionId, {
-          queueItemId: prompt.queueItemId,
+          queueItemId,
           choiceIndex,
           latencyMs: Date.now() - startedAt.current,
         });
+        // Stale response if user somehow moved on
+        if (currentQueueIdRef.current !== queueItemId) {
+          return;
+        }
         setFeedback({
           correct: res.correct,
           correctIndex: res.correctIndex,
@@ -258,11 +281,14 @@ export function FlashStudyClient() {
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al responder");
         setSelectedChoice(null);
+        answeringRef.current = false;
       } finally {
         setPending(false);
+        // On success, answeringRef stays true until goNext() so double-submit
+        // cannot race the auto-advance timer.
       }
     },
-    [goNext, pending, phase, prompt, sessionId],
+    [goNext, phase, prompt, sessionId],
   );
 
   // Keyboard: 1-4 / A-D answer; Enter/Space continue
@@ -278,7 +304,7 @@ export function FlashStudyClient() {
         }
         return;
       }
-      if (phase !== "card" || pending || !prompt) return;
+      if (phase !== "card" || answeringRef.current || pending || !prompt) return;
       const map: Record<string, 0 | 1 | 2 | 3> = {
         "1": 0,
         "2": 1,
