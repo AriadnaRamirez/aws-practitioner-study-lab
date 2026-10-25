@@ -17,8 +17,9 @@ import {
   type StudySize,
   type Topic,
 } from "@aps/shared";
+import { FlashDeck, FlashDeckShowcase } from "@/components/study/flash-deck";
 import { Button } from "@/components/ui/button";
-import { Skeleton, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { fetchMe, getStoredToken } from "@/lib/api";
 import { getTopics } from "@/lib/content-api";
 import {
@@ -327,18 +328,17 @@ export function FlashStudyClient() {
           <Spinner label="Preparando sesión" />
           <span>
             {phase === "starting"
-              ? "Creando tu sesión de flashcards…"
+              ? "Barajando tu mazo…"
               : "Cargando estudio…"}
           </span>
         </div>
-        <div className="mt-8 space-y-3">
-          <Skeleton className="h-8 w-2/3" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-5/6" />
-          <Skeleton className="mt-6 h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
+        <div className="mt-10">
+          <FlashDeck
+            loading
+            eyebrow="FLASH"
+            title="Preparando cartas…"
+            footer="Un momento"
+          />
         </div>
       </section>
     );
@@ -368,47 +368,52 @@ export function FlashStudyClient() {
   if (phase === "setup") {
     return (
       <section className="mx-auto max-w-2xl px-6 py-10">
-        <p className="text-sm font-medium text-[var(--accent)]">
-          Happy path · Flash MCQ
-        </p>
-        <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">
-          Empieza a estudiar
-        </h1>
-        <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-          4 opciones, refuerzo al fallar y dominio con 3 aciertos seguidos.
-          {dailyStreak > 0
-            ? ` Racha diaria: ${dailyStreak} día${dailyStreak === 1 ? "" : "s"}.`
-            : null}
-        </p>
+        <div className="grid items-center gap-10 md:grid-cols-[1fr_minmax(0,14rem)]">
+          <div>
+            <p className="text-sm font-medium text-[var(--accent)]">
+              Mazo · Flash MCQ
+            </p>
+            <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">
+              Empieza a{" "}
+              <span className="text-gradient-aws">estudiar</span>
+            </h1>
+            <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+              4 opciones, refuerzo al fallar y dominio con 3 aciertos seguidos.
+              {dailyStreak > 0
+                ? ` Racha diaria: ${dailyStreak} día${dailyStreak === 1 ? "" : "s"}.`
+                : null}
+            </p>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button
-            size="lg"
-            disabled={pending}
-            onClick={() => void onStart(10, [])}
-            className="min-w-[12rem]"
-          >
-            {pending ? (
-              <span className="inline-flex items-center gap-2">
-                <Spinner /> Preparando…
-              </span>
-            ) : (
-              "Empezar 10 flashcards"
-            )}
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            disabled={pending}
-            onClick={() => void onStart(20, [])}
-          >
-            Empezar 20
-          </Button>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button
+                size="lg"
+                disabled={pending}
+                onClick={() => void onStart(10, [])}
+                className="min-w-[12rem]"
+              >
+                {pending ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner /> Preparando…
+                  </span>
+                ) : (
+                  "Empezar 10 flashcards"
+                )}
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                disabled={pending}
+                onClick={() => void onStart(20, [])}
+              >
+                Empezar 20
+              </Button>
+            </div>
+            <p className="mt-3 text-xs text-[var(--foreground-muted)]">
+              Un clic → primera carta. Atajos: 1–4 o A–D · Enter para continuar.
+            </p>
+          </div>
+          <FlashDeckShowcase className="hidden md:block scale-90 origin-center" />
         </div>
-        <p className="mt-3 text-xs text-[var(--foreground-muted)]">
-          Un clic → primera carta. Atajos: teclas 1–4 o A–D para responder;
-          Enter para continuar.
-        </p>
 
         <button
           type="button"
@@ -576,20 +581,20 @@ export function FlashStudyClient() {
     <section className="mx-auto max-w-2xl px-6 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
-            Racha de sesión · {sessionStreak}
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
+            Racha · {sessionStreak}
           </p>
           <h1 className="font-display text-2xl font-bold tracking-tight">
-            Flash MCQ
+            Tu mazo
           </h1>
         </div>
         <p className="text-sm text-[var(--foreground-muted)]">
-          Quedan {remaining} · respondidas {answered}
+          Quedan {remaining} · {answered} hechas
         </p>
       </div>
 
       <div
-        className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]"
+        className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]"
         role="progressbar"
         aria-valuenow={progressPct}
         aria-valuemin={0}
@@ -597,82 +602,82 @@ export function FlashStudyClient() {
       >
         <div
           className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
-          style={{ width: `${progressPct}%` }}
+          style={{
+            width: `${progressPct}%`,
+            boxShadow: "0 0 12px var(--glow)",
+          }}
         />
       </div>
 
       {prompt ? (
-        <div
-          key={prompt.queueItemId}
-          className="mt-8 animate-[fade-up_0.28s_ease-out]"
-        >
-          <p className="text-xs font-medium text-[var(--accent)]">
-            {(prompt.variant && VARIANT_LABEL[prompt.variant]) ||
+        <div key={prompt.queueItemId} className="mt-8">
+          <FlashDeck
+            eyebrow={
+              (prompt.variant && VARIANT_LABEL[prompt.variant]) ||
               prompt.variant ||
-              "Flash"}
-          </p>
-          <p className="font-display mt-3 text-xl font-semibold leading-snug md:text-2xl">
-            {prompt.stem}
-          </p>
+              "FLASH"
+            }
+            title={prompt.stem}
+            footer={`${answered + 1} · ${uniqueItems || size} en el mazo`}
+          >
+            <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
+              {prompt.choices.map((choice, idx) => {
+                const i = idx as 0 | 1 | 2 | 3;
+                const isSelected = selectedChoice === i;
+                const showKey = phase === "feedback" && feedback;
+                const isCorrect = showKey && feedback.correctIndex === i;
+                const isWrongPick =
+                  showKey && isSelected && !feedback.correct;
 
-          <ul className="mt-6 flex flex-col gap-2" aria-busy={pending}>
-            {prompt.choices.map((choice, idx) => {
-              const i = idx as 0 | 1 | 2 | 3;
-              const isSelected = selectedChoice === i;
-              const showKey = phase === "feedback" && feedback;
-              const isCorrect = showKey && feedback.correctIndex === i;
-              const isWrongPick =
-                showKey && isSelected && !feedback.correct;
-
-              return (
-                <li key={`${prompt.queueItemId}-${i}`}>
-                  <button
-                    type="button"
-                    disabled={pending || phase === "feedback"}
-                    onClick={() => void onAnswer(i)}
-                    className={cn(
-                      "w-full rounded-md px-4 py-3.5 text-left text-sm leading-snug transition-[transform,background-color,box-shadow] duration-150 ring-1 active:scale-[0.99] disabled:cursor-wait",
-                      isCorrect &&
-                        "bg-emerald-500/15 ring-emerald-600 dark:ring-emerald-400",
-                      isWrongPick &&
-                        "bg-red-500/15 ring-red-600 dark:ring-red-400",
-                      !showKey &&
-                        "bg-[var(--surface-elevated)] ring-[var(--border)] hover:bg-[var(--surface-hover)] hover:ring-[var(--border-strong)]",
-                      !showKey && isSelected && "ring-[var(--accent)]",
-                      pending && isSelected && "opacity-90",
-                    )}
-                  >
-                    <span className="mr-2 font-semibold text-[var(--foreground-muted)]">
-                      {String.fromCharCode(65 + i)}.
-                    </span>
-                    {choice}
-                    {pending && isSelected ? (
-                      <span className="ml-2 inline-flex align-middle">
-                        <Spinner label="Enviando respuesta" />
+                return (
+                  <li key={`${prompt.queueItemId}-${i}`}>
+                    <button
+                      type="button"
+                      disabled={pending || phase === "feedback"}
+                      onClick={() => void onAnswer(i)}
+                      className={cn(
+                        "w-full rounded-xl px-3.5 py-3 text-left text-sm leading-snug transition-[transform,background-color,box-shadow] duration-150 ring-1 active:scale-[0.99] disabled:cursor-wait",
+                        isCorrect && "bg-emerald-100 ring-emerald-500",
+                        isWrongPick && "bg-red-100 ring-red-500",
+                        !showKey &&
+                          "bg-[#f4f4f4] ring-black/10 hover:bg-[#ebebeb] hover:ring-black/20",
+                        !showKey &&
+                          isSelected &&
+                          "bg-orange-50 ring-[var(--accent)]",
+                      )}
+                    >
+                      <span className="mr-2 font-semibold text-black/45">
+                        {String.fromCharCode(65 + i)}.
                       </span>
-                    ) : null}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                      <span className="text-black">{choice}</span>
+                      {pending && isSelected ? (
+                        <span className="ml-2 inline-flex align-middle">
+                          <Spinner label="Enviando respuesta" />
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </FlashDeck>
         </div>
       ) : pending ? (
-        <div className="mt-8 flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
-          <Spinner /> Cargando carta…
+        <div className="mt-8">
+          <FlashDeck loading eyebrow="FLASH" title="…" footer="Cargando" />
         </div>
       ) : null}
 
       {phase === "feedback" && feedback ? (
         <div
           className={cn(
-            "mt-6 rounded-md px-4 py-4 text-sm ring-1 animate-[fade-up_0.25s_ease-out]",
+            "mt-6 rounded-2xl px-4 py-4 text-sm ring-1 animate-[fade-up_0.25s_ease-out]",
             feedback.correct
-              ? "bg-emerald-500/10 ring-emerald-600/40"
-              : "bg-red-500/10 ring-red-600/40",
+              ? "bg-emerald-500/15 ring-emerald-500/40"
+              : "bg-red-500/15 ring-red-500/40",
           )}
         >
-          <p className="font-semibold">
+          <p className="font-semibold text-white">
             {feedback.correct ? "Correcto" : "Incorrecto — vuelve más adelante"}
             {feedback.itemMastered ? " · ¡Dominado!" : null}
           </p>
@@ -681,19 +686,19 @@ export function FlashStudyClient() {
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button onClick={goNext}>
-              {summaryRef.current ? "Ver resumen" : "Siguiente"}
+              {summaryRef.current ? "Ver resumen" : "Siguiente carta"}
             </Button>
             <span className="text-xs text-[var(--foreground-muted)]">
               {autoIn != null
-                ? `Siguiente automático…`
-                : "Enter o Espacio para continuar"}
+                ? "Siguiente automático…"
+                : "Enter o Espacio"}
             </span>
           </div>
         </div>
       ) : null}
 
       {error ? (
-        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-4 text-sm text-[var(--danger)]" role="alert">
           {error}
         </p>
       ) : null}

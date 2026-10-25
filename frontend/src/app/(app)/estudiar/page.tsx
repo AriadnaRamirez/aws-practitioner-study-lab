@@ -46,7 +46,8 @@ export default function EstudiarPage() {
               AWS Practitioner Study Lab
             </p>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--foreground)]">
-              Estudiar
+              Estudiar{" "}
+              <span className="text-gradient-aws">flashcards</span>
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">

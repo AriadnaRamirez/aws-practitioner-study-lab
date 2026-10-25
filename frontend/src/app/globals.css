@@ -1,48 +1,69 @@
 @import "tailwindcss";
 
-/* Teal-lab identity: cool mist / deep night — not purple-white, not cream-terracotta */
+/*
+  Minimalismo tech — fondo negro, pops naranja AWS.
+  Referencia: mazo de 3 cards apiladas + tipografía high-contrast.
+*/
 :root {
-  --background: #eef3f7;
-  --foreground: #0b1c2c;
-  --foreground-muted: #4a5f73;
-  --surface: #f7fafc;
-  --surface-elevated: #ffffff;
-  --surface-hover: #e4ecf3;
-  --border: #c9d6e3;
-  --border-strong: #8fa3b8;
-  --accent: #0d8f9a;
-  --accent-hover: #0a7a83;
-  --accent-foreground: #f4fcfd;
-  --accent-soft: #c5eef1;
-  --ring: #0d8f9a;
-  --glow: rgba(13, 143, 154, 0.28);
-  --glow-secondary: rgba(232, 152, 56, 0.18);
-  --hero-mesh-a: #b8dde8;
-  --hero-mesh-b: #d4e8f0;
-  --hero-mesh-c: #9fd4c8;
-  --nav-bg: rgba(247, 250, 252, 0.82);
+  --background: #000000;
+  --foreground: #ffffff;
+  --foreground-muted: #9a9a9a;
+  --surface: #0a0a0a;
+  --surface-elevated: #141414;
+  --surface-hover: #1c1c1c;
+  --border: #262626;
+  --border-strong: #3f3f3f;
+  --accent: #ff9900;
+  --accent-hover: #ffb84d;
+  --accent-foreground: #0a0a0a;
+  --accent-soft: rgba(255, 153, 0, 0.16);
+  --accent-deep: #e47911;
+  --accent-warm: #ffb84d;
+  --ring: #ff9900;
+  --glow: rgba(255, 153, 0, 0.28);
+  --glow-secondary: rgba(255, 184, 77, 0.16);
+  --hero-mesh-a: rgba(255, 153, 0, 0.22);
+  --hero-mesh-b: rgba(228, 121, 17, 0.12);
+  --hero-mesh-c: rgba(255, 184, 77, 0.1);
+  --nav-bg: rgba(0, 0, 0, 0.78);
+  --card-face: #ffffff;
+  --card-face-fg: #0a0a0a;
+  --success: #3dd68c;
+  --danger: #ff6b6b;
+  --deck-grad-1: linear-gradient(145deg, #ff9900 0%, #ffb84d 45%, #e47911 100%);
+  --deck-grad-2: linear-gradient(145deg, #232f3e 0%, #1a2332 50%, #0f1a28 100%);
+  --deck-grad-3: linear-gradient(145deg, #ffb84d 0%, #ff9900 40%, #c45500 100%);
 }
 
 .dark {
-  --background: #061018;
-  --foreground: #e6eef5;
-  --foreground-muted: #8aa0b5;
-  --surface: #0c1a24;
-  --surface-elevated: #122433;
-  --surface-hover: #1a3042;
-  --border: #1e3548;
-  --border-strong: #3d5a73;
-  --accent: #2ec4c6;
-  --accent-hover: #45d4d6;
-  --accent-foreground: #042028;
-  --accent-soft: #0f3a3f;
-  --ring: #2ec4c6;
-  --glow: rgba(46, 196, 198, 0.22);
-  --glow-secondary: rgba(232, 152, 56, 0.12);
-  --hero-mesh-a: #0a2a38;
-  --hero-mesh-b: #0d1f2c;
-  --hero-mesh-c: #12352f;
-  --nav-bg: rgba(6, 16, 24, 0.86);
+  --background: #000000;
+  --foreground: #ffffff;
+  --foreground-muted: #9a9a9a;
+  --surface: #0a0a0a;
+  --surface-elevated: #141414;
+  --surface-hover: #1c1c1c;
+  --border: #262626;
+  --border-strong: #3f3f3f;
+  --accent: #ff9900;
+  --accent-hover: #ffb84d;
+  --accent-foreground: #0a0a0a;
+  --accent-soft: rgba(255, 153, 0, 0.16);
+  --accent-deep: #e47911;
+  --accent-warm: #ffb84d;
+  --ring: #ff9900;
+  --glow: rgba(255, 153, 0, 0.28);
+  --glow-secondary: rgba(255, 184, 77, 0.16);
+  --hero-mesh-a: rgba(255, 153, 0, 0.22);
+  --hero-mesh-b: rgba(228, 121, 17, 0.12);
+  --hero-mesh-c: rgba(255, 184, 77, 0.1);
+  --nav-bg: rgba(0, 0, 0, 0.78);
+  --card-face: #ffffff;
+  --card-face-fg: #0a0a0a;
+  --success: #3dd68c;
+  --danger: #ff6b6b;
+  --deck-grad-1: linear-gradient(145deg, #ff9900 0%, #ffb84d 45%, #e47911 100%);
+  --deck-grad-2: linear-gradient(145deg, #232f3e 0%, #1a2332 50%, #0f1a28 100%);
+  --deck-grad-3: linear-gradient(145deg, #ffb84d 0%, #ff9900 40%, #c45500 100%);
 }
 
 @theme inline {
@@ -77,10 +98,36 @@
 @keyframes soft-pulse {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.45;
   }
   50% {
-    opacity: 0.85;
+    opacity: 0.8;
+  }
+}
+
+@keyframes deck-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -92,6 +139,13 @@ body {
 
 .font-display {
   font-family: var(--font-syne), ui-sans-serif, sans-serif;
+}
+
+.text-gradient-aws {
+  background: linear-gradient(105deg, #ffb84d 0%, #ff9900 45%, #e47911 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .animate-fade-up {
@@ -118,14 +172,17 @@ body {
   animation: soft-pulse 6s ease-in-out infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.animate-deck-in {
+  animation: deck-in 0.4s ease-out both;
 }
 
 .animate-spin {
   animation: spin 0.7s linear infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -136,7 +193,9 @@ body {
   .animate-drift,
   .animate-soft-pulse,
   .animate-spin,
-  .animate-pulse {
+  .animate-pulse,
+  .animate-deck-in,
+  .animate-shimmer {
     animation: none;
   }
 }
