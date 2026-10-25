@@ -31,21 +31,22 @@ type Props = {
   size?: "sm" | "md" | "lg" | "hero";
 };
 
+/** Landscape plates (~16:9) on ink #0a0f1a — no cutout fringe. */
 const SIZE: Record<NonNullable<Props["size"]>, string> = {
-  sm: "h-20 w-28",
-  md: "h-32 w-44",
-  lg: "h-44 w-64",
-  hero: "h-52 w-full max-w-xs sm:h-60",
+  sm: "h-16 w-28",
+  md: "h-28 w-48",
+  lg: "h-36 w-64",
+  hero: "aspect-[16/9] w-full max-w-md",
 };
 
 const SIZES_ATTR: Record<NonNullable<Props["size"]>, string> = {
   sm: "112px",
-  md: "176px",
+  md: "192px",
   lg: "256px",
-  hero: "(max-width: 640px) 80vw, 320px",
+  hero: "(max-width: 640px) 92vw, 448px",
 };
 
-/** Lightweight WebP mascot (transparent). */
+/** Dark-plate mascot WebPs — background matches site ink. */
 export function Mascot({
   pose = "study",
   className,
@@ -56,7 +57,7 @@ export function Mascot({
   return (
     <div
       className={cn(
-        "relative",
+        "relative overflow-hidden bg-[var(--brand-ink)]",
         SIZE[size],
         float && "animate-mascot-float",
         className,
@@ -68,9 +69,9 @@ export function Mascot({
         fill
         priority={priority}
         loading={priority ? "eager" : "lazy"}
-        quality={75}
+        quality={82}
         sizes={SIZES_ATTR[size]}
-        className="object-contain object-center drop-shadow-[0_12px_28px_rgba(232,80,2,0.22)]"
+        className="object-cover object-center"
       />
     </div>
   );

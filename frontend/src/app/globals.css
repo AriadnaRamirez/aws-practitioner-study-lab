@@ -9,21 +9,23 @@
 :root {
   --brand-orange: #e85002;
   --brand-black: #000000;
+  /* Matches mascot plate backgrounds so characters blend seamlessly */
+  --brand-ink: #0a0f1a;
   --brand-white: #f9f9f9;
   --brand-light-gray: #a7a7a7;
   --brand-gray: #646464;
-  --brand-dark-gray: #333333;
-  --brand-grad-1: #000000;
+  --brand-dark-gray: #1a2233;
+  --brand-grad-1: #0a0f1a;
   --brand-grad-2: #c10801;
   --brand-grad-3: #f16001;
   --brand-grad-4: #d9c3ab;
 
-  --background: var(--brand-black);
+  --background: var(--brand-ink);
   --foreground: var(--brand-white);
   --foreground-muted: var(--brand-light-gray);
-  --surface: var(--brand-dark-gray);
-  --surface-elevated: #2a2a2a;
-  --surface-hover: #3d3d3d;
+  --surface: #121826;
+  --surface-elevated: #1a2233;
+  --surface-hover: #243044;
   --border: rgba(249, 249, 249, 0.12);
   --border-strong: rgba(249, 249, 249, 0.22);
   --accent: var(--brand-orange);
@@ -35,10 +37,10 @@
   --ring: var(--brand-orange);
   --glow: rgba(232, 80, 2, 0.4);
   --glow-secondary: rgba(241, 96, 1, 0.2);
-  --hero-mesh-a: rgba(241, 96, 1, 0.55);
-  --hero-mesh-b: rgba(193, 8, 1, 0.4);
-  --hero-mesh-c: rgba(217, 195, 171, 0.28);
-  --nav-bg: rgba(0, 0, 0, 0.72);
+  --hero-mesh-a: rgba(232, 80, 2, 0.18);
+  --hero-mesh-b: rgba(193, 8, 1, 0.12);
+  --hero-mesh-c: rgba(26, 34, 51, 0.4);
+  --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
   --success: #3dd68c;
@@ -64,12 +66,12 @@
 }
 
 .dark {
-  --background: var(--brand-black);
+  --background: var(--brand-ink);
   --foreground: var(--brand-white);
   --foreground-muted: var(--brand-light-gray);
-  --surface: var(--brand-dark-gray);
-  --surface-elevated: #2a2a2a;
-  --surface-hover: #3d3d3d;
+  --surface: #121826;
+  --surface-elevated: #1a2233;
+  --surface-hover: #243044;
   --border: rgba(249, 249, 249, 0.12);
   --border-strong: rgba(249, 249, 249, 0.22);
   --accent: var(--brand-orange);
@@ -81,10 +83,10 @@
   --ring: var(--brand-orange);
   --glow: rgba(232, 80, 2, 0.4);
   --glow-secondary: rgba(241, 96, 1, 0.2);
-  --hero-mesh-a: rgba(241, 96, 1, 0.55);
-  --hero-mesh-b: rgba(193, 8, 1, 0.4);
-  --hero-mesh-c: rgba(217, 195, 171, 0.28);
-  --nav-bg: rgba(0, 0, 0, 0.72);
+  --hero-mesh-a: rgba(232, 80, 2, 0.18);
+  --hero-mesh-b: rgba(193, 8, 1, 0.12);
+  --hero-mesh-c: rgba(26, 34, 51, 0.4);
+  --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
   --success: #3dd68c;
@@ -301,7 +303,7 @@ code,
 }
 
 .brand-bar {
-  background: var(--branding-gradient);
+  background: var(--accent);
 }
 
 .mark-star {

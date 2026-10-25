@@ -26,11 +26,7 @@ export function LandingHero() {
     <div className="relative flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--foreground)]">
       <div
         aria-hidden
-        className="atmos-orange pointer-events-none absolute inset-0 -z-0"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.7)_100%)]"
+        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_35%,rgba(232,80,2,0.14),transparent_70%)]"
       />
 
       <Suspense fallback={null}>
@@ -102,7 +98,10 @@ export function LandingHero() {
         </div>
 
         <div className="animate-fade-up mt-auto pt-8">
-          <div className="brand-bar mb-5 h-1 w-16 rounded-full" aria-hidden />
+          <div
+            className="mb-5 h-0.5 w-12 rounded-full bg-[var(--accent)]"
+            aria-hidden
+          />
           <h1 className="font-display text-[clamp(2.75rem,14vw,4.5rem)] font-bold leading-[0.95] tracking-tight text-[var(--brand-white)]">
             Study Lab
           </h1>
