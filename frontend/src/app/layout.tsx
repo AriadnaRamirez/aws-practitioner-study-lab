@@ -40,7 +40,12 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${figtree.variable} ${jetbrains.variable} min-h-dvh antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          forcedTheme="dark"
+        >
           {children}
         </ThemeProvider>
       </body>
