@@ -1,3 +1,5 @@
+import './load-env';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { API_PREFIX, APP_NAME } from '@aps/shared';
@@ -12,12 +14,23 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
   app.setGlobalPrefix(API_PREFIX);
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle(APP_NAME)
-    .setDescription('API pública versionada (scaffold — sin features de estudio aún)')
+    .setDescription(
+      'API pública versionada. Auth: JWT access Bearer (sin refresh en MVP).',
+    )
     .setVersion('0.1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);

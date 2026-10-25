@@ -14,8 +14,12 @@
     "build:web": "npm run build -w @aps/web",
     "build:api": "npm run build -w @aps/api",
     "lint": "npm run lint -w @aps/web && npm run lint -w @aps/api",
-    "test:api": "npm run test -w @aps/api"
+    "test:api": "npm run test -w @aps/api",
+    "db:up": "docker compose up -d",
+    "db:migrate": "npm run prisma:migrate -w @aps/api",
+    "db:seed": "npm run prisma:seed -w @aps/api"
   },
+
   "engines": {
     "node": ">=20"
   }
