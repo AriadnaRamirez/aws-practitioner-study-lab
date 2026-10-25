@@ -43,7 +43,11 @@ export function LandingHero() {
       </header>
 
       <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col px-5 pb-10 pt-4 sm:px-6">
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        <div className="relative flex flex-1 flex-col items-center justify-center gap-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-[18%] h-56 w-56 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(232,80,2,0.28),transparent_68%)] blur-2xl sm:h-64 sm:w-64"
+          />
           <Mascot pose="study" size="hero" priority />
 
           <Link
