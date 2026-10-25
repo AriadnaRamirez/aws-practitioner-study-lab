@@ -59,11 +59,11 @@ export function SiteCredits({ className, compact = false }: Props) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/partners/aws-restart-clf-lockup.svg"
+              src="/partners/aws-restart-clf.webp"
               alt="AWS re/Start Cloud Practitioner"
               width={200}
-              height={40}
-              className="h-9 w-auto"
+              height={34}
+              className="h-8 w-auto"
               loading="lazy"
               decoding="async"
             />
