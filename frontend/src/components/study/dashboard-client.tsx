@@ -75,13 +75,18 @@ export function DashboardClient() {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-12">
-      <header className="flex min-w-0 items-baseline justify-between gap-3">
-        <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight sm:text-3xl">
-          Hola, @{user.username}
-        </h1>
-        <p className="shrink-0 font-mono text-sm tabular-nums text-[var(--accent)]">
-          {pct}%
+      <header className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+          Panel de estudio
         </p>
+        <div className="mt-2 flex min-w-0 items-baseline justify-between gap-3">
+          <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight sm:text-3xl">
+            @{user.username}
+          </h1>
+          <p className="shrink-0 font-mono text-sm tabular-nums text-[var(--foreground-muted)]">
+            Dominio {pct}%
+          </p>
+        </div>
       </header>
 
       <ExamCountdown className="mt-6" examDate={user.examDate} compact />

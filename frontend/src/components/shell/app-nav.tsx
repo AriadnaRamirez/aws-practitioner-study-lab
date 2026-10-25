@@ -88,9 +88,10 @@ export function AppNav() {
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="font-display truncate text-sm font-semibold tracking-tight"
+            className="font-display min-w-0 truncate text-sm font-semibold tracking-tight"
           >
-            Study Lab
+            <span className="sm:hidden">Study Lab</span>
+            <span className="hidden sm:inline">AWS Practitioner Study Lab</span>
           </Link>
           {masteryPct != null ? (
             <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">

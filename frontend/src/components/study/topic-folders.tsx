@@ -62,23 +62,18 @@ export function TopicFolders({ topics, className }: Props) {
         Temas
       </h2>
 
-      <ul className="mt-5 flex w-full min-w-0 flex-col">
-        {folders.map(({ cat, total, mastered, pct }, i) => {
+      <ul className="mt-5 flex w-full min-w-0 flex-col gap-3">
+        {folders.map(({ cat, total, mastered, pct }) => {
           const href = `/estudiar?category=${encodeURIComponent(cat.id)}&start=10`;
           const muted =
             cat.tone === "orange" || cat.tone === "cream"
               ? "text-black/55"
               : "text-white/60";
           return (
-            <li
-              key={cat.id}
-              className={cn("relative min-w-0", i > 0 && "-mt-3")}
-              style={{ zIndex: folders.length - i }}
-            >
-              {/* Folder tab */}
+            <li key={cat.id} className="relative min-w-0">
               <div
                 className={cn(
-                  "mx-auto h-3.5 w-[38%] max-w-[9rem] rounded-t-lg sm:w-[28%]",
+                  "ml-4 h-3 w-24 rounded-t-md sm:ml-6",
                   TAB_FACE[cat.tone],
                 )}
                 aria-hidden
@@ -86,27 +81,22 @@ export function TopicFolders({ topics, className }: Props) {
               <Link
                 href={href}
                 className={cn(
-                  "flex min-w-0 items-center justify-between gap-4 rounded-2xl px-4 py-5 transition-[transform,filter] sm:px-6 sm:py-6",
-                  "hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+                  "flex min-w-0 items-center justify-between gap-4 rounded-md px-4 py-4 sm:px-5 sm:py-5",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
                   FOLDER_FACE[cat.tone],
                 )}
               >
                 <div className="min-w-0">
                   <p className={cn("text-xs tabular-nums", muted)}>
-                    {total} ítems · {mastered}/{total}
+                    {mastered}/{total}
                   </p>
-                  <p className="font-display mt-1 truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                  <p className="font-display mt-1 truncate text-lg font-semibold tracking-tight sm:text-xl">
                     {cat.title}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className={cn("text-xs uppercase tracking-wider", muted)}>
-                    Dominio
-                  </p>
-                  <p className="font-display mt-0.5 text-lg font-semibold tabular-nums sm:text-xl">
-                    {pct}%
-                  </p>
-                </div>
+                <p className="shrink-0 font-mono text-sm tabular-nums">
+                  {pct}%
+                </p>
               </Link>
             </li>
           );
