@@ -8,7 +8,7 @@ import {
 
 const now = '2026-10-24T12:00:00.000Z';
 
-/** In-memory demo seed — EC2 / S3 style samples for Swagger + admin shell. */
+/** Demo seed data (APS-6/7) — EC2 / S3 samples; consumed by prisma/seed.ts. */
 export function buildSeedTopics(): Topic[] {
   return [
     {

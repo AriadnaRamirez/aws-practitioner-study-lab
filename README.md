@@ -29,12 +29,30 @@ cp apps/api/.env.example apps/api/.env
 docker compose up -d
 # o Postgres local con DATABASE_URL=postgresql://aps:aps_dev@127.0.0.1:5432/aps_lab
 
+# Apply Prisma migrations (auth + content models)
 npm run db:migrate
+# Seed ADMIN + demo topics / knowledge / exam questions (APS-7)
 npm run db:seed
 npm run build -w @aps/shared
 ```
 
-El seed crea **1 ADMIN** con `ADMIN_EMAIL` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` (ver `.env.example`). No commits de secretos reales.
+### Migrate + seed (content)
+
+From repo root (Postgres up, `apps/api/.env` with `DATABASE_URL`):
+
+```bash
+npm run db:migrate   # prisma migrate dev — creates/applies Topic, KnowledgeItem, ExamQuestion
+npm run db:seed      # admin user + content from apps/api/src/content/content.seed.ts
+```
+
+Or from `apps/api`:
+
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+El seed crea **1 ADMIN** (`ADMIN_EMAIL` / `ADMIN_USERNAME` / `ADMIN_PASSWORD`) y el contenido demo CLF (temas Cómputo/Almacenamiento/Fundamentos, flash EC2/S3/responsabilidad compartida, 2 preguntas). No commits de secretos reales.
 
 ## Desarrollo
 
@@ -71,22 +89,24 @@ npm run dev:web
 
 El front sigue la preferencia del sistema vía **next-themes** (`system`): tokens en `apps/web/src/app/globals.css`. Tipografías **Syne** + **Figtree**; paleta teal / cool mist — no branding CCST.
 
-### Contenido stub (APS-6)
+### Contenido (APS-6 + APS-7)
 
 | Qué | Dónde |
 | --- | --- |
 | Tipos | `packages/shared` (`Topic`, `KnowledgeItem`, `ExamQuestion`) |
+| Persistencia | Prisma `Topic` / `KnowledgeItem` / `ExamQuestion` (JSON: distractors, choices, allowedVariants) |
 | API | `GET /api/v1/topics`, `/knowledge-items`, `/exam-questions` |
 | Admin CRUD | `/api/v1/admin/...` + header `x-admin-token` (`ADMIN_TOKEN`) |
 | UI admin | `/admin` (Resumen, Usuarios stub, Temas, Flash, Banco, Import stub) |
+| Seed | `npm run db:seed` ← `content.seed.ts` |
 
 Las mutaciones admin de contenido aún usan `x-admin-token`; siguiente paso: sustituir `AdminGuard` por JWT + role `ADMIN`.
 
-## Alcance actual (Wave 1 integrada)
+## Alcance actual
 
-- **APS-3–6:** monorepo, auth JWT, shell/tema, content stubs + admin  
+- **APS-3–7:** monorepo, auth JWT, shell/tema, content CRUD sobre Postgres/Prisma  
 
-**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, guest analytics, Prisma content (APS-7), Google OAuth.
+**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, guest analytics, Google OAuth.
 
 ## Scripts raíz
 
@@ -95,7 +115,7 @@ Las mutaciones admin de contenido aún usan `x-admin-token`; siguiente paso: sus
 | `npm run dev:web` | Next en `:43123` |
 | `npm run dev:api` | Nest watch en `:43124` |
 | `npm run db:up` | `docker compose up -d` (Postgres) |
-| `npm run db:migrate` | Prisma migrate |
-| `npm run db:seed` | Seed admin |
+| `npm run db:migrate` | Prisma migrate (auth + content) |
+| `npm run db:seed` | Seed admin + content demo |
 | `npm run build` | shared → api → web |
 | `npm run test:api` | unit tests Nest |

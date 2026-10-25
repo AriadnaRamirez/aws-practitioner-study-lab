@@ -30,7 +30,7 @@ async function bootstrap() {
       [
         'API pública versionada `/api/v1`.',
         'Auth: JWT access Bearer (APS-4).',
-        'Content stubs in-memory (APS-6): topics, knowledge, exam questions.',
+        'Content (APS-7 Prisma): topics, knowledge, exam questions.',
         'Study sessions (APS-9/10): EXAM_STUDY with miss-repeat; EXAM_TIMED cronometrado + mock 65/90.',
         'Admin content mutations still use header `x-admin-token` until JWT AdminGuard merge.',
       ].join(' '),

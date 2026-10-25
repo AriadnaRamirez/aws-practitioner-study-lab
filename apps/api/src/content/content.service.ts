@@ -7,10 +7,20 @@ import {
   type ContentStatus,
   type ExamChoices,
   type ExamQuestion,
+  type FlashVariant,
   type KnowledgeItem,
   type Topic,
+  type TopicType,
 } from '@aps/shared';
-import { ContentStore } from './content.store';
+import type {
+  ContentStatus as PrismaContentStatus,
+  ExamQuestion as PrismaExamQuestion,
+  KnowledgeItem as PrismaKnowledgeItem,
+  Topic as PrismaTopic,
+  TopicType as PrismaTopicType,
+} from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import type {
   CreateExamQuestionDto,
   CreateKnowledgeItemDto,
@@ -20,187 +30,277 @@ import type {
   UpdateTopicDto,
 } from './dto/content.dto';
 
-function nowIso(): string {
-  return new Date().toISOString();
-}
-
-function newId(prefix: string): string {
-  return `${prefix}-${crypto.randomUUID()}`;
-}
-
 function assertFourChoices(choices: string[]): asserts choices is ExamChoices {
   if (!Array.isArray(choices) || choices.length !== 4) {
     throw new BadRequestException('choices must contain exactly 4 strings');
   }
 }
 
+function asStringArray(value: Prisma.JsonValue, field: string): string[] {
+  if (!Array.isArray(value) || !value.every((v) => typeof v === 'string')) {
+    throw new BadRequestException(`${field} must be a JSON string array`);
+  }
+  return value as string[];
+}
+
+function toIso(d: Date): string {
+  return d.toISOString();
+}
+
+function mapTopic(row: PrismaTopic): Topic {
+  return {
+    id: row.id,
+    trackId: row.trackId,
+    type: row.type as TopicType,
+    name: row.name,
+    parentId: row.parentId,
+    sortOrder: row.sortOrder,
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
+function mapKnowledge(row: PrismaKnowledgeItem): KnowledgeItem {
+  return {
+    id: row.id,
+    topicId: row.topicId,
+    trackId: row.trackId,
+    name: row.name,
+    definition: row.definition,
+    distractors: asStringArray(row.distractors, 'distractors'),
+    explanation: row.explanation,
+    allowedVariants: asStringArray(
+      row.allowedVariants,
+      'allowedVariants',
+    ) as FlashVariant[],
+    status: row.status as ContentStatus,
+    externalKey: row.externalKey,
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
+function mapQuestion(row: PrismaExamQuestion): ExamQuestion {
+  const choices = asStringArray(row.choices, 'choices');
+  assertFourChoices(choices);
+  const correctIndex = row.correctIndex;
+  if (correctIndex < 0 || correctIndex > 3) {
+    throw new BadRequestException('correctIndex must be 0..3');
+  }
+  return {
+    id: row.id,
+    topicId: row.topicId,
+    trackId: row.trackId,
+    stem: row.stem,
+    choices,
+    correctIndex: correctIndex as 0 | 1 | 2 | 3,
+    explanation: row.explanation,
+    status: row.status as ContentStatus,
+    externalKey: row.externalKey,
+    createdAt: toIso(row.createdAt),
+    updatedAt: toIso(row.updatedAt),
+  };
+}
+
 @Injectable()
 export class ContentService {
-  constructor(private readonly store: ContentStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  listTopics(): Topic[] {
-    return [...this.store.topics.values()].sort(
-      (a, b) => a.sortOrder - b.sortOrder,
-    );
+  async listTopics(): Promise<Topic[]> {
+    const rows = await this.prisma.topic.findMany({
+      orderBy: { sortOrder: 'asc' },
+    });
+    return rows.map(mapTopic);
   }
 
-  getTopic(id: string): Topic {
-    const topic = this.store.topics.get(id);
+  async getTopic(id: string): Promise<Topic> {
+    const topic = await this.prisma.topic.findUnique({ where: { id } });
     if (!topic) throw new NotFoundException(`Topic ${id} not found`);
-    return topic;
+    return mapTopic(topic);
   }
 
-  createTopic(dto: CreateTopicDto): Topic {
-    const ts = nowIso();
-    const topic: Topic = {
-      id: newId('topic'),
-      trackId: dto.trackId,
-      type: dto.type,
-      name: dto.name,
-      parentId: dto.parentId ?? null,
-      sortOrder: dto.sortOrder ?? 0,
-      createdAt: ts,
-      updatedAt: ts,
-    };
-    this.store.topics.set(topic.id, topic);
-    return topic;
+  async createTopic(dto: CreateTopicDto): Promise<Topic> {
+    if (dto.parentId) {
+      await this.getTopic(dto.parentId);
+    }
+    const row = await this.prisma.topic.create({
+      data: {
+        trackId: dto.trackId,
+        type: dto.type as PrismaTopicType,
+        name: dto.name,
+        parentId: dto.parentId ?? null,
+        sortOrder: dto.sortOrder ?? 0,
+      },
+    });
+    return mapTopic(row);
   }
 
-  updateTopic(id: string, dto: UpdateTopicDto): Topic {
-    const existing = this.getTopic(id);
-    const updated: Topic = {
-      ...existing,
-      ...dto,
-      id: existing.id,
-      updatedAt: nowIso(),
-    };
-    this.store.topics.set(id, updated);
-    return updated;
+  async updateTopic(id: string, dto: UpdateTopicDto): Promise<Topic> {
+    await this.getTopic(id);
+    if (dto.parentId) {
+      await this.getTopic(dto.parentId);
+    }
+    const row = await this.prisma.topic.update({
+      where: { id },
+      data: {
+        ...(dto.trackId !== undefined ? { trackId: dto.trackId } : {}),
+        ...(dto.type !== undefined
+          ? { type: dto.type as PrismaTopicType }
+          : {}),
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.parentId !== undefined ? { parentId: dto.parentId } : {}),
+        ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder } : {}),
+      },
+    });
+    return mapTopic(row);
   }
 
-  deleteTopic(id: string): void {
-    this.getTopic(id);
-    this.store.topics.delete(id);
+  async deleteTopic(id: string): Promise<void> {
+    await this.getTopic(id);
+    await this.prisma.topic.delete({ where: { id } });
   }
 
-  listKnowledge(opts?: {
+  async listKnowledge(opts?: {
     publishedOnly?: boolean;
     topicId?: string;
-  }): KnowledgeItem[] {
-    let items = [...this.store.knowledge.values()];
-    if (opts?.publishedOnly) {
-      items = items.filter((i) => i.status === 'published');
-    }
-    if (opts?.topicId) {
-      items = items.filter((i) => i.topicId === opts.topicId);
-    }
-    return items;
+  }): Promise<KnowledgeItem[]> {
+    const rows = await this.prisma.knowledgeItem.findMany({
+      where: {
+        ...(opts?.publishedOnly ? { status: 'published' } : {}),
+        ...(opts?.topicId ? { topicId: opts.topicId } : {}),
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    return rows.map(mapKnowledge);
   }
 
-  getKnowledge(id: string, opts?: { publishedOnly?: boolean }): KnowledgeItem {
-    const item = this.store.knowledge.get(id);
+  async getKnowledge(
+    id: string,
+    opts?: { publishedOnly?: boolean },
+  ): Promise<KnowledgeItem> {
+    const item = await this.prisma.knowledgeItem.findUnique({ where: { id } });
     if (!item) throw new NotFoundException(`KnowledgeItem ${id} not found`);
     if (opts?.publishedOnly && item.status !== 'published') {
       throw new NotFoundException(`KnowledgeItem ${id} not found`);
     }
-    return item;
+    return mapKnowledge(item);
   }
 
-  createKnowledge(dto: CreateKnowledgeItemDto): KnowledgeItem {
-    this.getTopic(dto.topicId);
+  async createKnowledge(dto: CreateKnowledgeItemDto): Promise<KnowledgeItem> {
+    await this.getTopic(dto.topicId);
     if (!dto.distractors || dto.distractors.length < 3) {
       throw new BadRequestException('distractors must have at least 3 entries');
     }
-    const ts = nowIso();
-    const item: KnowledgeItem = {
-      id: newId('ki'),
-      topicId: dto.topicId,
-      trackId: dto.trackId,
-      name: dto.name,
-      definition: dto.definition,
-      distractors: dto.distractors,
-      explanation: dto.explanation,
-      allowedVariants: dto.allowedVariants,
-      status: dto.status,
-      externalKey: dto.externalKey ?? null,
-      createdAt: ts,
-      updatedAt: ts,
-    };
-    this.store.knowledge.set(item.id, item);
-    return item;
+    const row = await this.prisma.knowledgeItem.create({
+      data: {
+        topicId: dto.topicId,
+        trackId: dto.trackId,
+        name: dto.name,
+        definition: dto.definition,
+        distractors: dto.distractors,
+        explanation: dto.explanation,
+        allowedVariants: dto.allowedVariants,
+        status: dto.status as PrismaContentStatus,
+        externalKey: dto.externalKey ?? null,
+      },
+    });
+    return mapKnowledge(row);
   }
 
-  updateKnowledge(id: string, dto: UpdateKnowledgeItemDto): KnowledgeItem {
-    const existing = this.getKnowledge(id);
-    if (dto.topicId) this.getTopic(dto.topicId);
+  async updateKnowledge(
+    id: string,
+    dto: UpdateKnowledgeItemDto,
+  ): Promise<KnowledgeItem> {
+    await this.getKnowledge(id);
+    if (dto.topicId) await this.getTopic(dto.topicId);
     if (dto.distractors && dto.distractors.length < 3) {
       throw new BadRequestException('distractors must have at least 3 entries');
     }
-    const updated: KnowledgeItem = {
-      ...existing,
-      ...dto,
-      id: existing.id,
-      updatedAt: nowIso(),
-    };
-    this.store.knowledge.set(id, updated);
-    return updated;
+    const row = await this.prisma.knowledgeItem.update({
+      where: { id },
+      data: {
+        ...(dto.topicId !== undefined ? { topicId: dto.topicId } : {}),
+        ...(dto.trackId !== undefined ? { trackId: dto.trackId } : {}),
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.definition !== undefined ? { definition: dto.definition } : {}),
+        ...(dto.distractors !== undefined
+          ? { distractors: dto.distractors }
+          : {}),
+        ...(dto.explanation !== undefined
+          ? { explanation: dto.explanation }
+          : {}),
+        ...(dto.allowedVariants !== undefined
+          ? { allowedVariants: dto.allowedVariants }
+          : {}),
+        ...(dto.status !== undefined
+          ? { status: dto.status as PrismaContentStatus }
+          : {}),
+        ...(dto.externalKey !== undefined
+          ? { externalKey: dto.externalKey }
+          : {}),
+      },
+    });
+    return mapKnowledge(row);
   }
 
-  deleteKnowledge(id: string): void {
-    this.getKnowledge(id);
-    this.store.knowledge.delete(id);
+  async deleteKnowledge(id: string): Promise<void> {
+    await this.getKnowledge(id);
+    await this.prisma.knowledgeItem.delete({ where: { id } });
   }
 
-  listQuestions(opts?: {
+  async listQuestions(opts?: {
     publishedOnly?: boolean;
     topicId?: string;
-  }): ExamQuestion[] {
-    let items = [...this.store.questions.values()];
-    if (opts?.publishedOnly) {
-      items = items.filter((i) => i.status === 'published');
-    }
-    if (opts?.topicId) {
-      items = items.filter((i) => i.topicId === opts.topicId);
-    }
-    return items;
+  }): Promise<ExamQuestion[]> {
+    const rows = await this.prisma.examQuestion.findMany({
+      where: {
+        ...(opts?.publishedOnly ? { status: 'published' } : {}),
+        ...(opts?.topicId ? { topicId: opts.topicId } : {}),
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    return rows.map(mapQuestion);
   }
 
-  getQuestion(id: string, opts?: { publishedOnly?: boolean }): ExamQuestion {
-    const item = this.store.questions.get(id);
+  async getQuestion(
+    id: string,
+    opts?: { publishedOnly?: boolean },
+  ): Promise<ExamQuestion> {
+    const item = await this.prisma.examQuestion.findUnique({ where: { id } });
     if (!item) throw new NotFoundException(`ExamQuestion ${id} not found`);
     if (opts?.publishedOnly && item.status !== 'published') {
       throw new NotFoundException(`ExamQuestion ${id} not found`);
     }
-    return item;
+    return mapQuestion(item);
   }
 
-  createQuestion(dto: CreateExamQuestionDto): ExamQuestion {
-    this.getTopic(dto.topicId);
+  async createQuestion(dto: CreateExamQuestionDto): Promise<ExamQuestion> {
+    await this.getTopic(dto.topicId);
     assertFourChoices(dto.choices);
     if (dto.correctIndex < 0 || dto.correctIndex > 3) {
       throw new BadRequestException('correctIndex must be 0..3');
     }
-    const ts = nowIso();
-    const item: ExamQuestion = {
-      id: newId('eq'),
-      topicId: dto.topicId,
-      trackId: dto.trackId,
-      stem: dto.stem,
-      choices: dto.choices,
-      correctIndex: dto.correctIndex,
-      explanation: dto.explanation,
-      status: dto.status,
-      externalKey: dto.externalKey ?? null,
-      createdAt: ts,
-      updatedAt: ts,
-    };
-    this.store.questions.set(item.id, item);
-    return item;
+    const row = await this.prisma.examQuestion.create({
+      data: {
+        topicId: dto.topicId,
+        trackId: dto.trackId,
+        stem: dto.stem,
+        choices: dto.choices,
+        correctIndex: dto.correctIndex,
+        explanation: dto.explanation,
+        status: dto.status as PrismaContentStatus,
+        externalKey: dto.externalKey ?? null,
+      },
+    });
+    return mapQuestion(row);
   }
 
-  updateQuestion(id: string, dto: UpdateExamQuestionDto): ExamQuestion {
-    const existing = this.getQuestion(id);
-    if (dto.topicId) this.getTopic(dto.topicId);
+  async updateQuestion(
+    id: string,
+    dto: UpdateExamQuestionDto,
+  ): Promise<ExamQuestion> {
+    await this.getQuestion(id);
+    if (dto.topicId) await this.getTopic(dto.topicId);
     if (dto.choices) assertFourChoices(dto.choices);
     if (
       dto.correctIndex !== undefined &&
@@ -208,20 +308,32 @@ export class ContentService {
     ) {
       throw new BadRequestException('correctIndex must be 0..3');
     }
-    const updated: ExamQuestion = {
-      ...existing,
-      ...dto,
-      id: existing.id,
-      choices: (dto.choices ?? existing.choices) as ExamChoices,
-      status: (dto.status ?? existing.status) as ContentStatus,
-      updatedAt: nowIso(),
-    };
-    this.store.questions.set(id, updated);
-    return updated;
+    const row = await this.prisma.examQuestion.update({
+      where: { id },
+      data: {
+        ...(dto.topicId !== undefined ? { topicId: dto.topicId } : {}),
+        ...(dto.trackId !== undefined ? { trackId: dto.trackId } : {}),
+        ...(dto.stem !== undefined ? { stem: dto.stem } : {}),
+        ...(dto.choices !== undefined ? { choices: dto.choices } : {}),
+        ...(dto.correctIndex !== undefined
+          ? { correctIndex: dto.correctIndex }
+          : {}),
+        ...(dto.explanation !== undefined
+          ? { explanation: dto.explanation }
+          : {}),
+        ...(dto.status !== undefined
+          ? { status: dto.status as PrismaContentStatus }
+          : {}),
+        ...(dto.externalKey !== undefined
+          ? { externalKey: dto.externalKey }
+          : {}),
+      },
+    });
+    return mapQuestion(row);
   }
 
-  deleteQuestion(id: string): void {
-    this.getQuestion(id);
-    this.store.questions.delete(id);
+  async deleteQuestion(id: string): Promise<void> {
+    await this.getQuestion(id);
+    await this.prisma.examQuestion.delete({ where: { id } });
   }
 }

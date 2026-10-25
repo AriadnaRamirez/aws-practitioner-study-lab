@@ -12,6 +12,19 @@ enum Role {
   ADMIN
 }
 
+/// Aligned with @aps/shared TopicType (maestro §5).
+enum TopicType {
+  SERVICE
+  CONCEPT
+}
+
+/// Aligned with @aps/shared ContentStatus (maestro §5).
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -38,4 +51,69 @@ model PasswordResetToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+/// Taxonomy node under an exam track (maestro §5 / §10).
+model Topic {
+  id        String    @id @default(cuid())
+  trackId   String
+  type      TopicType
+  name      String
+  parentId  String?
+  parent    Topic?    @relation("TopicTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Topic[]   @relation("TopicTree")
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  knowledgeItems KnowledgeItem[]
+  examQuestions  ExamQuestion[]
+
+  @@index([trackId])
+  @@index([parentId])
+  @@index([sortOrder])
+}
+
+/// Canonical flash fact → runtime MCQ variants (maestro §5).
+model KnowledgeItem {
+  id              String        @id @default(cuid())
+  topicId         String
+  topic           Topic         @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  trackId         String
+  name            String
+  definition      String
+  /// At least 3 false names/definitions; JSON string[].
+  distractors     Json
+  explanation     String
+  /// Subset of FlashVariant; JSON string[].
+  allowedVariants Json
+  status          ContentStatus @default(draft)
+  externalKey     String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([topicId])
+  @@index([trackId])
+  @@index([status])
+}
+
+/// Exam bank item with exactly 4 choices (maestro §5).
+model ExamQuestion {
+  id           String        @id @default(cuid())
+  topicId      String
+  topic        Topic         @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  trackId      String
+  stem         String
+  /// Exactly four choice strings; JSON [string, string, string, string].
+  choices      Json
+  correctIndex Int
+  explanation  String
+  status       ContentStatus @default(draft)
+  externalKey  String?       @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([topicId])
+  @@index([trackId])
+  @@index([status])
 }

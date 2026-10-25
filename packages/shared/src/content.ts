@@ -1,4 +1,4 @@
-/** Content model contracts — maestro §5 (APS-6 stubs; Prisma tables come in APS-7). */
+/** Content model contracts — maestro §5 / §10 (Prisma-backed in API as of APS-7). */
 
 /** Topic taxonomy kind. Future: AI_TOPIC. */
 export type TopicType = "SERVICE" | "CONCEPT";
