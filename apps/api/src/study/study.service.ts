@@ -116,13 +116,13 @@ export class StudyService {
     private readonly content: ContentService,
   ) {}
 
-  startSession(opts: {
+  async startSession(opts: {
     userId: string;
     mode: StudyMode;
     size: SessionSize;
     topicIds?: string[];
     timezone?: string;
-  }): StudySessionView | ExamTimedSessionView {
+  }): Promise<StudySessionView | ExamTimedSessionView> {
     if (opts.mode === 'EXAM_TIMED') {
       return this.startExamTimed(opts.userId, {
         size: opts.size,
@@ -141,7 +141,7 @@ export class StudyService {
       );
     }
 
-    let questions = this.content.listQuestions({ publishedOnly: true });
+    let questions = await this.content.listQuestions({ publishedOnly: true });
     if (opts.topicIds?.length) {
       const allowed = new Set(opts.topicIds);
       questions = questions.filter((q) => allowed.has(q.topicId));
@@ -288,22 +288,32 @@ export class StudyService {
 
   /* —— EXAM_TIMED —— */
 
-  startExamTimed(
+  async startExamTimed(
     userId: string,
     opts: { size: SessionSize; topicIds?: string[]; timezone?: string },
-  ): ExamTimedSessionView {
+  ): Promise<ExamTimedSessionView> {
     if (!(EXAM_TIMED_SIZES as readonly number[]).includes(opts.size)) {
       throw new BadRequestException(
         'EXAM_TIMED admite 10/20/30/50/65',
       );
     }
-    const pool = this.pickTimedQuestions(opts.size, opts.topicIds);
+    const pool = await this.pickTimedQuestions(opts.size, opts.topicIds);
     const now = new Date();
     const timeLimitSec = examTimedLimitSec(opts.size);
     const endsAt = new Date(now.getTime() + timeLimitSec * 1000);
     const id = newId('sess');
     const answers = new Map<string, 0 | 1 | 2 | 3 | null>();
-    for (const q of pool) answers.set(q.id, null);
+    const bank = new Map<string, BankItem & { correctIndex: 0 | 1 | 2 | 3 }>();
+    for (const q of pool) {
+      answers.set(q.id, null);
+      bank.set(q.id, {
+        stem: q.stem,
+        choices: q.choices,
+        correctIndex: q.correctIndex,
+        explanation: q.explanation,
+        topicId: q.topicId,
+      });
+    }
 
     const record: TimedSessionRecord = {
       id,
@@ -316,6 +326,7 @@ export class StudyService {
       status: 'IN_PROGRESS',
       timezone: opts.timezone ?? 'UTC',
       questionIds: pool.map((q) => q.id),
+      bank,
       answers,
       markedForReview: new Set(),
     };
@@ -323,20 +334,20 @@ export class StudyService {
     return this.toTimedView(record);
   }
 
-  getAnySession(
+  async getAnySession(
     userId: string,
     sessionId: string,
-  ): StudySessionView | ExamTimedSessionView {
+  ): Promise<StudySessionView | ExamTimedSessionView> {
     if (this.store.timedSessions.has(sessionId)) {
       return this.getTimedSession(userId, sessionId);
     }
     return this.getSession(sessionId, userId);
   }
 
-  getAnySummary(
+  async getAnySummary(
     userId: string,
     sessionId: string,
-  ): StudySessionSummary | ExamTimedSummary {
+  ): Promise<StudySessionSummary | ExamTimedSummary> {
     if (this.store.timedSessions.has(sessionId)) {
       return this.getTimedSummary(userId, sessionId);
     }
@@ -406,11 +417,11 @@ export class StudyService {
     return record.summary;
   }
 
-  private pickTimedQuestions(
+  private async pickTimedQuestions(
     size: SessionSize,
     topicIds?: string[],
-  ): ExamQuestion[] {
-    let pool = this.content.listQuestions({ publishedOnly: true });
+  ): Promise<ExamQuestion[]> {
+    let pool = await this.content.listQuestions({ publishedOnly: true });
     if (topicIds?.length) {
       const set = new Set(topicIds);
       pool = pool.filter((q) => set.has(q.topicId));
@@ -471,12 +482,15 @@ export class StudyService {
 
   private toTimedView(record: TimedSessionRecord): ExamTimedSessionView {
     const questions: ExamTimedQuestionView[] = record.questionIds.map((id) => {
-      const q = this.content.getQuestion(id);
+      const q = record.bank.get(id);
+      if (!q) {
+        throw new BadRequestException(`Bank missing question ${id}`);
+      }
       return {
-        id: q.id,
+        id,
         stem: q.stem,
         choices: q.choices,
-        topicId: q.topicId,
+        topicId: q.topicId ?? '',
       };
     });
     const answers: ExamTimedSessionView['answers'] = {};
@@ -515,18 +529,19 @@ export class StudyService {
     const mistakes: ExamTimedMistake[] = [];
 
     for (const id of record.questionIds) {
-      const q = this.content.getQuestion(id);
+      const q = record.bank.get(id);
+      if (!q) continue;
       const selected = record.answers.get(id) ?? null;
       if (selected === null) {
         unansweredCount += 1;
         mistakes.push({
-          questionId: q.id,
+          questionId: id,
           stem: q.stem,
           choices: q.choices,
           selectedIndex: null,
           correctIndex: q.correctIndex,
           explanation: q.explanation,
-          topicId: q.topicId,
+          topicId: q.topicId ?? '',
         });
         continue;
       }
@@ -534,13 +549,13 @@ export class StudyService {
         correctCount += 1;
       } else {
         mistakes.push({
-          questionId: q.id,
+          questionId: id,
           stem: q.stem,
           choices: q.choices,
           selectedIndex: selected,
           correctIndex: q.correctIndex,
           explanation: q.explanation,
-          topicId: q.topicId,
+          topicId: q.topicId ?? '',
         });
       }
     }

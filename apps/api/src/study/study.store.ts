@@ -52,6 +52,8 @@ export interface TimedSessionRecord {
   status: TimedSessionStatus;
   timezone: string;
   questionIds: string[];
+  /** Snapshot of questions at start (avoids async lookups mid-session). */
+  bank: Map<string, BankItem & { correctIndex: 0 | 1 | 2 | 3 }>;
   answers: Map<string, 0 | 1 | 2 | 3 | null>;
   markedForReview: Set<string>;
   summary?: ExamTimedSummary;
