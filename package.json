@@ -23,9 +23,15 @@
     "test:api": "npm run test:backend",
     "db:up": "docker compose up -d",
     "db:migrate": "npm run prisma:migrate -w @aps/backend",
-    "db:seed": "npm run prisma:seed -w @aps/backend"
+    "db:seed": "npm run prisma:seed -w @aps/backend",
+    "setup:local": "bash scripts/local-up.sh",
+    "local": "npm run build -w @aps/shared && concurrently -k -n backend,frontend -c teal,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "db:migrate:deploy": "npm run prisma:migrate:deploy -w @aps/backend"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
   }
 }

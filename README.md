@@ -1,6 +1,8 @@
 # AWS Practitioner Study Lab
 
-Frontend y backend viven **por separado** en la raíz del repo (mismo monorepo npm, paquetes distintos).
+**No hay deploy.** El MVP se corre en **tu laptop** (`localhost`). Un Cloud Agent no puede arrancar procesos en tu PC: clona el repo y usa los scripts de abajo.
+
+Frontend y backend van **por separado** en la raíz (mismo monorepo npm).
 
 | Carpeta | Rol | Stack | Puerto |
 | --- | --- | --- | --- |
@@ -8,51 +10,40 @@ Frontend y backend viven **por separado** en la raíz del repo (mismo monorepo n
 | [`backend/`](./backend) | API | Nest.js + TypeScript + Prisma + Swagger | `43124` |
 | [`packages/shared/`](./packages/shared) | Contratos compartidos (tipos / constantes) | TypeScript | — |
 
-Producto y reglas: Project Context → `docs/documento-maestro.md`  
-Cómo pedir trabajo: Project Context → `docs/sistema-tickets.md`
+## En tu máquina (localhost)
 
-## Requisitos
+Requisitos: Node ≥ 20, npm 10+, Docker (Postgres) o Postgres local.
 
-- Node.js ≥ 20
-- npm 10+
-- PostgreSQL 16 (recomendado vía Docker Compose)
+```bash
+git checkout cursor/mvp-local-54b6
+npm run setup:local    # install, .env, docker Postgres, migrate, seed
+npm run local          # Nest :43124 + Next :43123 a la vez
+```
 
-## Setup
+Luego abre:
+
+- UI: http://127.0.0.1:43123  
+- API health: http://127.0.0.1:43124/api/v1/health  
+- Swagger: http://127.0.0.1:43124/docs  
+
+Admin seed: usuario `admin` / password `ChangeMeAdmin1!`
+
+Alternativa en dos terminales: `npm run dev:backend` y `npm run dev:frontend`.
+
+Producto: Project Context → `docs/documento-maestro.md`  
+Tickets: Project Context → `docs/sistema-tickets.md`
+
+## Setup manual (si no usas setup:local)
 
 ```bash
 npm install
 cp backend/.env.example backend/.env
-# opcional frontend:
-# echo 'NEXT_PUBLIC_API_URL=http://127.0.0.1:43124/api/v1' > frontend/.env.local
-
+echo 'NEXT_PUBLIC_API_URL=http://127.0.0.1:43124/api/v1' > frontend/.env.local
 docker compose up -d
-npm run db:migrate
+npm run db:migrate:deploy
 npm run db:seed
 npm run build -w @aps/shared
 ```
-
-El seed crea **1 ADMIN** (`ADMIN_EMAIL` / `ADMIN_USERNAME` / `ADMIN_PASSWORD`) y contenido demo CLF. No commits de secretos reales.
-
-## Desarrollo (dos procesos)
-
-Terminal 1 — **backend** (Nest):
-
-```bash
-npm run dev:backend
-```
-
-- Health: http://127.0.0.1:43124/api/v1/health  
-- Swagger: http://127.0.0.1:43124/docs  
-
-Terminal 2 — **frontend** (Next):
-
-```bash
-npm run dev:frontend
-```
-
-- UI: http://127.0.0.1:43123  
-
-Aliases legacy: `dev:api` → backend, `dev:web` → frontend.
 
 ### Auth
 
