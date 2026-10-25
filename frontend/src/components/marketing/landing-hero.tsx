@@ -81,7 +81,7 @@ export function LandingHero() {
               </span>
             </span>
             <span
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)]"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--brand-white)]"
               aria-hidden
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -110,12 +110,13 @@ export function LandingHero() {
 
         {/* Brand-forward footer headline */}
         <div className="animate-fade-up mt-auto pt-10">
-          <h1 className="font-display text-[clamp(2.75rem,14vw,4.5rem)] font-bold leading-[0.95] tracking-tight">
+          <div className="brand-bar mb-5 h-1 w-16 rounded-full" aria-hidden />
+          <h1 className="font-display text-[clamp(2.75rem,14vw,4.5rem)] font-bold leading-[0.95] tracking-tight text-[var(--brand-white)]">
             Study Lab
           </h1>
-          <p className="mt-3 max-w-[16rem] text-sm leading-snug text-[var(--foreground-muted)]">
+          <p className="mt-3 max-w-[16rem] text-sm leading-snug text-[var(--brand-light-gray)]">
             Prepárate para{" "}
-            <span className="font-medium text-[var(--foreground)]">
+            <span className="font-medium text-[var(--brand-white)]">
               AWS Cloud Practitioner
             </span>
           </p>
