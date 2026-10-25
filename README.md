@@ -82,11 +82,25 @@ El front sigue la preferencia del sistema vía **next-themes** (`system`): token
 
 Las mutaciones admin de contenido aún usan `x-admin-token`; siguiente paso: sustituir `AdminGuard` por JWT + role `ADMIN`.
 
-## Alcance actual (Wave 1 integrada)
+## Alcance actual (Wave 1 + APS-8)
 
 - **APS-3–6:** monorepo, auth JWT, shell/tema, content stubs + admin  
+- **APS-8:** motor flash MCQ (`StudyModule`): `FLASH_STUDY`, miss-repeat, dominio 3, rachas; UI `/estudiar` (JWT)
 
-**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, guest analytics, Prisma content (APS-7), Google OAuth.
+### Estudio flash (APS-8)
+
+JWT Bearer obligatorio. Contenido vía `ContentService` (no redefine Topic/Knowledge en Prisma).
+
+| Método | Ruta | Qué hace |
+| --- | --- | --- |
+| `POST` | `/api/v1/study/sessions` | Inicia `FLASH_STUDY` (`size` 10/20/30/50, `topicIds?`) |
+| `GET` | `/api/v1/study/sessions/:id` | Estado + carta actual |
+| `POST` | `/api/v1/study/sessions/:id/answer` | Respuesta → feedback + miss-repeat / dominio |
+| `GET` | `/api/v1/study/sessions/:id/summary` | Resumen al completar |
+
+Prisma (solo progreso): `StudySession`, `Attempt`, `ItemProgress`, `DailyStreak`.
+
+**Fuera de alcance aún:** modos de examen, podio, guest analytics, Prisma content (APS-7), Google OAuth.
 
 ## Scripts raíz
 

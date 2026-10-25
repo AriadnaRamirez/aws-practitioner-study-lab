@@ -31,6 +31,7 @@ async function bootstrap() {
         'API pública versionada `/api/v1`.',
         'Auth: JWT access Bearer (APS-4).',
         'Content stubs in-memory (APS-6): topics, knowledge, exam questions.',
+        'Study FLASH_STUDY (APS-8): JWT; miss-repeat + dominio 3; ContentService para ítems.',
         'Admin content mutations still use header `x-admin-token` until JWT AdminGuard merge.',
       ].join(' '),
     )
@@ -41,6 +42,7 @@ async function bootstrap() {
     .addTag('topics', 'Public topic list')
     .addTag('knowledge', 'Public published KnowledgeItems (flash)')
     .addTag('exam-questions', 'Public published ExamQuestions')
+    .addTag('study', 'Flash MCQ sessions (JWT)')
     .addTag('admin-topics', 'Admin CRUD topics (x-admin-token)')
     .addTag('admin-knowledge', 'Admin CRUD knowledge items')
     .addTag('admin-exam-questions', 'Admin CRUD exam questions')

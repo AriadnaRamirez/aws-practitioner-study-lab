@@ -12,6 +12,18 @@ enum Role {
   ADMIN
 }
 
+enum StudyMode {
+  FLASH_STUDY
+  EXAM_STUDY
+  EXAM_TIMED
+  WEAK_REVIEW
+}
+
+enum StudyItemType {
+  KNOWLEDGE
+  EXAM_QUESTION
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -23,6 +35,10 @@ model User {
   createdAt    DateTime @default(now())
 
   passwordResetTokens PasswordResetToken[]
+  studySessions       StudySession[]
+  attempts            Attempt[]
+  itemProgress        ItemProgress[]
+  dailyStreak         DailyStreak?
 
   @@index([email])
   @@index([username])
@@ -38,4 +54,83 @@ model PasswordResetToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+/// Runtime study/exam session (maestro §10). Content items via ContentService until APS-7.
+model StudySession {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId          String?
+  mode             StudyMode
+  size             Int
+  /// JSON string[] of topicIds (empty = mixto).
+  scopeJson        String    @default("[]")
+  timeLimitSec     Int?
+  /// Snapshot of user IANA tz at start (daily streak civil date).
+  timezone         String    @default("UTC")
+  /// Remaining queue + current prompt state (server-owned).
+  stateJson        String    @default("{}")
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  score            Float?
+  /// JSON summary written on completion.
+  summaryJson      String?
+  sessionStreak    Int       @default(0)
+  maxSessionStreak Int       @default(0)
+  answeredCount    Int       @default(0)
+  correctCount     Int       @default(0)
+  missRepeatCount  Int       @default(0)
+  uniqueItems      Int       @default(0)
+
+  attempts Attempt[]
+
+  @@index([userId, startedAt(sort: Desc)])
+}
+
+model Attempt {
+  id          String        @id @default(cuid())
+  sessionId   String
+  session     StudySession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType    StudyItemType
+  itemId      String
+  correct     Boolean
+  latencyMs   Int?
+  variant     String?
+  choiceIndex Int?
+  createdAt   DateTime      @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([sessionId])
+  @@index([itemType, itemId])
+}
+
+model ItemProgress {
+  id                 String        @id @default(cuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType           StudyItemType
+  itemId             String
+  consecutiveCorrect Int           @default(0)
+  failCount          Int           @default(0)
+  passCount          Int           @default(0)
+  masteredAt         DateTime?
+  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime      @default(now())
+
+  @@unique([userId, itemType, itemId])
+  @@index([userId, failCount(sort: Desc)])
+}
+
+model DailyStreak {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  current       Int      @default(0)
+  longest       Int      @default(0)
+  /// Civil date YYYY-MM-DD in the user's timezone of last completed session.
+  lastStudyDate String?
+  updatedAt     DateTime @updatedAt
 }

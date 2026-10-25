@@ -26,3 +26,19 @@ export {
   type ExamChoices,
   type ExamQuestion,
 } from './content';
+export {
+  STUDY_MODES,
+  STUDY_SIZES,
+  MISS_REPEAT_OFFSET,
+  MASTERY_STREAK,
+  STUDY_ITEM_TYPES,
+  type StudyMode,
+  type StudySize,
+  type StudyItemType,
+  type StudyPrompt,
+  type StartStudySessionRequest,
+  type StudySessionView,
+  type AnswerStudyRequest,
+  type StudySessionSummary,
+  type AnswerStudyResponse,
+} from './study';

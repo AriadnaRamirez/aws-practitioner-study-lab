@@ -1,10 +1,16 @@
 import type {
+  AnswerStudyRequest,
+  AnswerStudyResponse,
   AuthResponse,
   ForgotPasswordRequest,
   LoginRequest,
   PublicUser,
   RegisterRequest,
   ResetPasswordRequest,
+  StartStudySessionRequest,
+  StudySessionSummary,
+  StudySessionView,
+  Topic,
 } from '@aps/shared';
 
 const API_URL =
@@ -102,4 +108,40 @@ export function resetPassword(body: ResetPasswordRequest) {
 
 export function fetchMe() {
   return apiFetch<PublicUser>('/auth/me', { auth: true });
+}
+
+export function fetchTopics() {
+  return apiFetch<Topic[]>('/topics');
+}
+
+export function startFlashSession(body: StartStudySessionRequest) {
+  return apiFetch<StudySessionView>('/study/sessions', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    auth: true,
+  });
+}
+
+export function getStudySession(sessionId: string) {
+  return apiFetch<StudySessionView>(`/study/sessions/${sessionId}`, {
+    auth: true,
+  });
+}
+
+export function answerStudy(sessionId: string, body: AnswerStudyRequest) {
+  return apiFetch<AnswerStudyResponse>(
+    `/study/sessions/${sessionId}/answer`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+      auth: true,
+    },
+  );
+}
+
+export function getStudySummary(sessionId: string) {
+  return apiFetch<StudySessionSummary>(
+    `/study/sessions/${sessionId}/summary`,
+    { auth: true },
+  );
 }
