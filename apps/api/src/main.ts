@@ -30,13 +30,9 @@ async function bootstrap() {
       [
         'API pública versionada `/api/v1`.',
         'Auth: JWT access Bearer (APS-4).',
-<<<<<<< HEAD
         'Content (APS-7 Prisma): topics, knowledge, exam questions.',
         'Study sessions (APS-9/10): EXAM_STUDY with miss-repeat; EXAM_TIMED cronometrado + mock 65/90.',
-=======
-        'Content stubs in-memory (APS-6): topics, knowledge, exam questions.',
         'Guest marketing + usage analytics (APS-13).',
->>>>>>> origin/cursor/aps-13-guest-analytics-54b6
         'Admin content mutations still use header `x-admin-token` until JWT AdminGuard merge.',
       ].join(' '),
     )
@@ -48,11 +44,8 @@ async function bootstrap() {
     .addTag('topics', 'Public topic list')
     .addTag('knowledge', 'Public published KnowledgeItems (flash)')
     .addTag('exam-questions', 'Public published ExamQuestions')
-<<<<<<< HEAD
     .addTag('study', 'Study / Modo Examen sessions')
-=======
     .addTag('admin-usage', 'Owner usage analytics (users, guests, conversion)')
->>>>>>> origin/cursor/aps-13-guest-analytics-54b6
     .addTag('admin-topics', 'Admin CRUD topics (x-admin-token)')
     .addTag('admin-knowledge', 'Admin CRUD knowledge items')
     .addTag('admin-exam-questions', 'Admin CRUD exam questions')

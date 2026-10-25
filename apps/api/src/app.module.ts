@@ -13,12 +13,9 @@ import { StudyModule } from './study/study.module';
     HealthModule,
     AuthModule,
     ContentModule,
-<<<<<<< HEAD
     StudyModule,
-=======
     GuestModule,
     AdminModule,
->>>>>>> origin/cursor/aps-13-guest-analytics-54b6
   ],
 })
 export class AppModule {}
