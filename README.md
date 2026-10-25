@@ -44,11 +44,23 @@ npm run dev:web
 
 Variables: ver `.env.example`.
 
-## Alcance actual (APS-3)
+## Alcance actual (APS-3 + APS-6)
 
-Scaffold únicamente: workspaces, healthcheck, Swagger, landing mínima.
+Scaffold + **content stubs in-memory** (topics / knowledge / exam questions) y shell `/admin` en español.
 
-**Fuera de alcance aún:** auth, flashcards, modos de examen, podio, admin, PostgreSQL en runtime.
+| Qué | Dónde |
+| --- | --- |
+| Tipos compartidos | `packages/shared` (`Topic`, `KnowledgeItem`, `ExamQuestion`) |
+| API contenido | `GET /api/v1/topics`, `/knowledge-items`, `/exam-questions` |
+| Admin CRUD | `/api/v1/admin/...` + header `x-admin-token` (`ADMIN_TOKEN`) |
+| UI admin | `/admin` (Resumen, Usuarios stub, Temas, Flash, Banco, Import stub) |
+| Swagger | http://127.0.0.1:43124/docs |
+
+**Fuera de alcance aún:** auth JWT (APS-4), Prisma content tables (APS-7), motor flash, examen, podio, import real.
+
+### Admin token (APS-6 → APS-4)
+
+Hasta el merge de auth, las mutaciones admin usan `x-admin-token` = `ADMIN_TOKEN` (default `dev-admin-token`). `AdminGuard` está documentado para sustituirse por JWT + role `ADMIN` sin renombrar los controllers.
 
 ## Scripts raíz
 

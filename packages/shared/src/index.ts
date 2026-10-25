@@ -1,4 +1,4 @@
-/** Shared contracts for AWS Practitioner Study Lab (scaffold — expand in later tickets). */
+/** Shared contracts for AWS Practitioner Study Lab. */
 
 export const APP_NAME = "AWS Practitioner Study Lab";
 export const API_PREFIX = "api/v1";
@@ -11,3 +11,17 @@ export interface HealthResponse {
   app: typeof APP_NAME;
   timestamp: string;
 }
+
+export {
+  TOPIC_TYPES,
+  FLASH_VARIANTS,
+  CONTENT_STATUSES,
+  DEFAULT_TRACK_ID,
+  type TopicType,
+  type FlashVariant,
+  type ContentStatus,
+  type Topic,
+  type KnowledgeItem,
+  type ExamChoices,
+  type ExamQuestion,
+} from "./content";

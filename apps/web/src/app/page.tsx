@@ -40,6 +40,13 @@ export default function Home() {
             http://127.0.0.1:43124/docs
           </a>
         </li>
+        <li>
+          Admin shell:{" "}
+          <a className="underline underline-offset-4" href="/admin">
+            /admin
+          </a>{" "}
+          (Resumen, Temas, Flash, Banco…)
+        </li>
       </ul>
     </main>
   );
