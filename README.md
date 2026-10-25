@@ -15,7 +15,8 @@ Frontend y backend van **por separado** en la raíz (mismo monorepo npm).
 Requisitos: Node ≥ 20, npm 10+, Docker (Postgres) o Postgres local.
 
 ```bash
-git checkout cursor/mvp-local-54b6
+git clone https://github.com/AriadnaRamirez/aws-practitioner-study-lab.git
+cd aws-practitioner-study-lab
 npm run setup:local    # install, .env, docker Postgres, migrate, seed
 npm run local          # Nest :43124 + Next :43123 a la vez
 ```
