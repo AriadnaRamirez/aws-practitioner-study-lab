@@ -90,7 +90,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    const identifier = dto.identifier.trim();
+    const identifier = (
+      dto.identifier ??
+      dto.login ??
+      dto.email ??
+      ''
+    ).trim();
     if (!identifier || !dto.password) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
