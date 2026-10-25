@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { PublicUser } from "@aps/shared";
+import { Logo } from "@/components/brand/logo";
 import {
   fetchProgressOverview,
   getStoredToken,
@@ -25,21 +26,6 @@ const GUEST_ITEMS: NavItem[] = [
   { href: "/guest", label: "Probar" },
   { href: "/register", label: "Crear cuenta" },
 ];
-
-function MarkStar({ className }: { className?: string }) {
-  return (
-    <svg
-      className={cn("mark-star shrink-0", className)}
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 1.5 14.2 9.8 22.5 12 14.2 14.2 12 22.5 9.8 14.2 1.5 12l8.3-2.2L12 1.5Z" />
-    </svg>
-  );
-}
 
 export function AppNav() {
   const pathname = usePathname();
@@ -102,10 +88,10 @@ export function AppNav() {
         <div className="flex min-w-0 items-center gap-2.5">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="font-display inline-flex min-w-0 items-center gap-2 truncate text-sm font-semibold tracking-tight"
+            className="inline-flex min-w-0 items-center"
+            aria-label="Study Lab"
           >
-            <MarkStar />
-            <span>Study Lab</span>
+            <Logo size={28} withWordmark />
           </Link>
           {masteryPct != null ? (
             <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">

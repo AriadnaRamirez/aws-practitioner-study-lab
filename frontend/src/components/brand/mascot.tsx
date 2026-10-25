@@ -2,13 +2,13 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export const MASCOT_POSES = {
-  study: "/mascot/study.jpg",
-  wave: "/mascot/wave.jpg",
-  laptop: "/mascot/laptop.jpg",
-  rocket: "/mascot/rocket.jpg",
-  server: "/mascot/server.jpg",
-  s3: "/mascot/s3.jpg",
-  security: "/mascot/security.jpg",
+  study: "/mascot/study.png",
+  wave: "/mascot/wave.png",
+  laptop: "/mascot/laptop.png",
+  rocket: "/mascot/rocket.png",
+  server: "/mascot/server.png",
+  s3: "/mascot/s3.png",
+  security: "/mascot/security.png",
 } as const;
 
 export type MascotPose = keyof typeof MASCOT_POSES;
@@ -26,23 +26,19 @@ const ALT: Record<MascotPose, string> = {
 type Props = {
   pose?: MascotPose;
   className?: string;
-  /** Soft float motion */
   float?: boolean;
   priority?: boolean;
   size?: "sm" | "md" | "lg" | "hero";
 };
 
 const SIZE: Record<NonNullable<Props["size"]>, string> = {
-  sm: "h-20 w-36",
-  md: "h-28 w-48",
-  lg: "h-40 w-72",
-  hero: "h-48 w-full max-w-sm sm:h-56",
+  sm: "h-20 w-28",
+  md: "h-32 w-44",
+  lg: "h-44 w-64",
+  hero: "h-52 w-full max-w-xs sm:h-60",
 };
 
-/**
- * AWS Study Lab mascot — navy blob with Amazon smile.
- * Poses live in /public/mascot.
- */
+/** Transparent PNG mascot poses (no background plate). */
 export function Mascot({
   pose = "study",
   className,
@@ -53,7 +49,7 @@ export function Mascot({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[1.75rem]",
+        "relative",
         SIZE[size],
         float && "animate-mascot-float",
         className,
@@ -64,8 +60,8 @@ export function Mascot({
         alt={ALT[pose]}
         fill
         priority={priority}
-        sizes="(max-width: 640px) 90vw, 420px"
-        className="object-cover object-center"
+        sizes="(max-width: 640px) 80vw, 360px"
+        className="object-contain object-center drop-shadow-[0_18px_40px_rgba(232,80,2,0.28)]"
       />
     </div>
   );

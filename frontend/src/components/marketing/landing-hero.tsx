@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Logo } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
 import { cn } from "@/lib/utils";
 
@@ -16,21 +17,6 @@ function ByeBanner() {
     >
       Sesión cerrada
     </p>
-  );
-}
-
-function MarkStar({ className }: { className?: string }) {
-  return (
-    <svg
-      className={cn("mark-star", className)}
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 1.5 14.2 9.8 22.5 12 14.2 14.2 12 22.5 9.8 14.2 1.5 12l8.3-2.2L12 1.5Z" />
-    </svg>
   );
 }
 
@@ -51,12 +37,8 @@ export function LandingHero() {
       </Suspense>
 
       <header className="relative z-10 mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 sm:px-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2"
-          aria-label="Study Lab"
-        >
-          <MarkStar />
+        <Link href="/" aria-label="Study Lab" className="inline-flex">
+          <Logo size={36} priority />
         </Link>
         <p className="text-[11px] font-medium tracking-wide text-[var(--foreground-muted)]">
           Study Lab
