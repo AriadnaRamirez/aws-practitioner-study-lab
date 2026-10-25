@@ -15,7 +15,7 @@ export function Spinner({
     >
       <span
         aria-hidden
-        className="inline-block size-4 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent)] shadow-[0_0_8px_var(--glow)]"
+        className="inline-block size-4 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent)]"
       />
       <span className="sr-only">{label}</span>
     </span>

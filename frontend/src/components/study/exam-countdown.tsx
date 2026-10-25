@@ -95,7 +95,7 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
   return (
     <aside
       className={cn(
-        "flex gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 ring-1 ring-[var(--accent)]/20",
+        "flex gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4",
         className,
       )}
       aria-live="polite"
@@ -106,12 +106,11 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
           compact ? "w-14" : "w-16",
         )}
         style={{
-          boxShadow: "0 12px 28px -12px var(--glow)",
+          boxShadow: "0 10px 22px -14px rgba(0, 0, 0, 0.55)",
         }}
       >
         <div
-          className="px-1 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]"
-          style={{ background: "var(--deck-grad-1)" }}
+          className="bg-[var(--accent)] px-1 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]"
         >
           {(monthShort ?? "—").replace(/\.$/, "").slice(0, 3)}
         </div>

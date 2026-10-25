@@ -409,7 +409,7 @@ export function FlashStudyClient() {
             </p>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">
               Empieza a{" "}
-              <span className="text-gradient-aws">estudiar</span>
+              <span className="text-accent-aws">estudiar</span>
             </h1>
             <p className="mt-2 text-sm text-[var(--foreground-muted)]">
               4 opciones, refuerzo al fallar y dominio con 3 aciertos seguidos.
@@ -638,7 +638,7 @@ export function FlashStudyClient() {
           className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
           style={{
             width: `${progressPct}%`,
-            boxShadow: "0 0 12px var(--glow)",
+            boxShadow: "none",
           }}
         />
       </div>

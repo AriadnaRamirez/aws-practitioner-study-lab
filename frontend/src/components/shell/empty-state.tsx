@@ -27,16 +27,10 @@ export function EmptyState({
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background: `
-            radial-gradient(ellipse 70% 50% at 20% 30%, var(--hero-mesh-a), transparent 55%),
-            radial-gradient(ellipse 60% 45% at 85% 20%, var(--hero-mesh-c), transparent 50%),
-            radial-gradient(ellipse 80% 55% at 50% 100%, var(--hero-mesh-b), transparent 55%)
+            radial-gradient(ellipse 60% 40% at 15% 20%, var(--hero-mesh-a), transparent 60%),
+            radial-gradient(ellipse 70% 50% at 90% 85%, var(--hero-mesh-b), transparent 55%)
           `,
         }}
-      />
-      <div
-        aria-hidden
-        className="animate-soft-pulse pointer-events-none absolute -left-16 top-24 -z-10 h-56 w-56 rounded-full blur-3xl"
-        style={{ background: "var(--glow)" }}
       />
 
       <p className="animate-fade-up font-display text-xs font-semibold tracking-[0.14em] text-[var(--accent)] uppercase">

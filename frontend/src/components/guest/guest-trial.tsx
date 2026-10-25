@@ -154,9 +154,8 @@ export function GuestTrial() {
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background: `
-            radial-gradient(ellipse 70% 50% at 10% 0%, var(--hero-mesh-a), transparent 55%),
-            radial-gradient(ellipse 60% 40% at 90% 10%, var(--hero-mesh-c), transparent 50%),
-            linear-gradient(180deg, var(--background), color-mix(in srgb, var(--hero-mesh-b) 35%, var(--background)))
+            radial-gradient(ellipse 60% 40% at 10% 0%, var(--hero-mesh-a), transparent 60%),
+            radial-gradient(ellipse 70% 50% at 90% 100%, var(--hero-mesh-b), transparent 55%)
           `,
         }}
       />

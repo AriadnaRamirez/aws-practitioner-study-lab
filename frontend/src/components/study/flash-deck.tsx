@@ -19,7 +19,7 @@ type FlashDeckProps = {
 };
 
 /**
- * Mazo de 3 cards apiladas (referencia minimalismo tech).
+ * Mazo de 3 cards apiladas — caras planas AWS (naranja / squid ink).
  * Front card = pregunta; las de atrás dan sensación de deck.
  */
 export function FlashDeck({
@@ -43,11 +43,11 @@ export function FlashDeck({
       {depth >= 2 ? (
         <div
           aria-hidden
-          className="absolute inset-x-4 top-4 bottom-0 rounded-2xl"
+          className="absolute inset-x-4 top-4 bottom-0 rounded-2xl ring-1 ring-white/5"
           style={{
-            background: "var(--deck-grad-3)",
+            background: "var(--deck-back)",
             transform: "translate(14px, 18px) rotate(2.5deg)",
-            opacity: 0.55,
+            opacity: 0.7,
             zIndex: 0,
           }}
         />
@@ -55,11 +55,11 @@ export function FlashDeck({
       {depth >= 1 ? (
         <div
           aria-hidden
-          className="absolute inset-x-2 top-2 bottom-1 rounded-2xl"
+          className="absolute inset-x-2 top-2 bottom-1 rounded-2xl ring-1 ring-white/8"
           style={{
-            background: "var(--deck-grad-2)",
+            background: "var(--deck-mid)",
             transform: "translate(8px, 10px) rotate(1.2deg)",
-            opacity: 0.85,
+            opacity: 0.95,
             zIndex: 1,
           }}
         />
@@ -67,9 +67,9 @@ export function FlashDeck({
 
       {/* Front card */}
       <article
-        className="relative z-[2] overflow-hidden rounded-2xl ring-1 ring-white/10"
+        className="relative z-[2] overflow-hidden rounded-2xl ring-1 ring-black/20"
         style={{
-          boxShadow: "0 24px 48px -20px rgba(255, 153, 0, 0.35)",
+          boxShadow: "0 18px 36px -18px rgba(0, 0, 0, 0.55)",
         }}
       >
         <div
@@ -78,19 +78,17 @@ export function FlashDeck({
             loading && "animate-shimmer",
           )}
           style={{
-            background: loading
-              ? "linear-gradient(110deg, #1a1a1a 25%, #2a2a2a 37%, #1a1a1a 63%)"
-              : "var(--deck-grad-1)",
+            background: loading ? "var(--deck-mid)" : "var(--deck-face)",
             minHeight: "9.5rem",
           }}
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/85">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-foreground)]/80">
               {eyebrow}
             </p>
             <span
               aria-hidden
-              className="inline-flex size-7 items-center justify-center rounded-full border border-white/35 text-white/90"
+              className="inline-flex size-7 items-center justify-center rounded-full border border-black/25 text-[var(--accent-foreground)]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -101,9 +99,9 @@ export function FlashDeck({
               </svg>
             </span>
           </div>
-          <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-white sm:text-2xl">
+          <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--accent-foreground)] sm:text-2xl">
             {loading ? (
-              <span className="inline-block h-7 w-4/5 rounded bg-white/25" />
+              <span className="inline-block h-7 w-4/5 rounded bg-black/20" />
             ) : (
               title
             )}
@@ -135,33 +133,33 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
       aria-hidden
     >
       <div
-        className="absolute left-6 top-8 h-44 w-40 rounded-2xl"
+        className="absolute left-6 top-8 h-44 w-40 rounded-2xl ring-1 ring-white/5"
         style={{
-          background: "var(--deck-grad-3)",
+          background: "var(--deck-back)",
           transform: "rotate(-8deg)",
-          opacity: 0.7,
+          opacity: 0.85,
         }}
       />
       <div
-        className="absolute left-14 top-4 h-48 w-44 rounded-2xl"
+        className="absolute left-14 top-4 h-48 w-44 rounded-2xl ring-1 ring-white/8"
         style={{
-          background: "var(--deck-grad-2)",
+          background: "var(--deck-mid)",
           transform: "rotate(3deg)",
         }}
       />
       <div
-        className="absolute left-10 top-0 flex h-52 w-48 flex-col overflow-hidden rounded-2xl ring-1 ring-white/15"
+        className="absolute left-10 top-0 flex h-52 w-48 flex-col overflow-hidden rounded-2xl ring-1 ring-black/15"
         style={{
-          background: "var(--deck-grad-1)",
-          boxShadow: "0 28px 50px -18px rgba(255, 153, 0, 0.45)",
+          background: "var(--deck-face)",
+          boxShadow: "0 22px 40px -18px rgba(0, 0, 0, 0.55)",
           transform: "rotate(-2deg)",
         }}
       >
         <div className="flex flex-1 flex-col p-4">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/80">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-foreground)]/75">
             AWS Lab
           </span>
-          <span className="font-display mt-auto text-lg font-bold text-white">
+          <span className="font-display mt-auto text-lg font-bold text-[var(--accent-foreground)]">
             Flash MCQ
           </span>
         </div>

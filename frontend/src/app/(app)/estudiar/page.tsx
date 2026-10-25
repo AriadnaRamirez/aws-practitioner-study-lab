@@ -35,7 +35,7 @@ export default function EstudiarPage() {
         className="pointer-events-none absolute inset-0 -z-10 opacity-80"
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 10% 0%, var(--hero-mesh-a), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 10%, var(--hero-mesh-c), transparent 50%)",
+            "radial-gradient(ellipse 60% 40% at 8% 0%, var(--hero-mesh-a), transparent 60%), radial-gradient(ellipse 55% 45% at 92% 8%, var(--hero-mesh-b), transparent 55%)",
         }}
       />
 
@@ -47,7 +47,7 @@ export default function EstudiarPage() {
             </p>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--foreground)]">
               Estudiar{" "}
-              <span className="text-gradient-aws">flashcards</span>
+              <span className="text-accent-aws">flashcards</span>
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">

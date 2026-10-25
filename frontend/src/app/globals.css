@@ -1,69 +1,76 @@
 @import "tailwindcss";
 
 /*
-  Minimalismo tech — fondo negro, pops naranja AWS.
-  Referencia: mazo de 3 cards apiladas + tipografía high-contrast.
+  Estética AWS flat — squid ink + naranja sólido #ff9900.
+  Sin degradados dorado/amarillo; acentos planos como el smile del logo.
 */
 :root {
-  --background: #000000;
+  --background: #0b1118;
   --foreground: #ffffff;
-  --foreground-muted: #9a9a9a;
-  --surface: #0a0a0a;
-  --surface-elevated: #141414;
-  --surface-hover: #1c1c1c;
-  --border: #262626;
-  --border-strong: #3f3f3f;
+  --foreground-muted: #aab7b8;
+  --surface: #161d26;
+  --surface-elevated: #232f3e;
+  --surface-hover: #2d3a4a;
+  --border: #37475a;
+  --border-strong: #545b64;
   --accent: #ff9900;
-  --accent-hover: #ffb84d;
-  --accent-foreground: #0a0a0a;
-  --accent-soft: rgba(255, 153, 0, 0.16);
-  --accent-deep: #e47911;
-  --accent-warm: #ffb84d;
+  --accent-hover: #ec7211;
+  --accent-foreground: #161d26;
+  --accent-soft: rgba(255, 153, 0, 0.14);
+  --accent-deep: #ec7211;
+  --accent-warm: #ff9900;
   --ring: #ff9900;
-  --glow: rgba(255, 153, 0, 0.28);
-  --glow-secondary: rgba(255, 184, 77, 0.16);
-  --hero-mesh-a: rgba(255, 153, 0, 0.22);
-  --hero-mesh-b: rgba(228, 121, 17, 0.12);
-  --hero-mesh-c: rgba(255, 184, 77, 0.1);
-  --nav-bg: rgba(0, 0, 0, 0.78);
+  --glow: rgba(255, 153, 0, 0.18);
+  --glow-secondary: rgba(35, 47, 62, 0.5);
+  --hero-mesh-a: rgba(35, 47, 62, 0.45);
+  --hero-mesh-b: rgba(35, 47, 62, 0.7);
+  --hero-mesh-c: rgba(35, 47, 62, 0.35);
+  --nav-bg: rgba(11, 17, 24, 0.88);
   --card-face: #ffffff;
-  --card-face-fg: #0a0a0a;
-  --success: #3dd68c;
-  --danger: #ff6b6b;
-  --deck-grad-1: linear-gradient(145deg, #ff9900 0%, #ffb84d 45%, #e47911 100%);
-  --deck-grad-2: linear-gradient(145deg, #232f3e 0%, #1a2332 50%, #0f1a28 100%);
-  --deck-grad-3: linear-gradient(145deg, #ffb84d 0%, #ff9900 40%, #c45500 100%);
+  --card-face-fg: #161d26;
+  --success: #1d8102;
+  --danger: #d13212;
+  /* Solid deck faces — no gold gradient */
+  --deck-face: #ff9900;
+  --deck-mid: #232f3e;
+  --deck-back: #161d26;
+  --deck-grad-1: #ff9900;
+  --deck-grad-2: #232f3e;
+  --deck-grad-3: #161d26;
 }
 
 .dark {
-  --background: #000000;
+  --background: #0b1118;
   --foreground: #ffffff;
-  --foreground-muted: #9a9a9a;
-  --surface: #0a0a0a;
-  --surface-elevated: #141414;
-  --surface-hover: #1c1c1c;
-  --border: #262626;
-  --border-strong: #3f3f3f;
+  --foreground-muted: #aab7b8;
+  --surface: #161d26;
+  --surface-elevated: #232f3e;
+  --surface-hover: #2d3a4a;
+  --border: #37475a;
+  --border-strong: #545b64;
   --accent: #ff9900;
-  --accent-hover: #ffb84d;
-  --accent-foreground: #0a0a0a;
-  --accent-soft: rgba(255, 153, 0, 0.16);
-  --accent-deep: #e47911;
-  --accent-warm: #ffb84d;
+  --accent-hover: #ec7211;
+  --accent-foreground: #161d26;
+  --accent-soft: rgba(255, 153, 0, 0.14);
+  --accent-deep: #ec7211;
+  --accent-warm: #ff9900;
   --ring: #ff9900;
-  --glow: rgba(255, 153, 0, 0.28);
-  --glow-secondary: rgba(255, 184, 77, 0.16);
-  --hero-mesh-a: rgba(255, 153, 0, 0.22);
-  --hero-mesh-b: rgba(228, 121, 17, 0.12);
-  --hero-mesh-c: rgba(255, 184, 77, 0.1);
-  --nav-bg: rgba(0, 0, 0, 0.78);
+  --glow: rgba(255, 153, 0, 0.18);
+  --glow-secondary: rgba(35, 47, 62, 0.5);
+  --hero-mesh-a: rgba(35, 47, 62, 0.45);
+  --hero-mesh-b: rgba(35, 47, 62, 0.7);
+  --hero-mesh-c: rgba(35, 47, 62, 0.35);
+  --nav-bg: rgba(11, 17, 24, 0.88);
   --card-face: #ffffff;
-  --card-face-fg: #0a0a0a;
-  --success: #3dd68c;
-  --danger: #ff6b6b;
-  --deck-grad-1: linear-gradient(145deg, #ff9900 0%, #ffb84d 45%, #e47911 100%);
-  --deck-grad-2: linear-gradient(145deg, #232f3e 0%, #1a2332 50%, #0f1a28 100%);
-  --deck-grad-3: linear-gradient(145deg, #ffb84d 0%, #ff9900 40%, #c45500 100%);
+  --card-face-fg: #161d26;
+  --success: #1d8102;
+  --danger: #d13212;
+  --deck-face: #ff9900;
+  --deck-mid: #232f3e;
+  --deck-back: #161d26;
+  --deck-grad-1: #ff9900;
+  --deck-grad-2: #232f3e;
+  --deck-grad-3: #161d26;
 }
 
 @theme inline {
@@ -98,10 +105,10 @@
 @keyframes soft-pulse {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.35;
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.55;
   }
 }
 
@@ -141,11 +148,13 @@ body {
   font-family: var(--font-syne), ui-sans-serif, sans-serif;
 }
 
-.text-gradient-aws {
-  background: linear-gradient(105deg, #ffb84d 0%, #ff9900 45%, #e47911 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Flat AWS orange — no gold/yellow gradient */
+.text-gradient-aws,
+.text-accent-aws {
+  color: var(--accent);
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
 }
 
 .animate-fade-up {

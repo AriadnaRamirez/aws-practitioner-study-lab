@@ -22,21 +22,14 @@ function ByeBanner() {
 
 export function LandingHero() {
   return (
-    <section className="relative isolate flex min-h-[100dvh] flex-col overflow-hidden bg-black">
+    <section className="relative isolate flex min-h-[100dvh] flex-col overflow-hidden bg-[var(--background)]">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div
-          className="absolute inset-0 animate-drift"
+          className="absolute inset-0"
           style={{
-            background: `
-              radial-gradient(ellipse 70% 50% at 20% 30%, var(--hero-mesh-a), transparent 55%),
-              radial-gradient(ellipse 55% 40% at 85% 15%, var(--hero-mesh-c), transparent 50%),
-              radial-gradient(ellipse 80% 55% at 60% 90%, var(--hero-mesh-b), transparent 55%)
-            `,
+            background:
+              "radial-gradient(ellipse 80% 60% at 70% 100%, var(--hero-mesh-b), transparent 55%)",
           }}
-        />
-        <div
-          className="animate-soft-pulse absolute left-1/2 top-1/3 h-64 w-[28rem] -translate-x-1/2 rounded-full blur-[100px]"
-          style={{ background: "var(--glow)" }}
         />
       </div>
 
@@ -69,7 +62,7 @@ export function LandingHero() {
           <h1 className="animate-fade-up font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
             <span className="text-white">Tu mazo.</span>
             <br />
-            <span className="text-gradient-aws">Tu examen AWS.</span>
+            <span className="text-accent-aws">Tu examen AWS.</span>
           </h1>
 
           <p className="animate-fade-up-delay-1 mt-6 max-w-md text-lg font-medium leading-snug text-white/90 md:text-xl">
