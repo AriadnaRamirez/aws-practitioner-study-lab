@@ -38,14 +38,16 @@ enum StudyItemType {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  username     String   @unique
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String    @unique
   passwordHash String
-  role         Role     @default(STUDENT)
-  timezone     String   @default("UTC")
-  podiumHidden Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  role         Role      @default(STUDENT)
+  timezone     String    @default("UTC")
+  podiumHidden Boolean   @default(false)
+  /// Soft-ban: login rejected while set (admin owner tool).
+  bannedAt     DateTime?
+  createdAt    DateTime  @default(now())
 
   passwordResetTokens PasswordResetToken[]
   studySessions       StudySession[]

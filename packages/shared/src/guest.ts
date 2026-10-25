@@ -27,6 +27,16 @@ export interface UsageSummary {
   conversionRate: number;
   /** Sum of GuestProbe.sessionsCount */
   guestSessionsTotal: number;
+  /** Distinct users with ≥1 StudySession in last 24h */
+  dau: number;
+  /** Distinct users with ≥1 StudySession in last 7×24h */
+  wau: number;
+  /** StudySession rows started in last 7×24h */
+  sessionsLast7d: number;
+  /** Among sessionsLast7d, how many have endedAt */
+  sessionsCompletedLast7d: number;
+  /** 0–1 finish rate over last 7d */
+  finishRateLast7d: number;
 }
 
 export interface AdminUserRow {
@@ -36,7 +46,20 @@ export interface AdminUserRow {
   role: 'STUDENT' | 'ADMIN';
   timezone: string;
   podiumHidden: boolean;
+  bannedAt: string | null;
   createdAt: string;
+}
+
+export interface AdminUpdateUserRequest {
+  podiumHidden?: boolean;
+  /** true = soft-ban now; false = clear ban */
+  banned?: boolean;
+}
+
+export interface AdminResetPasswordResponse {
+  userId: string;
+  username: string;
+  temporaryPassword: string;
 }
 
 export interface AdminGuestRow {

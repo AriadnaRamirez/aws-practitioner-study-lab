@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -10,6 +18,7 @@ import {
   ApiAdminTokenHeader,
 } from '../common/guards/admin.guard';
 import { AdminUsageService } from './admin-usage.service';
+import { UpdateAdminUserDto } from './dto/admin-user.dto';
 
 @ApiTags('admin-usage')
 @ApiAdminTokenHeader()
@@ -22,7 +31,7 @@ export class AdminUsageController {
   @Get('usage')
   @ApiOperation({
     summary:
-      'Resumen de uso owner: usuarios, guests, conversión, sesiones guest (sin heatmaps de conocimiento)',
+      'Resumen de uso owner: usuarios, guests, DAU/WAU, finish rate (sin heatmaps de conocimiento)',
   })
   @ApiOkResponse({ description: 'UsageSummary' })
   usageSummary() {
@@ -34,6 +43,22 @@ export class AdminUsageController {
   @ApiOkResponse({ description: 'AdminUserRow[]' })
   listUsers() {
     return this.usage.listUsers();
+  }
+
+  @Patch('users/:id')
+  @ApiOperation({ summary: 'Actualizar podiumHidden / soft-ban' })
+  @ApiOkResponse({ description: 'AdminUserRow' })
+  updateUser(@Param('id') id: string, @Body() dto: UpdateAdminUserDto) {
+    return this.usage.updateUser(id, dto);
+  }
+
+  @Post('users/:id/reset-password')
+  @ApiOperation({
+    summary: 'Generar contraseña temporal (devuelta una vez en la respuesta)',
+  })
+  @ApiOkResponse({ description: 'AdminResetPasswordResponse' })
+  resetPassword(@Param('id') id: string) {
+    return this.usage.resetPassword(id);
   }
 
   @Get('guests')

@@ -65,6 +65,28 @@ export default async function AdminResumenPage() {
               Suma de sesiones registradas en GuestProbe
             </p>
           </li>
+          <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <p className="text-sm text-zinc-500">DAU / WAU</p>
+            <p className="mt-1 text-3xl font-semibold">
+              {data.dau}{" "}
+              <span className="text-lg font-medium text-zinc-500">
+                / {data.wau}
+              </span>
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Usuarios distintos con sesión (24h / 7×24h)
+            </p>
+          </li>
+          <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+            <p className="text-sm text-zinc-500">Finish rate (7d)</p>
+            <p className="mt-1 text-3xl font-semibold">
+              {pct(data.finishRateLast7d)}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              {data.sessionsCompletedLast7d}/{data.sessionsLast7d} sesiones
+              terminadas
+            </p>
+          </li>
         </ul>
       ) : (
         <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700">

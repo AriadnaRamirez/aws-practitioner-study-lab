@@ -39,6 +39,12 @@ import {
 } from '@prisma/client';
 import { ContentService } from '../content/content.service';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  parseExamQueueState,
+  parseTimedState,
+  serializeExamQueue,
+  serializeTimed,
+} from './exam-session-state';
 import { pickVariant, renderFlashVariant } from './flash-render';
 import {
   parseState,
@@ -194,7 +200,7 @@ export class StudyService {
       });
     }
     if (opts.mode === 'EXAM_TIMED') {
-      return this.startExamTimed(opts.user.id, {
+      return this.startExamTimed(opts.user, {
         size: opts.size,
         topicIds: opts.topicIds,
         timezone: opts.timezone,
@@ -245,8 +251,21 @@ export class StudyService {
       queue.push({ queueItemId: newId('qi'), itemId: q.id });
     }
 
+    const tz = opts.timezone || opts.user.timezone || 'UTC';
+    const row = await this.prisma.studySession.create({
+      data: {
+        userId: opts.user.id,
+        mode: PrismaStudyMode.EXAM_STUDY,
+        size: studySize,
+        scopeJson: JSON.stringify(opts.topicIds ?? []),
+        timezone: tz,
+        uniqueItems: picked.length,
+        stateJson: '{}',
+      },
+    });
+
     const session: StudySessionRecord = {
-      id: newId('ss'),
+      id: row.id,
       userId: opts.user.id,
       mode: opts.mode,
       size: studySize,
@@ -260,8 +279,12 @@ export class StudyService {
       incorrectAnswers: 0,
       missRepeats: 0,
       status: 'active',
-      createdAt: nowIso(),
+      createdAt: row.startedAt.toISOString(),
     };
+    await this.prisma.studySession.update({
+      where: { id: row.id },
+      data: { stateJson: serializeExamQueue(session) },
+    });
     this.store.sessions.set(session.id, session);
     return viewOf(session);
   }
@@ -276,7 +299,26 @@ export class StudyService {
     if (this.store.sessions.has(sessionId)) {
       return viewOf(this.requireExamSession(sessionId, user.id));
     }
-    return this.getFlashSession(user, sessionId);
+
+    const row = await this.prisma.studySession.findFirst({
+      where: { id: sessionId, userId: user.id },
+    });
+    if (!row) {
+      throw new NotFoundException(`Session ${sessionId} not found`);
+    }
+
+    if (row.mode === PrismaStudyMode.FLASH_STUDY) {
+      return this.getFlashSession(user, sessionId);
+    }
+    if (row.mode === PrismaStudyMode.EXAM_TIMED) {
+      const timed = parseTimedState(row);
+      this.store.timedSessions.set(timed.id, timed);
+      return this.getTimedSession(user.id, sessionId);
+    }
+
+    const exam = parseExamQueueState(row);
+    this.store.sessions.set(exam.id, exam);
+    return viewOf(exam);
   }
 
   async answerAny(
@@ -284,6 +326,12 @@ export class StudyService {
     sessionId: string,
     dto: { queueItemId: string; choiceIndex: number; latencyMs?: number },
   ): Promise<AnswerStudyResponse> {
+    if (
+      !this.store.sessions.has(sessionId) &&
+      !this.store.timedSessions.has(sessionId)
+    ) {
+      await this.getAnySession(user, sessionId);
+    }
     if (this.store.sessions.has(sessionId)) {
       return this.answerExamStudy(
         sessionId,
@@ -299,6 +347,9 @@ export class StudyService {
     user: User,
     sessionId: string,
   ): Promise<StudySessionSummary | ExamTimedSummary> {
+    // Ensure store hydration for EXAM_* / WEAK after restart.
+    await this.getAnySession(user, sessionId);
+
     if (this.store.timedSessions.has(sessionId)) {
       return this.getTimedSummary(user.id, sessionId);
     }
@@ -371,29 +422,46 @@ export class StudyService {
     }
 
     const finished = session.queue.length === 0;
+    let summary = finished ? summaryOf(session) : undefined;
+
     if (finished) {
       session.status = 'completed';
       session.endedAt = nowIso();
-      await this.prisma.studySession
-        .update({
-          where: { id: session.id },
-          data: {
-            endedAt: new Date(),
-            correctCount: session.correctAnswers,
-            answeredCount: session.answered,
-            missRepeatCount: session.missRepeats,
-            maxSessionStreak: session.maxSessionStreak,
-            score:
-              session.answered > 0
-                ? (session.correctAnswers / session.answered) * 100
-                : 0,
-            summaryJson: JSON.stringify(summaryOf(session)),
-          },
-        })
-        .catch(() => undefined);
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      const tz = user?.timezone || 'UTC';
+      const streak = await this.bumpDailyStreak(
+        user ?? ({ id: userId, timezone: tz } as User),
+        tz,
+      );
+      summary = {
+        ...summaryOf(session),
+        dailyStreak: streak.current,
+        longestDailyStreak: streak.longest,
+      };
     }
 
     this.store.sessions.set(session.id, session);
+
+    await this.prisma.studySession.update({
+      where: { id: session.id },
+      data: {
+        stateJson: serializeExamQueue(session),
+        sessionStreak: session.sessionStreak,
+        maxSessionStreak: session.maxSessionStreak,
+        answeredCount: session.answered,
+        correctCount: session.correctAnswers,
+        missRepeatCount: session.missRepeats,
+        endedAt: finished ? new Date() : null,
+        score: finished
+          ? session.answered > 0
+            ? (session.correctAnswers / session.answered) * 100
+            : 0
+          : null,
+        summaryJson: summary ? JSON.stringify(summary) : null,
+      },
+    });
 
     return {
       correct,
@@ -405,7 +473,7 @@ export class StudyService {
       remaining: session.queue.length,
       finished,
       next: finished ? null : toExamPrompt(session.queue[0], session.bank),
-      summary: finished ? summaryOf(session) : undefined,
+      summary,
     };
   }
 
@@ -822,7 +890,7 @@ export class StudyService {
   /* —— EXAM_TIMED —— */
 
   async startExamTimed(
-    userId: string,
+    user: User,
     opts: { size: SessionSize; topicIds?: string[]; timezone?: string },
   ): Promise<ExamTimedSessionView> {
     if (!(EXAM_TIMED_SIZES as readonly number[]).includes(opts.size)) {
@@ -835,7 +903,6 @@ export class StudyService {
     const timeLimitSec = examTimedLimitSec(opts.size);
     const startedAt = new Date();
     const endsAt = new Date(startedAt.getTime() + timeLimitSec * 1000);
-    const id = newId('ex');
     const bank: TimedSessionRecord['bank'] = new Map();
     const answers = new Map<string, 0 | 1 | 2 | 3 | null>();
     const questionIds: string[] = [];
@@ -851,75 +918,130 @@ export class StudyService {
       answers.set(q.id, null);
     }
 
+    const tz = opts.timezone || user.timezone || 'UTC';
+    const row = await this.prisma.studySession.create({
+      data: {
+        userId: user.id,
+        mode: PrismaStudyMode.EXAM_TIMED,
+        size: opts.size,
+        scopeJson: JSON.stringify(opts.topicIds ?? []),
+        timeLimitSec,
+        timezone: tz,
+        uniqueItems: questions.length,
+        stateJson: '{}',
+      },
+    });
+
     const record: TimedSessionRecord = {
-      id,
-      userId,
+      id: row.id,
+      userId: user.id,
       mode: 'EXAM_TIMED',
       size: opts.size,
       timeLimitSec,
-      startedAt,
+      startedAt: row.startedAt,
       endsAt,
       status: 'IN_PROGRESS',
-      timezone: opts.timezone ?? 'UTC',
+      timezone: tz,
       questionIds,
       bank,
       answers,
       markedForReview: new Set(),
     };
-    this.store.timedSessions.set(id, record);
+    await this.persistTimed(record);
+    this.store.timedSessions.set(record.id, record);
     return this.toTimedView(record);
   }
 
-  getTimedSession(userId: string, sessionId: string): ExamTimedSessionView {
-    const record = this.requireTimedOwned(userId, sessionId);
-    this.refreshTimedExpiry(record);
+  async getTimedSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<ExamTimedSessionView> {
+    const record = await this.requireTimedOwned(userId, sessionId);
+    await this.refreshTimedExpiry(record);
     return this.toTimedView(record);
   }
 
-  answerTimed(
+  async answerTimed(
     userId: string,
     sessionId: string,
     questionId: string,
     choiceIndex: 0 | 1 | 2 | 3,
-  ): ExamTimedSessionView {
-    const record = this.requireTimedActive(userId, sessionId);
+  ): Promise<ExamTimedSessionView> {
+    const record = await this.requireTimedActive(userId, sessionId);
     if (!record.answers.has(questionId)) {
       throw new BadRequestException('Pregunta fuera de esta sesión');
     }
     record.answers.set(questionId, choiceIndex);
+    await this.persistTimed(record);
     return this.toTimedView(record);
   }
 
-  markTimedReview(
+  async markTimedReview(
     userId: string,
     sessionId: string,
     questionId: string,
     marked: boolean,
-  ): ExamTimedSessionView {
-    const record = this.requireTimedActive(userId, sessionId);
+  ): Promise<ExamTimedSessionView> {
+    const record = await this.requireTimedActive(userId, sessionId);
     if (!record.answers.has(questionId)) {
       throw new BadRequestException('Pregunta fuera de esta sesión');
     }
     if (marked) record.markedForReview.add(questionId);
     else record.markedForReview.delete(questionId);
+    await this.persistTimed(record);
     return this.toTimedView(record);
   }
 
-  submitTimed(userId: string, sessionId: string): ExamTimedSummary {
-    const record = this.requireTimedOwned(userId, sessionId);
-    this.refreshTimedExpiry(record);
+  async submitTimed(
+    userId: string,
+    sessionId: string,
+  ): Promise<ExamTimedSummary> {
+    const record = await this.requireTimedOwned(userId, sessionId);
+    await this.refreshTimedExpiry(record);
     if (record.summary) return record.summary;
     if (record.status === 'IN_PROGRESS') {
       record.status = 'SUBMITTED';
     }
     record.endedAt = new Date();
     record.summary = this.buildTimedSummary(record);
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user) {
+      await this.bumpDailyStreak(user, record.timezone || user.timezone);
+    }
+
+    let answeredCount = 0;
+    let correctCount = 0;
+    for (const id of record.questionIds) {
+      const q = record.bank.get(id);
+      const selected = record.answers.get(id) ?? null;
+      if (selected !== null) {
+        answeredCount += 1;
+        if (q && selected === q.correctIndex) correctCount += 1;
+      }
+    }
+
+    await this.prisma.studySession.update({
+      where: { id: record.id },
+      data: {
+        stateJson: serializeTimed(record),
+        endedAt: record.endedAt,
+        answeredCount,
+        correctCount,
+        score: record.summary.scorePercent,
+        summaryJson: JSON.stringify(record.summary),
+      },
+    });
+    this.store.timedSessions.set(record.id, record);
     return record.summary;
   }
 
-  getTimedSummary(userId: string, sessionId: string): ExamTimedSummary {
-    const record = this.requireTimedOwned(userId, sessionId);
-    this.refreshTimedExpiry(record);
+  async getTimedSummary(
+    userId: string,
+    sessionId: string,
+  ): Promise<ExamTimedSummary> {
+    const record = await this.requireTimedOwned(userId, sessionId);
+    await this.refreshTimedExpiry(record);
     if (!record.summary) {
       if (record.status === 'IN_PROGRESS') {
         throw new BadRequestException(
@@ -928,8 +1050,29 @@ export class StudyService {
       }
       record.endedAt = record.endedAt ?? new Date();
       record.summary = this.buildTimedSummary(record);
+      await this.persistTimed(record, true);
     }
     return record.summary;
+  }
+
+  private async persistTimed(
+    record: TimedSessionRecord,
+    withSummary = false,
+  ): Promise<void> {
+    this.store.timedSessions.set(record.id, record);
+    await this.prisma.studySession.update({
+      where: { id: record.id },
+      data: {
+        stateJson: serializeTimed(record),
+        endedAt: record.endedAt ?? null,
+        ...(withSummary && record.summary
+          ? {
+              summaryJson: JSON.stringify(record.summary),
+              score: record.summary.scorePercent,
+            }
+          : {}),
+      },
+    });
   }
 
   private async pickTimedQuestions(
@@ -954,36 +1097,54 @@ export class StudyService {
     return shuffle(pool).slice(0, size);
   }
 
-  private requireTimedOwned(
+  private async requireTimedOwned(
     userId: string,
     userSessionId: string,
-  ): TimedSessionRecord {
-    const record = this.store.timedSessions.get(userSessionId);
-    if (!record) throw new NotFoundException('Sesión no encontrada');
+  ): Promise<TimedSessionRecord> {
+    let record = this.store.timedSessions.get(userSessionId);
+    if (!record) {
+      const row = await this.prisma.studySession.findFirst({
+        where: {
+          id: userSessionId,
+          userId,
+          mode: PrismaStudyMode.EXAM_TIMED,
+        },
+      });
+      if (!row) throw new NotFoundException('Sesión no encontrada');
+      record = parseTimedState(row);
+      this.store.timedSessions.set(record.id, record);
+    }
     if (record.userId !== userId) {
       throw new ForbiddenException('No puedes acceder a esta sesión');
     }
     return record;
   }
 
-  private requireTimedActive(
+  private async requireTimedActive(
     userId: string,
     sessionId: string,
-  ): TimedSessionRecord {
-    const record = this.requireTimedOwned(userId, sessionId);
-    this.refreshTimedExpiry(record);
+  ): Promise<TimedSessionRecord> {
+    const record = await this.requireTimedOwned(userId, sessionId);
+    await this.refreshTimedExpiry(record);
     if (record.status !== 'IN_PROGRESS') {
       throw new BadRequestException('El examen ya terminó');
     }
     return record;
   }
 
-  private refreshTimedExpiry(record: TimedSessionRecord): void {
+  private async refreshTimedExpiry(record: TimedSessionRecord): Promise<void> {
     if (record.status !== 'IN_PROGRESS') return;
     if (Date.now() >= record.endsAt.getTime()) {
       record.status = 'EXPIRED';
       record.endedAt = record.endsAt;
       record.summary = this.buildTimedSummary(record);
+      const user = await this.prisma.user.findUnique({
+        where: { id: record.userId },
+      });
+      if (user) {
+        await this.bumpDailyStreak(user, record.timezone || user.timezone);
+      }
+      await this.persistTimed(record, true);
     }
   }
 
@@ -1223,10 +1384,7 @@ export class StudyService {
         size: playQueue.length,
         timezone: user.timezone || 'UTC',
         scopeJson: JSON.stringify(queueMeta),
-        stateJson: JSON.stringify({
-          queue: playQueue,
-          itemTypes: Object.fromEntries(itemTypesMap),
-        }),
+        stateJson: '{}',
         uniqueItems: playQueue.length,
       },
     });
@@ -1249,6 +1407,10 @@ export class StudyService {
       status: 'active',
       createdAt: row.startedAt.toISOString(),
     };
+    await this.prisma.studySession.update({
+      where: { id: row.id },
+      data: { stateJson: serializeExamQueue(session) },
+    });
     this.store.sessions.set(session.id, session);
 
     return this.toHistoryDetail(row, queueMeta);

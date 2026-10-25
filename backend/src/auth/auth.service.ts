@@ -100,6 +100,12 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    if (user.bannedAt) {
+      throw new UnauthorizedException(
+        'Cuenta suspendida. Contacta a la administradora.',
+      );
+    }
+
     const valid = await verifyPassword(dto.password, user.passwordHash);
     if (!valid) {
       throw new UnauthorizedException('Credenciales inválidas');

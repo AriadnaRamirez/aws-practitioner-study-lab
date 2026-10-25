@@ -73,6 +73,8 @@ export {
   type UsageSummary,
   type AdminUserRow,
   type AdminGuestRow,
+  type AdminUpdateUserRequest,
+  type AdminResetPasswordResponse,
 } from './guest';
 export {
   PODIUM_WINDOWS,
