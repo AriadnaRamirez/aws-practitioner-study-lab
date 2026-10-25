@@ -44,7 +44,7 @@
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
-  --success: #5ec8ff;
+  --success: #2fbf71;
   --danger: #ff6b4a;
   /* Deck faces stay ink/surface — orange only on primary CTAs */
   --deck-face: var(--surface-elevated);
@@ -92,7 +92,7 @@
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
-  --success: #5ec8ff;
+  --success: #2fbf71;
   --danger: #ff6b4a;
   /* Deck faces stay ink/surface — orange only on primary CTAs */
   --deck-face: var(--surface-elevated);
@@ -371,15 +371,34 @@ code,
 }
 
 .keycap-correct {
-  background: rgba(94, 200, 255, 0.16);
-  color: var(--foreground);
-  border-color: rgba(94, 200, 255, 0.45);
+  background: #2fbf71;
+  color: #06140c;
+  border-color: transparent;
 }
 
 .keycap-wrong {
-  background: rgba(255, 107, 74, 0.16);
-  color: var(--foreground);
-  border-color: rgba(255, 107, 74, 0.45);
+  background: #ff6b4a;
+  color: #1a0603;
+  border-color: transparent;
+}
+
+@keyframes celebrate-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-celebrate {
+  animation: celebrate-pop 0.55s ease-out both;
 }
 
 .keycap:active {
@@ -394,7 +413,8 @@ code,
   .animate-spin,
   .animate-pulse,
   .animate-deck-in,
-  .animate-shimmer {
+  .animate-shimmer,
+  .animate-celebrate {
     animation: none;
   }
 }

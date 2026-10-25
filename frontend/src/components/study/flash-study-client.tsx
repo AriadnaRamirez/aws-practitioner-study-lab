@@ -50,8 +50,7 @@ const VARIANT_LABEL: Record<string, string> = {
   NAME_FOCUS: "Enfoque en el nombre",
 };
 
-const AUTO_NEXT_CORRECT_MS = 900;
-const AUTO_NEXT_WRONG_MS = 1600;
+/** No auto-advance — user reads the explanation on the flipped card. */
 
 export function FlashStudyClient() {
   const router = useRouter();
@@ -288,11 +287,10 @@ export function FlashStudyClient() {
         } else {
           nextPromptRef.current = null;
         }
-        const delay = res.correct ? AUTO_NEXT_CORRECT_MS : AUTO_NEXT_WRONG_MS;
-        if (autoTimer.current) clearTimeout(autoTimer.current);
-        autoTimer.current = setTimeout(() => {
-          goNext();
-        }, delay);
+        if (autoTimer.current) {
+          clearTimeout(autoTimer.current);
+          autoTimer.current = null;
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al responder");
         setSelectedChoice(null);
@@ -611,6 +609,64 @@ export function FlashStudyClient() {
             }
             title={prompt.stem}
             footer={`${answered + 1} · ${uniqueItems || size} en el mazo`}
+            flipped={phase === "feedback" && Boolean(feedback)}
+            back={
+              feedback ? (
+                <div className="flex h-full flex-col" role="status">
+                  <div className="flex items-start justify-between gap-3">
+                    <p
+                      className={cn(
+                        "font-display animate-celebrate text-2xl font-bold tracking-tight",
+                        feedback.correct
+                          ? "text-[var(--success)]"
+                          : "text-[var(--danger)]",
+                      )}
+                    >
+                      {feedback.correct ? "¡Correcto!" : "Incorrecto"}
+                    </p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/partners/aws-smile.webp"
+                      alt="AWS"
+                      width={64}
+                      height={34}
+                      className="h-6 w-auto"
+                      decoding="async"
+                    />
+                  </div>
+                  {feedback.correct ? (
+                    <p className="animate-celebrate mt-1 text-sm text-[var(--success)]">
+                      {feedback.itemMastered
+                        ? "Concepto dominado · gran trabajo"
+                        : "Sigue así · buena lectura del concepto"}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+                      Respuesta correcta:{" "}
+                      <span className="font-semibold text-[var(--foreground)]">
+                        {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
+                        {prompt.choices[feedback.correctIndex]}
+                      </span>
+                    </p>
+                  )}
+                  <div className="mt-4 rounded-xl bg-[var(--surface)] px-3.5 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                      Por qué
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
+                      {feedback.explanation?.trim()
+                        ? feedback.explanation
+                        : feedback.correct
+                          ? "Esa opción describe bien el servicio o concepto de esta carta."
+                          : "La opción correcta es la que mejor encaja con la definición o el nombre pedido en el enunciado."}
+                    </p>
+                  </div>
+                  <Button className="mt-auto w-full" onClick={goNext}>
+                    {summaryRef.current ? "Ver resumen" : "Siguiente carta"}
+                  </Button>
+                </div>
+              ) : null
+            }
           >
             <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
               {prompt.choices.map((choice, idx) => {
@@ -653,33 +709,6 @@ export function FlashStudyClient() {
       ) : pending ? (
         <div className="mt-8">
           <FlashDeck loading eyebrow="FLASH" title="…" footer="Cargando" />
-        </div>
-      ) : null}
-
-      {phase === "feedback" && feedback ? (
-        <div
-          className={cn(
-            "mt-6 rounded-2xl border px-4 py-4 text-sm animate-[fade-up_0.25s_ease-out]",
-            feedback.correct
-              ? "border-[rgba(94,200,255,0.35)] bg-[rgba(94,200,255,0.1)]"
-              : "border-[rgba(255,107,74,0.35)] bg-[rgba(255,107,74,0.1)]",
-          )}
-          role="status"
-        >
-          <p className="font-display text-base font-semibold tracking-tight">
-            {feedback.correct ? "¡Correcto!" : "Incorrecto"}
-            {feedback.itemMastered ? " · Dominado" : null}
-          </p>
-          <p className="mt-2 leading-relaxed text-[var(--foreground)]">
-            {feedback.explanation?.trim()
-              ? feedback.explanation
-              : feedback.correct
-                ? "Buena elección: esa es la respuesta esperada para este concepto."
-                : "Revisa la opción marcada en azul: ahí está la respuesta correcta."}
-          </p>
-          <Button className="mt-4" onClick={goNext}>
-            {summaryRef.current ? "Ver resumen" : "Siguiente"}
-          </Button>
         </div>
       ) : null}
 

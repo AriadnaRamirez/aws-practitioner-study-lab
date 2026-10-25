@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type FlashDeckProps = {
-  /** Label on the gradient face (e.g. variant). */
+  /** Label on the face (e.g. variant). */
   eyebrow?: string;
   /** Main stem / question. */
   title: string;
@@ -14,13 +14,16 @@ type FlashDeckProps = {
   depth?: 1 | 2;
   /** Loading skeleton face. */
   loading?: boolean;
+  /** Flip to the result face. */
+  flipped?: boolean;
+  /** Back-face content (result + explanation). */
+  back?: ReactNode;
   className?: string;
   children?: ReactNode;
 };
 
 /**
- * Mazo de 3 cards apiladas — caras ink; el naranja queda en CTAs.
- * Front card = pregunta; las de atrás dan sensación de deck.
+ * Mazo de cards apiladas con flip a la cara de resultado.
  */
 export function FlashDeck({
   eyebrow = "FLASH",
@@ -28,18 +31,19 @@ export function FlashDeck({
   footer,
   depth = 2,
   loading = false,
+  flipped = false,
+  back,
   className,
   children,
 }: FlashDeckProps) {
   return (
     <div
       className={cn(
-        "relative mx-auto w-full max-w-md min-w-0 overflow-hidden animate-deck-in",
+        "relative mx-auto w-full max-w-md min-w-0 animate-deck-in",
         className,
       )}
-      style={{ minHeight: "17.5rem" }}
+      style={{ minHeight: "17.5rem", perspective: "1200px" }}
     >
-      {/* Back cards — kept inside the box (no page overflow) */}
       {depth >= 2 ? (
         <div
           aria-hidden
@@ -65,62 +69,82 @@ export function FlashDeck({
         />
       ) : null}
 
-      {/* Front card */}
-      <article
-        className="relative z-[2] overflow-hidden rounded-2xl ring-1 ring-black/20"
-        style={{
-          boxShadow: "0 18px 36px -18px rgba(0, 0, 0, 0.55)",
-        }}
+      <div
+        className={cn(
+          "relative z-[2] grid w-full transition-transform duration-500 ease-[cubic-bezier(0.4,0.2,0.2,1)]",
+          flipped && "[transform:rotateY(180deg)]",
+        )}
+        style={{ transformStyle: "preserve-3d" }}
       >
-        <div
-          className={cn(
-            "relative px-5 pb-6 pt-5",
-            loading && "animate-shimmer",
-          )}
+        {/* Front */}
+        <article
+          className="col-start-1 row-start-1 overflow-hidden rounded-2xl ring-1 ring-black/20"
           style={{
-            background: loading ? "var(--deck-mid)" : "var(--deck-face)",
-            minHeight: "9.5rem",
+            boxShadow: "0 18px 36px -18px rgba(0, 0, 0, 0.55)",
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
           }}
         >
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
-              {eyebrow}
-            </p>
-            <span
-              aria-hidden
-              className="inline-flex size-7 items-center justify-center rounded-full border border-[var(--border)] text-[var(--foreground-muted)]"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 3l7 3v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3z"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-              </svg>
-            </span>
+          <div
+            className={cn("relative px-5 pb-6 pt-5", loading && "animate-shimmer")}
+            style={{
+              background: loading ? "var(--deck-mid)" : "var(--deck-face)",
+              minHeight: "9.5rem",
+            }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
+                {eyebrow}
+              </p>
+              {/* Official AWS smile mark */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/partners/aws-smile.webp"
+                alt=""
+                width={53}
+                height={28}
+                className="h-5 w-auto opacity-90"
+                decoding="async"
+              />
+            </div>
+            <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--foreground)] sm:text-2xl">
+              {loading ? (
+                <span className="inline-block h-7 w-4/5 rounded bg-[var(--surface-hover)]" />
+              ) : (
+                title
+              )}
+            </h2>
           </div>
-          <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--foreground)] sm:text-2xl">
-            {loading ? (
-              <span className="inline-block h-7 w-4/5 rounded bg-[var(--surface-hover)]" />
-            ) : (
-              title
-            )}
-          </h2>
-        </div>
 
-        <div
-          className="px-5 py-4"
+          <div
+            className="px-5 py-4"
+            style={{
+              background: "var(--card-face)",
+              color: "var(--card-face-fg)",
+            }}
+          >
+            {footer ? (
+              <p className="text-xs font-medium text-black/55">{footer}</p>
+            ) : null}
+            {children}
+          </div>
+        </article>
+
+        {/* Back — same grid cell so height follows the taller face */}
+        <article
+          aria-hidden={!flipped}
+          className="col-start-1 row-start-1 flex min-h-full flex-col overflow-hidden rounded-2xl ring-1 ring-black/20"
           style={{
-            background: "var(--card-face)",
-            color: "var(--card-face-fg)",
+            boxShadow: "0 18px 36px -18px rgba(0, 0, 0, 0.55)",
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            background: "var(--deck-face)",
           }}
         >
-          {footer ? (
-            <p className="text-xs font-medium text-black/55">{footer}</p>
-          ) : null}
-          {children}
-        </div>
-      </article>
+          <div className="flex flex-1 flex-col px-5 py-5">{back}</div>
+        </article>
+      </div>
     </div>
   );
 }
@@ -159,10 +183,10 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
         }}
       >
         <div className="flex flex-1 flex-col p-4">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-foreground)]/75">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
             AWS Lab
           </span>
-          <span className="font-display mt-auto text-lg font-bold text-[var(--accent-foreground)]">
+          <span className="font-display mt-auto text-lg font-bold text-[var(--foreground)]">
             Flash MCQ
           </span>
         </div>
