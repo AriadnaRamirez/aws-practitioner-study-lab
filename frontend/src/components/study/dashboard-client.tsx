@@ -92,10 +92,10 @@ export function DashboardClient() {
         href="/estudiar?start=10"
         className={cn(
           buttonVariants({ size: "lg" }),
-          "mt-7 inline-flex w-full justify-center lowercase",
+          "mt-7 inline-flex w-full justify-center",
         )}
       >
-        empezar 10
+        Empezar 10
       </Link>
 
       {overview?.activeSessions?.length ? (

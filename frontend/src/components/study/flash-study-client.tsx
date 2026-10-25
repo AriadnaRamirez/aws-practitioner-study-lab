@@ -404,7 +404,7 @@ export function FlashStudyClient() {
                   <Spinner /> …
                 </span>
               ) : (
-                "empezar 10"
+                "Empezar 10"
               )}
             </Button>
             <Button
@@ -414,7 +414,7 @@ export function FlashStudyClient() {
               onClick={() => void onStart(20, [])}
               className="w-full sm:w-auto"
             >
-              empezar 20
+              Empezar 20
             </Button>
           </div>
         </div>

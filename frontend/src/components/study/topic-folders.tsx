@@ -14,19 +14,21 @@ type Props = {
   className?: string;
 };
 
-/** Keycap faces — orange accent vs soft grey, matching the landing grid. */
 const FOLDER_FACE: Record<StudyCategory["tone"], string> = {
-  orange: "keycap keycap-accent",
-  ink: "keycap",
-  slate: "keycap",
-  cream: "keycap",
+  orange:
+    "border border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]",
+  ink: "border border-[var(--glass-border)] bg-[var(--glass)] text-[var(--foreground)] backdrop-blur-md",
+  slate:
+    "border border-[var(--glass-border)] bg-[var(--surface-elevated)] text-[var(--foreground)]",
+  cream:
+    "border border-[var(--glass-border)] bg-[var(--glass-strong)] text-[var(--foreground)] backdrop-blur-md",
 };
 
 const TAB_FACE: Record<StudyCategory["tone"], string> = {
   orange: "bg-[var(--accent)]",
-  ink: "bg-[var(--keycap)]",
-  slate: "bg-[var(--keycap)]",
-  cream: "bg-[var(--keycap)]",
+  ink: "bg-[var(--glass)] border border-[var(--glass-border)] border-b-0",
+  slate: "bg-[var(--surface-elevated)] border border-[var(--glass-border)] border-b-0",
+  cream: "bg-[var(--glass-strong)] border border-[var(--glass-border)] border-b-0",
 };
 
 export function TopicFolders({ topics, className }: Props) {
@@ -62,7 +64,7 @@ export function TopicFolders({ topics, className }: Props) {
             <li key={cat.id} className="relative min-w-0" style={{ zIndex: i + 1 }}>
               <div
                 className={cn(
-                  "ml-3 h-3 w-[28%] max-w-[6.5rem] rounded-t-xl sm:ml-4",
+                  "ml-3 h-3 w-[28%] max-w-[6.5rem] rounded-t-2xl sm:ml-4",
                   TAB_FACE[cat.tone],
                 )}
                 aria-hidden
@@ -76,7 +78,7 @@ export function TopicFolders({ topics, className }: Props) {
                 )}
                 aria-label={cat.title}
               >
-                <p className="font-display min-w-0 truncate text-lg font-semibold lowercase tracking-tight sm:text-xl">
+                <p className="font-display min-w-0 truncate text-lg font-semibold tracking-tight sm:text-xl">
                   {cat.title}
                 </p>
                 <p className="shrink-0 font-mono text-sm tabular-nums opacity-80">

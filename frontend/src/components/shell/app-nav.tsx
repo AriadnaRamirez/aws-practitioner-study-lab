@@ -26,7 +26,21 @@ const GUEST_ITEMS: NavItem[] = [
   { href: "/register", label: "Crear cuenta" },
 ];
 
-/** Site header — text links, website chrome (not app tabs). */
+function MarkStar({ className }: { className?: string }) {
+  return (
+    <svg
+      className={cn("mark-star shrink-0", className)}
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 1.5 14.2 9.8 22.5 12 14.2 14.2 12 22.5 9.8 14.2 1.5 12l8.3-2.2L12 1.5Z" />
+    </svg>
+  );
+}
+
 export function AppNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<PublicUser | null>(null);
@@ -77,20 +91,21 @@ export function AppNav() {
     );
 
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--background)]">
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-xl">
       <a
         href="#contenido"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--accent-foreground)]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--accent-foreground)]"
       >
         Saltar al contenido
       </a>
       <div className="mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="font-display min-w-0 truncate text-sm font-semibold tracking-tight"
+            className="font-display inline-flex min-w-0 items-center gap-2 truncate text-sm font-semibold tracking-tight"
           >
-            study lab
+            <MarkStar />
+            <span>Study Lab</span>
           </Link>
           {masteryPct != null ? (
             <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">
@@ -107,31 +122,31 @@ export function AppNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={cn(linkClass(isActive(item)), "lowercase")}
+              className={linkClass(isActive(item))}
               aria-current={isActive(item) ? "page" : undefined}
             >
               {item.label}
             </Link>
           ))}
           {user ? (
-            <Link href="/logout" className={cn(linkClass(false), "lowercase")}>
-              salir
+            <Link href="/logout" className={linkClass(false)}>
+              Salir
             </Link>
           ) : (
-            <Link href="/login" className={cn(linkClass(false), "lowercase")}>
-              entrar
+            <Link href="/login" className={linkClass(false)}>
+              Entrar
             </Link>
           )}
         </nav>
 
         <button
           type="button"
-          className="keycap h-9 px-3 text-xs sm:hidden"
+          className="glass-pill h-9 px-4 text-xs sm:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((o) => !o)}
         >
-          {menuOpen ? "cerrar" : "menú"}
+          {menuOpen ? "Cerrar" : "Menú"}
         </button>
       </div>
 

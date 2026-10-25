@@ -42,9 +42,14 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
 
   if (!examDate || days === null || Number.isNaN(days)) {
     return (
-      <aside className={cn("keycap w-full justify-start px-4 py-3", className)}>
-        <Link href="/cuenta" className="text-sm hover:underline">
-          agregar fecha
+      <aside
+        className={cn(
+          "glass-pill w-full justify-start px-4 py-3 text-sm",
+          className,
+        )}
+      >
+        <Link href="/cuenta" className="hover:text-[var(--accent)]">
+          Agregar fecha
         </Link>
       </aside>
     );
@@ -75,45 +80,45 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
   return (
     <aside
       className={cn(
-        "keycap flex w-full min-w-0 items-center justify-start gap-3 px-3 py-3 sm:gap-4 sm:px-4",
+        "glass-pill flex w-full min-w-0 items-center justify-start gap-3 px-3 py-3 sm:gap-4 sm:px-4",
         className,
       )}
       aria-live="polite"
     >
       <div
         className={cn(
-          "flex shrink-0 flex-col overflow-hidden rounded-xl text-center shadow-[var(--keycap-accent-shadow)]",
+          "flex shrink-0 flex-col overflow-hidden rounded-2xl text-center",
           compact ? "w-12" : "w-14",
         )}
       >
-        <div className="bg-[var(--accent)] px-1 py-0.5 text-[10px] font-bold lowercase tracking-wider text-[var(--accent-foreground)]">
+        <div className="bg-[var(--accent)] px-1 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]">
           {(monthShort ?? "—").replace(/\.$/, "").slice(0, 3)}
         </div>
-        <div className="bg-[var(--keycap)] px-1 py-1.5">
-          <p className="font-display text-xl font-bold leading-none text-[var(--keycap-fg)]">
+        <div className="bg-[var(--surface-elevated)] px-1 py-1.5">
+          <p className="font-display text-xl font-bold leading-none text-[var(--foreground)]">
             {dayNum}
           </p>
         </div>
       </div>
 
-      <div className="min-w-0 flex-1 text-left normal-case">
-        <p className="font-display text-sm font-semibold leading-snug lowercase sm:text-base">
+      <div className="min-w-0 flex-1 text-left">
+        <p className="font-display text-sm font-semibold leading-snug sm:text-base">
           {headline}
         </p>
         {!compact ? (
-          <p className="mt-1 text-xs lowercase text-[var(--foreground-muted)]">
+          <p className="mt-1 text-xs text-[var(--foreground-muted)]">
             {formatLongDate(examDate)}
             {" · "}
             <Link href="/cuenta" className="text-[var(--accent)] hover:underline">
-              cambiar
+              Cambiar
             </Link>
           </p>
         ) : (
           <Link
             href="/cuenta"
-            className="mt-0.5 inline-block text-xs lowercase text-[var(--accent)] hover:underline"
+            className="mt-0.5 inline-block text-xs text-[var(--accent)] hover:underline"
           >
-            fecha
+            Fecha
           </Link>
         )}
       </div>

@@ -76,10 +76,10 @@ function LoginForm() {
         href="/"
         className="font-display text-sm font-semibold text-[var(--foreground)]"
       >
-        study lab
+        Study Lab
       </Link>
-      <h1 className="font-display mt-8 text-2xl font-semibold lowercase tracking-tight">
-        entrar
+      <h1 className="font-display mt-8 text-3xl font-semibold tracking-tight">
+        Entrar
       </h1>
       {hint ? (
         <p className="mt-2 text-sm text-[var(--accent)]">{hint}</p>
