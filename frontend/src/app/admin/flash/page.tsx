@@ -1,42 +1,41 @@
-import { getKnowledgeItems } from "@/lib/content-api";
+import { KnowledgeCrud } from "@/components/admin/knowledge-crud";
+import type { KnowledgeItem, Topic } from "@aps/shared";
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:43124/api/v1";
+const ADMIN_TOKEN =
+  process.env.NEXT_PUBLIC_ADMIN_TOKEN ??
+  process.env.ADMIN_TOKEN ??
+  "dev-admin-token";
+
+async function adminGet<T>(path: string): Promise<T[]> {
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    return (await res.json()) as T[];
+  } catch {
+    return [];
+  }
+}
 
 export default async function AdminFlashPage() {
-  const { data, source } = await getKnowledgeItems();
+  const [topics, knowledge] = await Promise.all([
+    adminGet<Topic>("/admin/topics"),
+    adminGet<KnowledgeItem>("/admin/knowledge-items"),
+  ]);
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Flash / hechos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Flash</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          KnowledgeItem canónico (name + definition + distractors + variantes).
-          Fuente: {source === "api" ? "API" : "mock"}.
+          CRUD de knowledge items (hechos flash). Incluye track AIF.
         </p>
       </div>
-      <ul className="space-y-3">
-        {data.map((item) => (
-          <li
-            key={item.id}
-            className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg font-semibold">{item.name}</h2>
-              <span className="text-xs uppercase tracking-wide text-zinc-500">
-                {item.status}
-              </span>
-            </div>
-            <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-              {item.definition}
-            </p>
-            <p className="mt-2 text-xs text-zinc-500">
-              Variantes: {item.allowedVariants.join(", ")} · distractores:{" "}
-              {item.distractors.length}
-            </p>
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-zinc-500">
-        CRUD: <code>/api/v1/admin/knowledge-items</code>
-      </p>
+      <KnowledgeCrud initial={knowledge} topics={topics} />
     </div>
   );
 }

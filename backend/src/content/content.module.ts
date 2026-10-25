@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FeatureFlagsModule } from '../feature-flags/feature-flags.module';
 import {
   AdminExportController,
   AdminImportController,
@@ -13,6 +14,7 @@ import { QuestionsController } from './questions.controller';
 import { TopicsController } from './topics.controller';
 
 @Module({
+  imports: [FeatureFlagsModule],
   controllers: [
     TopicsController,
     KnowledgeController,

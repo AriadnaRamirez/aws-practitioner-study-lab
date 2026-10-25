@@ -34,13 +34,13 @@ export class AdminTopicsController {
   @ApiOperation({ summary: 'Admin: list all topics' })
   @ApiOkResponse({ description: 'Topics' })
   list() {
-    return this.content.listTopics();
+    return this.content.listTopics({ allTracks: true });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Admin: get topic' })
   get(@Param('id') id: string) {
-    return this.content.getTopic(id);
+    return this.content.getTopic(id, { allTracks: true });
   }
 
   @Post()
@@ -58,7 +58,7 @@ export class AdminTopicsController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Admin: delete topic' })
-  remove(@Param('id') id: string) {
-    this.content.deleteTopic(id);
+  async remove(@Param('id') id: string) {
+    await this.content.deleteTopic(id);
   }
 }

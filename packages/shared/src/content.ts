@@ -26,6 +26,10 @@ export const CONTENT_STATUSES = [
 ] as const satisfies readonly ContentStatus[];
 
 export const DEFAULT_TRACK_ID = "CLF";
+/** AI Foundations track — gated by feature flag `exam_track_ai`. */
+export const AI_TRACK_ID = "AIF";
+export const TRACK_IDS = [DEFAULT_TRACK_ID, AI_TRACK_ID] as const;
+export type TrackId = (typeof TRACK_IDS)[number];
 
 export interface Topic {
   id: string;

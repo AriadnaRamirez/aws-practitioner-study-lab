@@ -40,13 +40,13 @@ export class AdminKnowledgeController {
   @ApiQuery({ name: 'topicId', required: false })
   @ApiOkResponse({ description: 'KnowledgeItems' })
   list(@Query('topicId') topicId?: string) {
-    return this.content.listKnowledge({ topicId });
+    return this.content.listKnowledge({ topicId, allTracks: true });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Admin: get knowledge item' })
   get(@Param('id') id: string) {
-    return this.content.getKnowledge(id);
+    return this.content.getKnowledge(id, { allTracks: true });
   }
 
   @Post()
@@ -64,7 +64,7 @@ export class AdminKnowledgeController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Admin: delete knowledge item' })
-  remove(@Param('id') id: string) {
-    this.content.deleteKnowledge(id);
+  async remove(@Param('id') id: string) {
+    await this.content.deleteKnowledge(id);
   }
 }

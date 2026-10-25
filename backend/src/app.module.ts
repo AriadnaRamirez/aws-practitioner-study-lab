@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { CommonModule } from './common/common.module';
 import { ContentModule } from './content/content.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { GuestModule } from './guest/guest.module';
@@ -12,6 +13,7 @@ import { StudyModule } from './study/study.module';
 @Module({
   imports: [
     PrismaModule,
+    CommonModule,
     HealthModule,
     AuthModule,
     ContentModule,

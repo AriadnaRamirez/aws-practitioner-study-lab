@@ -40,13 +40,13 @@ export class AdminQuestionsController {
   @ApiQuery({ name: 'topicId', required: false })
   @ApiOkResponse({ description: 'ExamQuestions' })
   list(@Query('topicId') topicId?: string) {
-    return this.content.listQuestions({ topicId });
+    return this.content.listQuestions({ topicId, allTracks: true });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Admin: get exam question' })
   get(@Param('id') id: string) {
-    return this.content.getQuestion(id);
+    return this.content.getQuestion(id, { allTracks: true });
   }
 
   @Post()
@@ -64,7 +64,7 @@ export class AdminQuestionsController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Admin: delete exam question' })
-  remove(@Param('id') id: string) {
-    this.content.deleteQuestion(id);
+  async remove(@Param('id') id: string) {
+    await this.content.deleteQuestion(id);
   }
 }
