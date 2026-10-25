@@ -45,6 +45,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/partners/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
     ];
   },
 };

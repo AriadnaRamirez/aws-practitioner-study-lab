@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" fill="none" role="img" aria-label="AWS re/Start Cloud Practitioner">
+  <rect width="320" height="72" rx="12" fill="#232F3E"/>
+  <text x="20" y="30" fill="#FFFFFF" font-family="Amazon Ember, Arial, sans-serif" font-size="18" font-weight="700">aws</text>
+  <path d="M20 36c18 10 36 10 52-2" stroke="#FF9900" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M68 32l4 2-4 2" fill="#FF9900"/>
+  <text x="96" y="28" fill="#FF9900" font-family="Amazon Ember, Arial, sans-serif" font-size="15" font-weight="700">re/Start</text>
+  <text x="96" y="50" fill="#FFFFFF" font-family="Amazon Ember, Arial, sans-serif" font-size="13" font-weight="500">Cloud Practitioner</text>
+</svg>

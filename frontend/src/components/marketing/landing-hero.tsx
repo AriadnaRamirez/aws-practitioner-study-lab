@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
+import { SiteCredits } from "@/components/shell/site-credits";
 import { cn } from "@/lib/utils";
 
 function ByeBanner() {
@@ -111,8 +112,13 @@ export function LandingHero() {
               AWS Cloud Practitioner
             </span>
           </p>
+          <p className="mt-2 text-xs text-[var(--brand-light-gray)]">
+            Por Ariadna Ramírez · Material no oficial
+          </p>
         </div>
       </main>
+
+      <SiteCredits className="relative z-10 bg-[var(--background)]/80" />
     </div>
   );
 }
