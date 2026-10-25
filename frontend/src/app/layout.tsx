@@ -36,9 +36,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" className="overflow-x-hidden" suppressHydrationWarning>
       <body
-        className={`${syne.variable} ${figtree.variable} ${jetbrains.variable} min-h-dvh antialiased`}
+        className={`${syne.variable} ${figtree.variable} ${jetbrains.variable} min-h-dvh w-full max-w-full overflow-x-hidden antialiased`}
       >
         <ThemeProvider
           attribute="class"

@@ -26,7 +26,7 @@ function ByeBanner() {
  */
 export function LandingHero() {
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col overflow-x-clip bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--foreground)]">
       <Suspense fallback={null}>
         <ByeBanner />
       </Suspense>

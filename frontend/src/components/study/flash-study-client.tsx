@@ -366,7 +366,7 @@ export function FlashStudyClient() {
 
   if (phase === "boot" || phase === "starting") {
     return (
-      <section className="mx-auto max-w-2xl px-6 py-12" aria-busy="true">
+      <section className="mx-auto w-full min-w-0 max-w-2xl py-8" aria-busy="true">
         <div className="flex items-center gap-3 text-sm text-[var(--foreground-muted)]">
           <Spinner label="Preparando sesión" />
           <span>
@@ -389,7 +389,7 @@ export function FlashStudyClient() {
 
   if (phase === "auth") {
     return (
-      <section className="mx-auto max-w-lg px-6 py-16">
+      <section className="mx-auto w-full min-w-0 max-w-lg py-12">
         <h1 className="font-display text-3xl font-bold tracking-tight">
           Flashcards
         </h1>
@@ -567,7 +567,7 @@ export function FlashStudyClient() {
 
   if (phase === "summary" && summary) {
     return (
-      <section className="mx-auto max-w-lg px-6 py-12 animate-[fade-up_0.35s_ease-out]">
+      <section className="mx-auto w-full min-w-0 max-w-lg py-10 animate-[fade-up_0.35s_ease-out]">
         <h1 className="font-display text-3xl font-bold tracking-tight">
           Sesión terminada
         </h1>
@@ -635,8 +635,8 @@ export function FlashStudyClient() {
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-6 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <section className="mx-auto w-full min-w-0 max-w-2xl py-2 sm:py-4">
+      <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
             Racha · {sessionStreak}

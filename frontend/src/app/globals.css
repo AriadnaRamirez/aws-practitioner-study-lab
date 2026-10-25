@@ -138,16 +138,41 @@
   }
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
-  overflow-x: clip;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-figtree), ui-sans-serif, sans-serif;
-  overflow-x: clip;
-  max-width: 100vw;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Long tokens / monospace must wrap instead of forcing page width */
+pre,
+code,
+.font-mono {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .font-display {

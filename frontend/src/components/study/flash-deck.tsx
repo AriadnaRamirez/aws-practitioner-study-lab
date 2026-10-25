@@ -34,19 +34,19 @@ export function FlashDeck({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full max-w-md animate-deck-in",
+        "relative mx-auto w-full max-w-md min-w-0 overflow-hidden animate-deck-in",
         className,
       )}
       style={{ minHeight: "17.5rem" }}
     >
-      {/* Back cards — diagonal cascade */}
+      {/* Back cards — kept inside the box (no page overflow) */}
       {depth >= 2 ? (
         <div
           aria-hidden
-          className="absolute inset-x-4 top-4 bottom-0 rounded-2xl ring-1 ring-white/5"
+          className="absolute inset-x-3 top-3 bottom-1 rounded-xl ring-1 ring-white/5"
           style={{
             background: "var(--deck-back)",
-            transform: "translate(14px, 18px) rotate(2.5deg)",
+            transform: "translate(6px, 8px)",
             opacity: 0.7,
             zIndex: 0,
           }}
@@ -55,10 +55,10 @@ export function FlashDeck({
       {depth >= 1 ? (
         <div
           aria-hidden
-          className="absolute inset-x-2 top-2 bottom-1 rounded-2xl ring-1 ring-white/8"
+          className="absolute inset-x-1.5 top-1.5 bottom-0.5 rounded-xl ring-1 ring-white/8"
           style={{
             background: "var(--deck-mid)",
-            transform: "translate(8px, 10px) rotate(1.2deg)",
+            transform: "translate(3px, 4px)",
             opacity: 0.95,
             zIndex: 1,
           }}
@@ -129,7 +129,10 @@ export function FlashDeck({
 export function FlashDeckShowcase({ className }: { className?: string }) {
   return (
     <div
-      className={cn("relative mx-auto h-64 w-full max-w-xs", className)}
+      className={cn(
+        "relative mx-auto h-64 w-full max-w-xs min-w-0 overflow-hidden",
+        className,
+      )}
       aria-hidden
     >
       <div

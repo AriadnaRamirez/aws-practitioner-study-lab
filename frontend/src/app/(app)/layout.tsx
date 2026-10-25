@@ -8,9 +8,9 @@ export default function AppShellLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-dvh min-w-0 flex-col overflow-x-clip bg-[var(--background)]">
+    <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)]">
       <AppNav />
-      <main id="contenido" className="min-w-0 flex-1">
+      <main id="contenido" className="w-full min-w-0 max-w-full flex-1 overflow-x-hidden">
         {children}
       </main>
       <SiteFooter />

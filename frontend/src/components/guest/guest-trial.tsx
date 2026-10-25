@@ -148,7 +148,7 @@ export function GuestTrial() {
     : "/register";
 
   return (
-    <main className="relative isolate mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-10">
+    <main className="relative isolate mx-auto flex min-h-dvh w-full min-w-0 max-w-2xl flex-col overflow-x-hidden px-4 py-10 sm:px-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
