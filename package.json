@@ -1,0 +1,22 @@
+{
+  "name": "aws-practitioner-study-lab",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AWS Practitioner Study Lab — monorepo (Next UI + Nest API)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w @aps/web",
+    "dev:api": "npm run start:dev -w @aps/api",
+    "build": "npm run build -w @aps/shared && npm run build -w @aps/api && npm run build -w @aps/web",
+    "build:web": "npm run build -w @aps/web",
+    "build:api": "npm run build -w @aps/api",
+    "lint": "npm run lint -w @aps/web && npm run lint -w @aps/api",
+    "test:api": "npm run test -w @aps/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
