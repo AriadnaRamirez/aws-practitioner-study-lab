@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN } from "@aps/shared";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { register, storeAuth } from "@/lib/api";
+import {
+  clearGuestProbeId,
+  getStoredGuestProbeId,
+  register,
+  storeAuth,
+} from "@/lib/api";
 
 function strengthHints(password: string) {
   return [
@@ -24,7 +30,8 @@ function strengthHints(password: string) {
   ];
 }
 
-export default function RegisterPage() {
+function RegisterForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -32,11 +39,18 @@ export default function RegisterPage() {
   const [timezone, setTimezone] = useState(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   );
+  const [guestProbeId, setGuestProbeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [doneUser, setDoneUser] = useState<string | null>(null);
 
   const hints = useMemo(() => strengthHints(password), [password]);
+
+  useEffect(() => {
+    const fromQuery = searchParams.get("guest")?.trim();
+    const fromStore = getStoredGuestProbeId();
+    setGuestProbeId(fromQuery || fromStore);
+  }, [searchParams]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -49,8 +63,10 @@ export default function RegisterPage() {
         password,
         confirmPassword,
         timezone,
+        ...(guestProbeId ? { guestProbeId } : {}),
       });
       storeAuth(res);
+      clearGuestProbeId();
       setDoneUser(res.user.username);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo registrar");
@@ -73,6 +89,9 @@ export default function RegisterPage() {
       <p className="mt-2 text-sm text-[var(--foreground-muted)]">
         Email, username único y contraseña robusta. El username aparece en el
         podio.
+        {guestProbeId
+          ? " Vincularemos tu prueba guest para métricas de conversión."
+          : null}
       </p>
 
       {doneUser ? (
@@ -179,5 +198,19 @@ export default function RegisterPage() {
         </Link>
       </p>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-16">
+          <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+        </main>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

@@ -26,3 +26,12 @@ export {
   type ExamChoices,
   type ExamQuestion,
 } from './content';
+export {
+  GUEST_PROBE_STORAGE_KEY,
+  GUEST_MAX_SESSIONS,
+  GUEST_SAMPLE_SIZE,
+  type GuestProbe,
+  type UsageSummary,
+  type AdminUserRow,
+  type AdminGuestRow,
+} from './guest';

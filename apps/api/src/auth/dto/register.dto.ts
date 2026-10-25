@@ -36,4 +36,11 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   timezone?: string;
+
+  @ApiPropertyOptional({
+    description: 'GuestProbe id from /guest marketing trial (conversion)',
+  })
+  @IsOptional()
+  @IsString()
+  guestProbeId?: string;
 }

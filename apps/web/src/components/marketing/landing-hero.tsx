@@ -102,7 +102,7 @@ export function LandingHero() {
             Entrar
           </Link>
           <Link
-            href="/estudiar"
+            href="/guest"
             className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
           >
             Probar sin cuenta

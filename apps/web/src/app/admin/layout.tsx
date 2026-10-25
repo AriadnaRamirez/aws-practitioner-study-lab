@@ -4,6 +4,7 @@ import { APP_NAME } from "@aps/shared";
 const NAV = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/usuarios", label: "Usuarios" },
+  { href: "/admin/guests", label: "Guests" },
   { href: "/admin/temas", label: "Temas" },
   { href: "/admin/flash", label: "Flash" },
   { href: "/admin/banco", label: "Banco" },
@@ -21,7 +22,7 @@ export default function AdminLayout({
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <p className="text-xs font-medium tracking-wide text-zinc-500">
-              Panel owner · stub APS-6
+              Panel owner · uso + contenido
             </p>
             <Link href="/admin" className="text-lg font-semibold tracking-tight">
               {APP_NAME}

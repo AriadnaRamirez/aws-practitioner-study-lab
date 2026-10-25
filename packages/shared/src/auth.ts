@@ -29,6 +29,8 @@ export interface RegisterRequest {
   password: string;
   confirmPassword: string;
   timezone?: string;
+  /** Optional GuestProbe id from marketing trial (APS-13 conversion). */
+  guestProbeId?: string;
 }
 
 export interface LoginRequest {

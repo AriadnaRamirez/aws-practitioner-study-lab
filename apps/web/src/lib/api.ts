@@ -1,16 +1,24 @@
 import type {
+  AdminGuestRow,
+  AdminUserRow,
   AuthResponse,
   ForgotPasswordRequest,
+  GuestProbe,
   LoginRequest,
   PublicUser,
   RegisterRequest,
   ResetPasswordRequest,
+  UsageSummary,
 } from '@aps/shared';
+import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:43124/api/v1';
 
 export const AUTH_TOKEN_KEY = 'aps_access_token';
+
+const ADMIN_TOKEN =
+  process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? 'dev-admin-token';
 
 export function getApiUrl() {
   return API_URL;
@@ -102,4 +110,49 @@ export function resetPassword(body: ResetPasswordRequest) {
 
 export function fetchMe() {
   return apiFetch<PublicUser>('/auth/me', { auth: true });
+}
+
+export function getStoredGuestProbeId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(GUEST_PROBE_STORAGE_KEY);
+}
+
+export function storeGuestProbeId(id: string) {
+  window.localStorage.setItem(GUEST_PROBE_STORAGE_KEY, id);
+}
+
+export function clearGuestProbeId() {
+  window.localStorage.removeItem(GUEST_PROBE_STORAGE_KEY);
+}
+
+export function createGuestProbe() {
+  return apiFetch<GuestProbe>('/guest/probes', { method: 'POST' });
+}
+
+export function fetchGuestProbe(id: string) {
+  return apiFetch<GuestProbe>(`/guest/probes/${id}`);
+}
+
+export function recordGuestSession(id: string) {
+  return apiFetch<GuestProbe>(`/guest/probes/${id}/sessions`, {
+    method: 'POST',
+  });
+}
+
+async function adminFetch<T>(path: string): Promise<T> {
+  return apiFetch<T>(path, {
+    headers: { 'x-admin-token': ADMIN_TOKEN },
+  });
+}
+
+export function fetchUsageSummary() {
+  return adminFetch<UsageSummary>('/admin/usage');
+}
+
+export function fetchAdminUsers() {
+  return adminFetch<AdminUserRow[]>('/admin/users');
+}
+
+export function fetchAdminGuests() {
+  return adminFetch<AdminGuestRow[]>('/admin/guests');
 }

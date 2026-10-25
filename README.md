@@ -78,15 +78,26 @@ El front sigue la preferencia del sistema vía **next-themes** (`system`): token
 | Tipos | `packages/shared` (`Topic`, `KnowledgeItem`, `ExamQuestion`) |
 | API | `GET /api/v1/topics`, `/knowledge-items`, `/exam-questions` |
 | Admin CRUD | `/api/v1/admin/...` + header `x-admin-token` (`ADMIN_TOKEN`) |
-| UI admin | `/admin` (Resumen, Usuarios stub, Temas, Flash, Banco, Import stub) |
+| UI admin | `/admin` (Resumen uso, Usuarios, Guests, Temas, Flash, Banco, Import stub) |
 
 Las mutaciones admin de contenido aún usan `x-admin-token`; siguiente paso: sustituir `AdminGuard` por JWT + role `ADMIN`.
 
-## Alcance actual (Wave 1 integrada)
+### Guest + analytics (APS-13)
 
-- **APS-3–6:** monorepo, auth JWT, shell/tema, content stubs + admin  
+| Qué | Dónde |
+| --- | --- |
+| Modelo | Prisma `GuestProbe` (`id`, `createdAt`, `sessionsCount`, `convertedUserId?`) |
+| API guest | `POST /guest/probes`, `GET /guest/probes/:id`, `POST /guest/probes/:id/sessions` |
+| API admin uso | `GET /admin/usage`, `/admin/users`, `/admin/guests` (`x-admin-token`) |
+| UI | `/guest` sesión limitada + CTA registro; landing “Probar sin cuenta”; `/admin` resumen |
 
-**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, guest analytics, Prisma content (APS-7), Google OAuth.
+Registro acepta `guestProbeId` opcional para conversión guest→cuenta.
+
+## Alcance actual
+
+- **APS-3–6 + 13:** monorepo, auth JWT, shell/tema, content stubs + admin, guest marketing + usage analytics  
+
+**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, Prisma content (APS-7), Google OAuth.
 
 ## Scripts raíz
 
