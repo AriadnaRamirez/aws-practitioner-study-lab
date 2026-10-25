@@ -236,6 +236,56 @@ export class AuthService {
     };
   }
 
+  async updateProfile(
+    user: User,
+    dto: { timezone?: string; podiumHidden?: boolean },
+  ): Promise<PublicUser> {
+    if (dto.timezone === undefined && dto.podiumHidden === undefined) {
+      throw new BadRequestException('Nada que actualizar');
+    }
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(dto.timezone !== undefined
+          ? { timezone: dto.timezone.trim() || 'UTC' }
+          : {}),
+        ...(dto.podiumHidden !== undefined
+          ? { podiumHidden: dto.podiumHidden }
+          : {}),
+      },
+    });
+    return this.toPublicUser(updated);
+  }
+
+  async changePassword(
+    user: User,
+    dto: {
+      currentPassword: string;
+      password: string;
+      confirmPassword: string;
+    },
+  ): Promise<{ message: string }> {
+    const valid = await verifyPassword(
+      dto.currentPassword,
+      user.passwordHash,
+    );
+    if (!valid) {
+      throw new UnauthorizedException('Contraseña actual incorrecta');
+    }
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException('Las contraseñas no coinciden');
+    }
+    const strength = validatePasswordStrength(dto.password);
+    if (!strength.ok) {
+      throw new BadRequestException(strength.errors.join('. '));
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hashPassword(dto.password) },
+    });
+    return { message: 'Contraseña actualizada' };
+  }
+
   toPublicUser(user: User): PublicUser {
     return {
       id: user.id,

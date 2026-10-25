@@ -28,4 +28,18 @@ export class ProgressController {
   ) {
     return this.studyService.listWeakItems(req.user.id, query.limit ?? 50);
   }
+
+  @Get('overview')
+  @ApiOperation({
+    summary: 'Resumen de dominio, racha y sesiones activas (dashboard)',
+  })
+  overview(@Req() req: { user: User }) {
+    return this.studyService.getProgressOverview(req.user.id);
+  }
+
+  @Get('by-topic')
+  @ApiOperation({ summary: '% dominio por tema' })
+  byTopic(@Req() req: { user: User }) {
+    return this.studyService.getTopicProgress(req.user.id);
+  }
 }

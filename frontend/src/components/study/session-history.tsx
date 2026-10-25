@@ -14,6 +14,7 @@ type SessionHistoryProps = {
   timezone?: string;
   emptyHint?: string;
   showMasFalladasLink?: boolean;
+  linkDetail?: boolean;
 };
 
 export function SessionHistory({
@@ -21,6 +22,7 @@ export function SessionHistory({
   timezone,
   emptyHint = "Aún no hay sesiones. Empieza en Estudiar o en Más falladas.",
   showMasFalladasLink = true,
+  linkDetail = false,
 }: SessionHistoryProps) {
   if (sessions.length === 0) {
     return (
@@ -42,44 +44,60 @@ export function SessionHistory({
 
   return (
     <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)]">
-      {sessions.map((s) => (
-        <li
-          key={s.id}
-          className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              {modeLabel(s.mode)}
-              <span className="ml-2 font-normal text-[var(--foreground-muted)]">
-                · {s.size} ítems
+      {sessions.map((s) => {
+        const body = (
+          <>
+            <div>
+              <p className="text-sm font-semibold text-[var(--foreground)]">
+                {modeLabel(s.mode)}
+                <span className="ml-2 font-normal text-[var(--foreground-muted)]">
+                  · {s.size} ítems
+                </span>
+              </p>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                {formatSessionWhen(s, timezone)}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-xs text-[var(--foreground-muted)] sm:text-right">
+              <span>
+                Score{" "}
+                <strong className="text-[var(--foreground)]">
+                  {formatScore(s)}
+                </strong>
               </span>
-            </p>
-            <p className="text-xs text-[var(--foreground-muted)]">
-              {formatSessionWhen(s, timezone)}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3 text-xs text-[var(--foreground-muted)] sm:text-right">
-            <span>
-              Score{" "}
-              <strong className="text-[var(--foreground)]">
-                {formatScore(s)}
-              </strong>
-            </span>
-            <span>
-              Tiempo{" "}
-              <strong className="text-[var(--foreground)]">
-                {formatDuration(s.durationMs)}
-              </strong>
-            </span>
-            <span>
-              Racha máx.{" "}
-              <strong className="text-[var(--foreground)]">
-                {s.maxStreak ?? "—"}
-              </strong>
-            </span>
-          </div>
-        </li>
-      ))}
+              <span>
+                Tiempo{" "}
+                <strong className="text-[var(--foreground)]">
+                  {formatDuration(s.durationMs)}
+                </strong>
+              </span>
+              <span>
+                Racha máx.{" "}
+                <strong className="text-[var(--foreground)]">
+                  {s.maxStreak ?? "—"}
+                </strong>
+              </span>
+            </div>
+          </>
+        );
+
+        return (
+          <li key={s.id}>
+            {linkDetail ? (
+              <Link
+                href={`/cuenta/historial/${s.id}`}
+                className="flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-[var(--surface-hover)] sm:flex-row sm:items-center sm:justify-between"
+              >
+                {body}
+              </Link>
+            ) : (
+              <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                {body}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

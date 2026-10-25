@@ -18,6 +18,8 @@ import {
   type ExamTimedSummary,
   type KnowledgeItem,
   type SessionSize,
+  type FlashVariant,
+  type HistoryAttemptRow,
   type StudyHistoryDetail,
   type StudyHistoryEntry,
   type StudyHistoryResponse,
@@ -192,6 +194,9 @@ export class StudyService {
     topicIds?: string[];
     timezone?: string;
   }): Promise<StudySessionView | ExamTimedSessionView> {
+    // CCST parity: starting a new session abandons open ones of the same mode.
+    await this.abandonOpenSessions(opts.user.id, opts.mode);
+
     if (opts.mode === 'FLASH_STUDY') {
       return this.startFlashSession(opts.user, {
         size: opts.size,
@@ -1261,6 +1266,133 @@ export class StudyService {
 
   /* —— APS-11: weak items / history / WEAK_REVIEW —— */
 
+  /** Mark open sessions of a mode as abandoned (ended without summary). */
+  private async abandonOpenSessions(userId: string, mode: StudyMode) {
+    const open = await this.prisma.studySession.findMany({
+      where: {
+        userId,
+        mode: mode as PrismaStudyMode,
+        endedAt: null,
+      },
+      select: { id: true },
+    });
+    if (!open.length) return;
+    const now = new Date();
+    await this.prisma.studySession.updateMany({
+      where: { id: { in: open.map((o) => o.id) } },
+      data: { endedAt: now },
+    });
+    for (const o of open) {
+      this.store.sessions.delete(o.id);
+      this.store.timedSessions.delete(o.id);
+    }
+  }
+
+  async getProgressOverview(userId: string) {
+    const [
+      knowledgeTotal,
+      questionTotal,
+      masteredItems,
+      weakItems,
+      streak,
+      activeRows,
+    ] = await Promise.all([
+      this.prisma.knowledgeItem.count({ where: { status: 'published' } }),
+      this.prisma.examQuestion.count({ where: { status: 'published' } }),
+      this.prisma.itemProgress.count({
+        where: { userId, masteredAt: { not: null } },
+      }),
+      this.prisma.itemProgress.count({
+        where: { userId, failCount: { gt: 0 } },
+      }),
+      this.prisma.dailyStreak.findUnique({ where: { userId } }),
+      this.prisma.studySession.findMany({
+        where: { userId, endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    const totalTrackableItems = knowledgeTotal + questionTotal;
+    const masteryPct = totalTrackableItems
+      ? Math.round((masteredItems / totalTrackableItems) * 1000) / 10
+      : 0;
+
+    return {
+      masteredItems,
+      totalTrackableItems,
+      masteryPct,
+      weakItems,
+      dailyStreak: streak?.current ?? 0,
+      longestDailyStreak: streak?.longest ?? 0,
+      activeSessions: activeRows.map((r) => ({
+        id: r.id,
+        mode: r.mode as StudyMode,
+        size: r.size,
+        answered: r.answeredCount,
+        startedAt: r.startedAt.toISOString(),
+      })),
+    };
+  }
+
+  async getTopicProgress(userId: string) {
+    const [topics, knowledge, questions, progress] = await Promise.all([
+      this.prisma.topic.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.knowledgeItem.findMany({
+        where: { status: 'published' },
+        select: { id: true, topicId: true },
+      }),
+      this.prisma.examQuestion.findMany({
+        where: { status: 'published' },
+        select: { id: true, topicId: true },
+      }),
+      this.prisma.itemProgress.findMany({
+        where: { userId, masteredAt: { not: null } },
+        select: { itemId: true, itemType: true },
+      }),
+    ]);
+
+    const masteredIds = new Set(progress.map((p) => p.itemId));
+    const byTopic = new Map<
+      string,
+      { total: number; mastered: number; name: string; trackId: string }
+    >();
+
+    for (const t of topics) {
+      byTopic.set(t.id, {
+        total: 0,
+        mastered: 0,
+        name: t.name,
+        trackId: t.trackId,
+      });
+    }
+    for (const k of knowledge) {
+      const row = byTopic.get(k.topicId);
+      if (!row) continue;
+      row.total += 1;
+      if (masteredIds.has(k.id)) row.mastered += 1;
+    }
+    for (const q of questions) {
+      const row = byTopic.get(q.topicId);
+      if (!row) continue;
+      row.total += 1;
+      if (masteredIds.has(q.id)) row.mastered += 1;
+    }
+
+    const topicsOut = [...byTopic.entries()]
+      .filter(([, v]) => v.total > 0)
+      .map(([topicId, v]) => ({
+        topicId,
+        topicName: v.name,
+        trackId: v.trackId,
+        mastered: v.mastered,
+        total: v.total,
+        masteryPct: Math.round((v.mastered / v.total) * 1000) / 10,
+      }));
+
+    return { topics: topicsOut };
+  }
+
   async listWeakItems(
     userId: string,
     limit = 50,
@@ -1295,11 +1427,90 @@ export class StudyService {
   ): Promise<StudyHistoryDetail> {
     const row = await this.prisma.studySession.findFirst({
       where: { id: sessionId, userId },
+      include: { attempts: { orderBy: { createdAt: 'asc' } } },
     });
     if (!row) {
       throw new NotFoundException('Sesión no encontrada');
     }
-    return this.toHistoryDetail(row);
+    const base = this.toHistoryDetail(row);
+    const attempts = await Promise.all(
+      row.attempts.map((a) => this.toHistoryAttempt(a)),
+    );
+    return { ...base, attempts };
+  }
+
+  private async toHistoryAttempt(a: {
+    id: string;
+    itemType: StudyItemType;
+    itemId: string;
+    correct: boolean;
+    choiceIndex: number | null;
+    variant: string | null;
+    createdAt: Date;
+  }): Promise<HistoryAttemptRow> {
+    let title = a.itemId;
+    let prompt: string | null = null;
+    let correctLabel: string | null = null;
+    let selectedLabel: string | null = null;
+    let explanation: string | null = null;
+
+    try {
+      if (a.itemType === StudyItemType.KNOWLEDGE) {
+        const k = await this.content.getKnowledge(a.itemId, {
+          publishedOnly: false,
+        });
+        title = k.name;
+        explanation = k.explanation;
+        const variant = (a.variant ?? 'DEFINITION_TO_NAME') as FlashVariant;
+        // Do NOT re-run renderFlashVariant: it reshuffles choices and would
+        // mislabel the historical choiceIndex. Use stable item fields.
+        if (variant === 'DEFINITION_TO_NAME') {
+          prompt = k.definition;
+          correctLabel = k.name;
+        } else {
+          prompt = `¿Qué es ${k.name}?`;
+          correctLabel = k.definition;
+        }
+        if (a.correct) {
+          selectedLabel = correctLabel;
+        } else if (a.choiceIndex != null) {
+          selectedLabel = `Opción ${a.choiceIndex + 1} (incorrecta)`;
+        }
+      } else {
+        const q = await this.content.getQuestion(a.itemId, {
+          publishedOnly: false,
+        });
+        title = q.stem.slice(0, 80);
+        prompt = q.stem;
+        correctLabel = q.choices[q.correctIndex] ?? null;
+        explanation = q.explanation;
+        // Exam choices are fixed order — safe to index.
+        if (a.choiceIndex != null && q.choices[a.choiceIndex] != null) {
+          selectedLabel = q.choices[a.choiceIndex]!;
+        } else if (a.choiceIndex != null) {
+          selectedLabel = `Opción ${a.choiceIndex + 1}`;
+        }
+      }
+    } catch {
+      if (a.choiceIndex != null) {
+        selectedLabel = `Opción ${a.choiceIndex + 1}`;
+      }
+    }
+
+    return {
+      id: a.id,
+      itemType: a.itemType as SharedStudyItemType,
+      itemId: a.itemId,
+      correct: a.correct,
+      choiceIndex: a.choiceIndex,
+      variant: a.variant,
+      createdAt: a.createdAt.toISOString(),
+      title,
+      prompt,
+      selectedLabel,
+      correctLabel,
+      explanation,
+    };
   }
 
   /**
@@ -1310,6 +1521,7 @@ export class StudyService {
     user: User,
     limit?: number,
   ): Promise<StudyHistoryDetail> {
+    await this.abandonOpenSessions(user.id, 'WEAK_REVIEW');
     const cap = Math.min(limit ?? 50, 50);
     const weak = await this.listWeakItems(user.id, cap);
 

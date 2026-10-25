@@ -8,6 +8,15 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { login, storeAuth } from "@/lib/api";
 
+const DEMO_ACCOUNTS = [
+  { label: "Estudiante", identifier: "demo", password: "StudyPass1!" },
+  {
+    label: "Admin",
+    identifier: "admin",
+    password: "ChangeMeAdmin1!",
+  },
+] as const;
+
 export default function LoginPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
@@ -22,13 +31,19 @@ export default function LoginPage() {
     try {
       const res = await login({ identifier, password });
       storeAuth(res);
-      const next = res.user.role === "ADMIN" ? "/admin" : "/estudiar";
+      const next = res.user.role === "ADMIN" ? "/admin" : "/dashboard";
       router.replace(next);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
       setPending(false);
     }
+  }
+
+  function fillDemo(identifierValue: string, passwordValue: string) {
+    setIdentifier(identifierValue);
+    setPassword(passwordValue);
+    setError(null);
   }
 
   return (
@@ -43,7 +58,8 @@ export default function LoginPage() {
         Entrar
       </h1>
       <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-        Usa tu email o username junto con la contraseña.
+        Usa tu <strong className="font-medium text-[var(--foreground)]">email o username</strong>{" "}
+        en el mismo campo, junto con la contraseña.
       </p>
 
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
@@ -54,7 +70,7 @@ export default function LoginPage() {
             type="text"
             required
             autoComplete="username"
-            placeholder="tu@email.com o username"
+            placeholder="demo · admin · tu@email.com"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />
@@ -87,6 +103,32 @@ export default function LoginPage() {
         </button>
       </form>
 
+      <aside className="mt-8 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground-muted)]">
+          Cuentas de demo (local)
+        </p>
+        <ul className="mt-3 space-y-2">
+          {DEMO_ACCOUNTS.map((acc) => (
+            <li key={acc.identifier}>
+              <button
+                type="button"
+                onClick={() => fillDemo(acc.identifier, acc.password)}
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-left text-sm transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-hover)]"
+              >
+                <span className="font-medium">{acc.label}</span>
+                <span className="mt-0.5 block font-mono text-xs text-[var(--foreground-muted)]">
+                  {acc.identifier} / {acc.password}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-[var(--foreground-muted)]">
+          También sirve <code className="font-mono">estudiante</code> con la
+          misma clave que demo.
+        </p>
+      </aside>
+
       <p className="mt-6 text-sm text-[var(--foreground-muted)]">
         <Link
           href="/forgot-password"
@@ -100,6 +142,13 @@ export default function LoginPage() {
           className="text-[var(--accent)] underline-offset-4 hover:underline"
         >
           Crear cuenta
+        </Link>
+        {" · "}
+        <Link
+          href="/guest"
+          className="text-[var(--accent)] underline-offset-4 hover:underline"
+        >
+          Probar sin cuenta
         </Link>
       </p>
     </main>

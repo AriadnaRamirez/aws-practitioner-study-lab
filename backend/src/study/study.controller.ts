@@ -73,6 +73,15 @@ export class StudyController {
       .then((session) => ({ session }));
   }
 
+  @Get('sessions/:id/history')
+  @ApiOperation({
+    summary: 'Detalle de historial: score + intentos con explicación',
+  })
+  @ApiOkResponse({ description: 'StudyHistoryDetail con attempts' })
+  historyDetail(@Req() req: { user: User }, @Param('id') id: string) {
+    return this.study.getHistorySession(req.user.id, id);
+  }
+
   @Get('sessions/:id')
   @ApiOperation({
     summary: 'Get session (FLASH / EXAM_STUDY / WEAK_REVIEW / EXAM_TIMED)',

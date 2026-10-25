@@ -17,7 +17,7 @@ import {
   recordGuestSession,
   storeGuestProbeId,
 } from "@/lib/api";
-import { MOCK_KNOWLEDGE } from "@/lib/content-api";
+import { getKnowledgeItems, MOCK_KNOWLEDGE } from "@/lib/content-api";
 
 type Phase = "loading" | "intro" | "quiz" | "done" | "capped" | "error";
 
@@ -61,13 +61,17 @@ export function GuestTrial() {
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [bank, setBank] = useState<KnowledgeItem[]>(MOCK_KNOWLEDGE);
 
-  const samples = useMemo(() => buildSamples(MOCK_KNOWLEDGE), []);
+  const samples = useMemo(() => buildSamples(bank), [bank]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        const { data } = await getKnowledgeItems();
+        if (!cancelled && data.length > 0) setBank(data);
+
         const existingId = getStoredGuestProbeId();
         let next: GuestProbe;
         if (existingId) {

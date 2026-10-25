@@ -9,7 +9,9 @@ export default function AppShellLayout({
   return (
     <div className="flex min-h-dvh flex-col bg-[var(--background)]">
       <AppNav />
-      <main className="flex-1">{children}</main>
+      <main id="contenido" className="flex-1">
+        {children}
+      </main>
       <OnboardingHost />
     </div>
   );

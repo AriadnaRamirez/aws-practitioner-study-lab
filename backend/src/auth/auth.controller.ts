@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -14,10 +15,12 @@ import {
 } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import { AuthService } from './auth.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('auth')
@@ -59,5 +62,24 @@ export class AuthController {
   @ApiOperation({ summary: 'Usuario actual (Bearer JWT)' })
   me(@Req() req: { user: User }) {
     return this.authService.toPublicUser(req.user);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar timezone / podiumHidden' })
+  updateMe(@Req() req: { user: User }, @Body() dto: UpdateProfileDto) {
+    return this.authService.updateProfile(req.user, dto);
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cambiar contraseña (sesión activa)' })
+  changePassword(
+    @Req() req: { user: User },
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(req.user, dto);
   }
 }

@@ -27,7 +27,14 @@ Luego abre:
 - API health: http://127.0.0.1:43124/api/v1/health  
 - Swagger: http://127.0.0.1:43124/docs  
 
-Admin seed: usuario `admin` / password `ChangeMeAdmin1!`
+Cuentas seed (login con **username o email** en el mismo campo):
+
+| Rol | Username | Password |
+| --- | --- | --- |
+| Admin | `admin` | `ChangeMeAdmin1!` |
+| Estudiante | `demo` o `estudiante` | `StudyPass1!` |
+
+En `/login` hay botones para rellenar demo/admin. Si fallan, corre `npm run db:seed`.
 
 Alternativa en dos terminales: `npm run dev:backend` y `npm run dev:frontend`.
 

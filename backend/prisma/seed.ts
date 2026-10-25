@@ -141,6 +141,48 @@ async function seedContent() {
   );
 }
 
+async function seedDemoStudents() {
+  const password = process.env.DEMO_PASSWORD ?? 'StudyPass1!';
+  const passwordHash = await bcrypt.hash(password, 12);
+  const timezone = 'America/Mexico_City';
+
+  const demos = [
+    {
+      email: 'demo@example.com',
+      username: 'demo',
+    },
+    {
+      email: 'estudiante@example.com',
+      username: 'estudiante',
+    },
+  ];
+
+  for (const d of demos) {
+    await prisma.user.upsert({
+      where: { email: d.email },
+      update: {
+        username: d.username,
+        passwordHash,
+        role: Role.STUDENT,
+        timezone,
+        bannedAt: null,
+      },
+      create: {
+        email: d.email,
+        username: d.username,
+        passwordHash,
+        role: Role.STUDENT,
+        timezone,
+      },
+    });
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `Demo students OK: demo|estudiante / ${password} (email: demo@example.com | estudiante@example.com)`,
+  );
+}
+
 async function seedFeatureFlags() {
   const examTrackAi = await prisma.featureFlag.upsert({
     where: { key: 'exam_track_ai' },
@@ -160,6 +202,7 @@ async function seedFeatureFlags() {
 
 async function main() {
   await seedAdmin();
+  await seedDemoStudents();
   await seedContent();
   await seedFeatureFlags();
 }

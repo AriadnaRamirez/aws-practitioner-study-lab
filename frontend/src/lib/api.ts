@@ -41,6 +41,10 @@ export function storeAuth(response: AuthResponse) {
   window.localStorage.setItem('aps_user', JSON.stringify(response.user));
 }
 
+export function setStoredUser(user: PublicUser) {
+  window.localStorage.setItem('aps_user', JSON.stringify(user));
+}
+
 export function clearAuth() {
   window.localStorage.removeItem(AUTH_TOKEN_KEY);
   window.localStorage.removeItem('aps_user');
@@ -130,6 +134,43 @@ export function fetchMe() {
   return apiFetch<PublicUser>('/auth/me', { auth: true });
 }
 
+export function updateProfile(body: {
+  timezone?: string;
+  podiumHidden?: boolean;
+}) {
+  return apiFetch<PublicUser>('/auth/me', {
+    method: 'PATCH',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function changePassword(body: {
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  return apiFetch<{ message: string }>('/auth/change-password', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function fetchProgressOverview() {
+  return apiFetch<import('@aps/shared').ProgressOverview>(
+    '/progress/overview',
+    { auth: true },
+  );
+}
+
+export function fetchTopicProgress() {
+  return apiFetch<import('@aps/shared').TopicProgressResponse>(
+    '/progress/by-topic',
+    { auth: true },
+  );
+}
+
 export function getStoredGuestProbeId(): string | null {
   if (typeof window === 'undefined') return null;
   return window.localStorage.getItem(GUEST_PROBE_STORAGE_KEY);
@@ -189,6 +230,13 @@ export function fetchStudySessions(limit = 50) {
   return apiFetch<StudyHistoryResponse>(`/study/sessions?limit=${limit}`, {
     auth: true,
   });
+}
+
+export function fetchSessionHistoryDetail(sessionId: string) {
+  return apiFetch<import('@aps/shared').StudyHistoryDetail>(
+    `/study/sessions/${sessionId}/history`,
+    { auth: true },
+  );
 }
 
 export function startWeakReview(body: StartWeakReviewRequest = {}) {

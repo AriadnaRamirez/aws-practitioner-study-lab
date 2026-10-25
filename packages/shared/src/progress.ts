@@ -46,9 +46,27 @@ export interface StudyHistoryResponse {
   total: number;
 }
 
+export interface HistoryAttemptRow {
+  id: string;
+  itemType: StudyItemType;
+  itemId: string;
+  correct: boolean;
+  choiceIndex: number | null;
+  variant: string | null;
+  createdAt: string;
+  /** Display title (knowledge name / exam stem short). */
+  title: string;
+  prompt: string | null;
+  selectedLabel: string | null;
+  correctLabel: string | null;
+  explanation: string | null;
+}
+
 export interface StudyHistoryDetail extends StudyHistoryEntry {
   queue: StudyQueueItem[];
   timeLimitSec: number | null;
+  /** Per-attempt breakdown when requested (historial detalle). */
+  attempts?: HistoryAttemptRow[];
 }
 
 export interface StartWeakReviewRequest {
@@ -58,4 +76,36 @@ export interface StartWeakReviewRequest {
 
 export interface StartWeakReviewResponse {
   session: StudyHistoryDetail;
+}
+
+/** Dashboard / progress overview (CCST-parity). */
+export interface ProgressOverview {
+  masteredItems: number;
+  totalTrackableItems: number;
+  masteryPct: number;
+  weakItems: number;
+  dailyStreak: number;
+  longestDailyStreak: number;
+  activeSessions: ActiveSessionSummary[];
+}
+
+export interface ActiveSessionSummary {
+  id: string;
+  mode: import('./study').StudyMode;
+  size: number;
+  answered: number;
+  startedAt: string;
+}
+
+export interface TopicProgressRow {
+  topicId: string;
+  topicName: string;
+  trackId: string;
+  mastered: number;
+  total: number;
+  masteryPct: number;
+}
+
+export interface TopicProgressResponse {
+  topics: TopicProgressRow[];
 }

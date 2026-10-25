@@ -97,6 +97,11 @@ export {
   type StudyHistoryEntry,
   type StudyHistoryResponse,
   type StudyHistoryDetail,
+  type HistoryAttemptRow,
   type StartWeakReviewRequest,
   type StartWeakReviewResponse,
+  type ProgressOverview,
+  type ActiveSessionSummary,
+  type TopicProgressRow,
+  type TopicProgressResponse,
 } from './progress';

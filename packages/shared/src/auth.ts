@@ -49,6 +49,17 @@ export interface ResetPasswordRequest {
   confirmPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  timezone?: string;
+  podiumHidden?: boolean;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+}
+
 export const USERNAME_MIN = 3;
 export const USERNAME_MAX = 24;
 export const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/;
