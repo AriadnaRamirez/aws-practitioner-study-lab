@@ -33,12 +33,12 @@ export class StudyController {
   @Post('sessions')
   @ApiOperation({
     summary:
-      'Start session: EXAM_STUDY (miss-repeat) or EXAM_TIMED (cronometrado)',
+      'Start FLASH_STUDY, EXAM_STUDY (miss-repeat) or EXAM_TIMED (cronometrado)',
   })
-  @ApiOkResponse({ description: 'Session view (study or timed)' })
+  @ApiOkResponse({ description: 'Session view (flash, study or timed)' })
   start(@Req() req: { user: User }, @Body() dto: StartStudySessionDto) {
     return this.study.startSession({
-      userId: req.user.id,
+      user: req.user,
       mode: dto.mode,
       size: dto.size,
       topicIds: dto.topicIds,
@@ -48,27 +48,22 @@ export class StudyController {
 
   @Get('sessions/:id')
   @ApiOperation({
-    summary: 'Get session (EXAM_STUDY view or EXAM_TIMED view)',
+    summary: 'Get session (FLASH / EXAM_STUDY / EXAM_TIMED)',
   })
   get(@Req() req: { user: User }, @Param('id') id: string) {
-    return this.study.getAnySession(req.user.id, id);
+    return this.study.getAnySession(req.user, id);
   }
 
   @Post('sessions/:id/answer')
   @ApiOperation({
-    summary: 'Answer current EXAM_STUDY prompt (live feedback + miss-repeat)',
+    summary: 'Answer current FLASH_STUDY or EXAM_STUDY prompt',
   })
   answer(
     @Req() req: { user: User },
     @Param('id') id: string,
     @Body() dto: AnswerStudyDto,
   ) {
-    return this.study.answer(
-      id,
-      req.user.id,
-      dto.queueItemId,
-      dto.choiceIndex,
-    );
+    return this.study.answerAny(req.user, id, dto);
   }
 
   @Post('sessions/:id/exam-answer')
@@ -112,8 +107,8 @@ export class StudyController {
   }
 
   @Get('sessions/:id/summary')
-  @ApiOperation({ summary: 'Summary (EXAM_STUDY completed or EXAM_TIMED)' })
+  @ApiOperation({ summary: 'Summary (FLASH / EXAM_STUDY / EXAM_TIMED)' })
   summary(@Req() req: { user: User }, @Param('id') id: string) {
-    return this.study.getAnySummary(req.user.id, id);
+    return this.study.getAnySummary(req.user, id);
   }
 }

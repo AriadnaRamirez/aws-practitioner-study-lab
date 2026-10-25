@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { OpenTourButton } from "@/components/onboarding/open-tour-button";
 import { ExamStudyPanel } from "@/components/study/exam-study-panel";
+import { FlashStudyClient } from "@/components/study/flash-study-client";
 
 export const metadata: Metadata = {
   title: "Estudiar",
@@ -40,10 +41,17 @@ export default function EstudiarPage() {
           </div>
         </div>
         <p className="max-w-prose text-sm text-[var(--foreground-muted)]">
-          Abajo: Modo Estudio para examen (feedback + refuerzo). Para simular el
-          CLF con timer y sin pistas en vivo, usa Modo Examen.
+          Flash MCQ con refuerzo al fallar, estudio del banco de examen, o
+          simulación cronometrada CLF.
         </p>
       </div>
+
+      <section className="mx-auto w-full max-w-3xl px-4 pb-6 sm:px-6">
+        <h2 className="mb-3 font-display text-xl font-semibold text-[var(--foreground)]">
+          Flashcards
+        </h2>
+        <FlashStudyClient />
+      </section>
 
       <ExamStudyPanel />
     </div>

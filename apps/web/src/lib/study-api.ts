@@ -58,6 +58,15 @@ export function startStudySession(body: StartStudySessionRequest) {
   });
 }
 
+/** Alias for FLASH_STUDY starters (APS-8). */
+export function startFlashSession(body: StartStudySessionRequest) {
+  return startStudySession({ ...body, mode: "FLASH_STUDY" });
+}
+
+export function getStudySession(sessionId: string) {
+  return studyFetch<StudySessionView>(`/study/sessions/${sessionId}`);
+}
+
 export function answerStudy(sessionId: string, body: AnswerStudyRequest) {
   return studyFetch<AnswerStudyResponse>(
     `/study/sessions/${sessionId}/answer`,

@@ -104,9 +104,14 @@ Las mutaciones admin de contenido aún usan `x-admin-token`; siguiente paso: sus
 
 ## Alcance actual
 
-- **APS-3–7:** monorepo, auth JWT, shell/tema, content CRUD sobre Postgres/Prisma  
+- **APS-3–7:** monorepo, auth JWT, shell/tema, content CRUD sobre Postgres/Prisma
+- **APS-8:** motor flash MCQ en Nest (`StudyModule`): `FLASH_STUDY`, miss-repeat, dominio 3, rachas; UI en `/estudiar`
+- **APS-9/10:** `EXAM_STUDY` + `EXAM_TIMED` (Nest)
+- **APS-13:** GuestProbe + usage analytics
 
-**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, guest analytics, Google OAuth.
+API: NestJS en `apps/api` (`@nestjs/common`, `nest start`). Swagger: `http://127.0.0.1:43124/docs`.
+
+**Fuera de alcance aún:** podio, Google OAuth, AdminGuard JWT.
 
 ## Scripts raíz
 

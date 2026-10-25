@@ -26,7 +26,8 @@ export class StartStudySessionDto {
 
   @ApiProperty({
     enum: EXAM_TIMED_SIZES,
-    description: 'EXAM_STUDY: 10–50. EXAM_TIMED: también 65 (mock).',
+    description:
+      'FLASH_STUDY / EXAM_STUDY: 10–50. EXAM_TIMED: también 65 (mock).',
   })
   @IsInt()
   @IsIn(ALL_SIZES)
@@ -55,6 +56,12 @@ export class AnswerStudyDto {
   @Min(0)
   @Max(3)
   choiceIndex!: 0 | 1 | 2 | 3;
+
+  @ApiPropertyOptional({ description: 'Client latency hint (FLASH_STUDY)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  latencyMs?: number;
 }
 
 export class AnswerExamTimedDto {

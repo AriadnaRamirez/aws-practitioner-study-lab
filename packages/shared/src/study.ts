@@ -13,7 +13,7 @@ export const STUDY_MODES = [
   'WEAK_REVIEW',
 ] as const satisfies readonly StudyMode[];
 
-/** Session sizes for study practice (EXAM_STUDY). Mock 65 is EXAM_TIMED only. */
+/** Session sizes for study practice (EXAM_STUDY / FLASH_STUDY). Mock 65 is EXAM_TIMED only. */
 export const STUDY_SIZES = [10, 20, 30, 50] as const;
 export type StudySize = (typeof STUDY_SIZES)[number];
 
@@ -46,22 +46,31 @@ export const MISS_REPEAT_OFFSET = 3;
 /** Consecutive item hits required for mastery (flash / study). */
 export const MASTERY_STREAK = 3;
 
+export type StudyItemType = 'KNOWLEDGE' | 'EXAM_QUESTION';
+
+export const STUDY_ITEM_TYPES = [
+  'KNOWLEDGE',
+  'EXAM_QUESTION',
+] as const satisfies readonly StudyItemType[];
+
 /** Prompt shown to the learner (no answer key until after submit). */
 export interface StudyPrompt {
   /** Stable id for this appearance in the queue (miss-repeats get new ids). */
   queueItemId: string;
   itemId: string;
+  /** Flash variant label when mode is FLASH_STUDY. */
+  variant?: string;
   stem: string;
   choices: [string, string, string, string];
 }
 
 export interface StartStudySessionRequest {
   mode: StudyMode;
-  /** EXAM_STUDY: 10/20/30/50. EXAM_TIMED: also 65. */
+  /** FLASH/EXAM_STUDY: 10/20/30/50. EXAM_TIMED: also 65. */
   size: SessionSize;
   /** Optional topic filter; omit = whole published bank for the mode. */
   topicIds?: string[];
-  /** Snapshot timezone for EXAM_TIMED. */
+  /** Snapshot timezone for EXAM_TIMED / daily streak. */
   timezone?: string;
 }
 
@@ -73,7 +82,10 @@ export interface StudySessionView {
   uniqueItems: number;
   remaining: number;
   sessionStreak: number;
+  maxSessionStreak: number;
   answered: number;
+  masteredInSession: number;
+  dailyStreak: number;
   current: StudyPrompt | null;
   status: 'active' | 'completed';
 }
@@ -81,6 +93,7 @@ export interface StudySessionView {
 export interface AnswerStudyRequest {
   queueItemId: string;
   choiceIndex: 0 | 1 | 2 | 3;
+  latencyMs?: number;
 }
 
 export interface StudySessionSummary {
@@ -92,13 +105,18 @@ export interface StudySessionSummary {
   incorrectAnswers: number;
   missRepeats: number;
   maxSessionStreak: number;
+  masteredInSession?: number;
   accuracyPct: number;
+  dailyStreak?: number;
+  longestDailyStreak?: number;
 }
 
 export interface AnswerStudyResponse {
   correct: boolean;
   correctIndex: 0 | 1 | 2 | 3;
   explanation: string;
+  itemMastered?: boolean;
+  itemConsecutiveCorrect?: number;
   sessionStreak: number;
   remaining: number;
   finished: boolean;
