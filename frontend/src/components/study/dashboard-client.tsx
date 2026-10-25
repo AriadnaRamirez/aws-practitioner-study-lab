@@ -1,0 +1,185 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import type { ProgressOverview, PublicUser } from "@aps/shared";
+import { STUDY_MODE_LABELS } from "@aps/shared";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  clearAuth,
+  fetchMe,
+  fetchProgressOverview,
+  getStoredToken,
+} from "@/lib/api";
+import { cn } from "@/lib/utils";
+
+export function DashboardClient() {
+  const [user, setUser] = useState<PublicUser | null>(null);
+  const [overview, setOverview] = useState<ProgressOverview | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!getStoredToken()) {
+      setUser(null);
+      return;
+    }
+    try {
+      const me = await fetchMe();
+      setUser(me);
+      const ov = await fetchProgressOverview();
+      setOverview(ov);
+    } catch (err) {
+      clearAuth();
+      setUser(null);
+      setError(err instanceof Error ? err.message : "Sesión inválida");
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+        <h1 className="font-display text-3xl font-bold tracking-tight">
+          Inicio
+        </h1>
+        <p className="mt-3 text-[var(--foreground-muted)]">
+          Entrá para ver tu dominio, racha y continuar sesiones.
+        </p>
+        {error ? (
+          <p className="mt-2 text-sm text-red-600">{error}</p>
+        ) : null}
+        <Link
+          href="/login"
+          className={cn(buttonVariants({ size: "lg" }), "mt-8 inline-flex")}
+        >
+          Entrar
+        </Link>
+      </div>
+    );
+  }
+
+  const pct = overview?.masteryPct ?? 0;
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <p className="text-sm font-medium text-[var(--accent)]">Tu lab</p>
+      <h1 className="font-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+        Hola, @{user.username}
+      </h1>
+      <p className="mt-3 max-w-xl text-base text-[var(--foreground-muted)]">
+        Elige un modo. El progreso (dominio, rachas, más falladas) se guarda en
+        tu cuenta.
+      </p>
+
+      <section className="mt-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm text-[var(--foreground-muted)]">
+              Dominio global
+            </p>
+            <p className="font-display text-3xl font-semibold">
+              {pct}%
+              <span className="ml-2 text-base font-normal text-[var(--foreground-muted)]">
+                {overview?.masteredItems ?? 0}/
+                {overview?.totalTrackableItems ?? 0} ítems
+              </span>
+            </p>
+          </div>
+          <div className="text-sm text-[var(--foreground-muted)]">
+            Racha diaria{" "}
+            <strong className="text-[var(--foreground)]">
+              {overview?.dailyStreak ?? 0}
+            </strong>
+            {" · "}
+            récord {overview?.longestDailyStreak ?? 0}
+          </div>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+          <div
+            className="h-full rounded-full bg-[var(--accent)] transition-[width]"
+            style={{ width: `${Math.min(100, pct)}%` }}
+          />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/progreso" className={cn(buttonVariants({ variant: "secondary" }))}>
+            Ver por tema
+          </Link>
+          <Link href="/mas-falladas" className={cn(buttonVariants({ variant: "ghost" }))}>
+            Más falladas ({overview?.weakItems ?? 0})
+          </Link>
+        </div>
+      </section>
+
+      {overview?.activeSessions?.length ? (
+        <section className="mt-8">
+          <h2 className="font-display text-xl font-semibold">
+            Sesiones a medias
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {overview.activeSessions.map((s) => (
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold">
+                    {STUDY_MODE_LABELS[s.mode]} · {s.size} ítems
+                  </p>
+                  <p className="text-xs text-[var(--foreground-muted)]">
+                    Respondidas {s.answered}
+                  </p>
+                </div>
+                <Link
+                  href={
+                    s.mode === "EXAM_TIMED"
+                      ? `/estudiar/examen?session=${s.id}`
+                      : s.mode === "WEAK_REVIEW"
+                        ? "/mas-falladas"
+                        : `/estudiar?session=${s.id}`
+                  }
+                  className={cn(buttonVariants({ size: "sm" }))}
+                >
+                  Continuar
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-10 grid gap-4 sm:grid-cols-3">
+        {[
+          {
+            href: "/estudiar",
+            title: "Flash + estudio",
+            body: "MCQ con miss-repeat y dominio.",
+          },
+          {
+            href: "/estudiar/examen",
+            title: "Modo Examen",
+            body: "Cronometrado, mock 65/90.",
+          },
+          {
+            href: "/podio",
+            title: "Podio",
+            body: "Ranking por ítems dominados.",
+          },
+        ].map((card) => (
+          <Link
+            key={card.href}
+            href={card.href}
+            className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4 transition-colors hover:border-[var(--accent)]"
+          >
+            <h3 className="font-display text-lg font-semibold">{card.title}</h3>
+            <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+              {card.body}
+            </p>
+          </Link>
+        ))}
+      </section>
+    </div>
+  );
+}

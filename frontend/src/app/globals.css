@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/* Teal-lab identity: cool mist / deep night — not purple-white, not cream-terracotta */
+:root {
+  --background: #eef3f7;
+  --foreground: #0b1c2c;
+  --foreground-muted: #4a5f73;
+  --surface: #f7fafc;
+  --surface-elevated: #ffffff;
+  --surface-hover: #e4ecf3;
+  --border: #c9d6e3;
+  --border-strong: #8fa3b8;
+  --accent: #0d8f9a;
+  --accent-hover: #0a7a83;
+  --accent-foreground: #f4fcfd;
+  --accent-soft: #c5eef1;
+  --ring: #0d8f9a;
+  --glow: rgba(13, 143, 154, 0.28);
+  --glow-secondary: rgba(232, 152, 56, 0.18);
+  --hero-mesh-a: #b8dde8;
+  --hero-mesh-b: #d4e8f0;
+  --hero-mesh-c: #9fd4c8;
+  --nav-bg: rgba(247, 250, 252, 0.82);
+}
+
+.dark {
+  --background: #061018;
+  --foreground: #e6eef5;
+  --foreground-muted: #8aa0b5;
+  --surface: #0c1a24;
+  --surface-elevated: #122433;
+  --surface-hover: #1a3042;
+  --border: #1e3548;
+  --border-strong: #3d5a73;
+  --accent: #2ec4c6;
+  --accent-hover: #45d4d6;
+  --accent-foreground: #042028;
+  --accent-soft: #0f3a3f;
+  --ring: #2ec4c6;
+  --glow: rgba(46, 196, 198, 0.22);
+  --glow-secondary: rgba(232, 152, 56, 0.12);
+  --hero-mesh-a: #0a2a38;
+  --hero-mesh-b: #0d1f2c;
+  --hero-mesh-c: #12352f;
+  --nav-bg: rgba(6, 16, 24, 0.86);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-figtree);
+  --font-display: var(--font-syne);
+  --font-mono: var(--font-jetbrains);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(2%, -3%) scale(1.04);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-figtree), ui-sans-serif, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-syne), ui-sans-serif, sans-serif;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+.animate-fade-up-delay-1 {
+  animation: fade-up 0.7s ease-out 0.12s both;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.7s ease-out 0.24s both;
+}
+
+.animate-fade-up-delay-3 {
+  animation: fade-up 0.7s ease-out 0.36s both;
+}
+
+.animate-drift {
+  animation: drift 18s ease-in-out infinite;
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-up-delay-1,
+  .animate-fade-up-delay-2,
+  .animate-fade-up-delay-3,
+  .animate-drift,
+  .animate-soft-pulse {
+    animation: none;
+  }
+}

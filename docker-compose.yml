@@ -1,0 +1,22 @@
+# Minimal Postgres for local APS Lab development.
+# Usage: docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aps
+      POSTGRES_PASSWORD: aps_dev
+      POSTGRES_DB: aps_lab
+    ports:
+      - "5432:5432"
+    volumes:
+      - aps_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aps -d aps_lab"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  aps_pg_data:

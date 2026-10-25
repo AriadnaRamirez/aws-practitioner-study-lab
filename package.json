@@ -1,0 +1,37 @@
+{
+  "name": "aws-practitioner-study-lab",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AWS Practitioner Study Lab \u2014 frontend (Next) + backend (Nest) separados",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev -w @aps/frontend",
+    "dev:backend": "npm run start:dev -w @aps/backend",
+    "dev:web": "npm run dev:frontend",
+    "dev:api": "npm run dev:backend",
+    "build": "npm run build -w @aps/shared && npm run build -w @aps/backend && npm run build -w @aps/frontend",
+    "build:frontend": "npm run build -w @aps/frontend",
+    "build:backend": "npm run build -w @aps/backend",
+    "build:web": "npm run build:frontend",
+    "build:api": "npm run build:backend",
+    "lint": "npm run lint -w @aps/frontend && npm run lint -w @aps/backend",
+    "test:backend": "npm run test -w @aps/backend",
+    "test:api": "npm run test:backend",
+    "db:up": "docker compose up -d",
+    "db:migrate": "npm run prisma:migrate -w @aps/backend",
+    "db:seed": "npm run prisma:seed -w @aps/backend",
+    "setup:local": "bash scripts/local-up.sh",
+    "local": "npm run build -w @aps/shared && concurrently -k -n backend,frontend -c teal,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "db:migrate:deploy": "npm run prisma:migrate:deploy -w @aps/backend"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}

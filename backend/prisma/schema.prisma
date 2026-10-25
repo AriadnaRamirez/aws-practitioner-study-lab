@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+/// Aligned with @aps/shared TopicType (maestro §5).
+enum TopicType {
+  SERVICE
+  CONCEPT
+}
+
+/// Aligned with @aps/shared ContentStatus (maestro §5).
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
+enum StudyMode {
+  FLASH_STUDY
+  EXAM_STUDY
+  EXAM_TIMED
+  WEAK_REVIEW
+}
+
+enum StudyItemType {
+  KNOWLEDGE
+  EXAM_QUESTION
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String    @unique
+  passwordHash String
+  role         Role      @default(STUDENT)
+  timezone     String    @default("UTC")
+  podiumHidden Boolean   @default(false)
+  /// Soft-ban: login rejected while set (admin owner tool).
+  bannedAt     DateTime?
+  createdAt    DateTime  @default(now())
+
+  passwordResetTokens PasswordResetToken[]
+  studySessions       StudySession[]
+  attempts            Attempt[]
+  itemProgress        ItemProgress[]
+  dailyStreak         DailyStreak?
+
+  @@index([email])
+  @@index([username])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Taxonomy node under an exam track (maestro §5 / §10).
+model Topic {
+  id        String    @id @default(cuid())
+  trackId   String
+  type      TopicType
+  name      String
+  parentId  String?
+  parent    Topic?    @relation("TopicTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Topic[]   @relation("TopicTree")
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  knowledgeItems KnowledgeItem[]
+  examQuestions  ExamQuestion[]
+
+  @@index([trackId])
+  @@index([parentId])
+  @@index([sortOrder])
+}
+
+/// Canonical flash fact → runtime MCQ variants (maestro §5).
+model KnowledgeItem {
+  id              String        @id @default(cuid())
+  topicId         String
+  topic           Topic         @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  trackId         String
+  name            String
+  definition      String
+  /// At least 3 false names/definitions; JSON string[].
+  distractors     Json
+  explanation     String
+  /// Subset of FlashVariant; JSON string[].
+  allowedVariants Json
+  status          ContentStatus @default(draft)
+  externalKey     String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([topicId])
+  @@index([trackId])
+  @@index([status])
+}
+
+/// Exam bank item with exactly 4 choices (maestro §5).
+model ExamQuestion {
+  id           String        @id @default(cuid())
+  topicId      String
+  topic        Topic         @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  trackId      String
+  stem         String
+  /// Exactly four choice strings; JSON [string, string, string, string].
+  choices      Json
+  correctIndex Int
+  explanation  String
+  status       ContentStatus @default(draft)
+  externalKey  String?       @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([topicId])
+  @@index([trackId])
+  @@index([status])
+}
+
+/// Marketing guest probe (APS-13). No progress/podium — conversion analytics only.
+model GuestProbe {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  sessionsCount   Int      @default(0)
+  convertedUserId String?  @unique
+
+  @@index([createdAt])
+}
+
+/// Runtime study/exam session (maestro §10). FLASH_STUDY persists here; EXAM_* may use store until migrated.
+model StudySession {
+  id               String     @id @default(cuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId          String?
+  mode             StudyMode
+  size             Int
+  /// JSON string[] of topicIds (empty = mixto).
+  scopeJson        String     @default("[]")
+  timeLimitSec     Int?
+  /// Snapshot of user IANA tz at start (daily streak civil date).
+  timezone         String     @default("UTC")
+  /// Remaining queue + current prompt state (server-owned).
+  stateJson        String     @default("{}")
+  startedAt        DateTime   @default(now())
+  endedAt          DateTime?
+  score            Float?
+  /// JSON summary written on completion.
+  summaryJson      String?
+  sessionStreak    Int        @default(0)
+  maxSessionStreak Int        @default(0)
+  answeredCount    Int        @default(0)
+  correctCount     Int        @default(0)
+  missRepeatCount  Int        @default(0)
+  uniqueItems      Int        @default(0)
+
+  attempts Attempt[]
+
+  @@index([userId, startedAt(sort: Desc)])
+}
+
+model Attempt {
+  id          String        @id @default(cuid())
+  sessionId   String
+  session     StudySession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType    StudyItemType
+  itemId      String
+  correct     Boolean
+  latencyMs   Int?
+  variant     String?
+  choiceIndex Int?
+  createdAt   DateTime      @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([sessionId])
+  @@index([itemType, itemId])
+}
+
+model ItemProgress {
+  id                 String        @id @default(cuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType           StudyItemType
+  itemId             String
+  consecutiveCorrect Int           @default(0)
+  failCount          Int           @default(0)
+  passCount          Int           @default(0)
+  masteredAt         DateTime?
+  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime      @default(now())
+
+  @@unique([userId, itemType, itemId])
+  @@index([userId, failCount(sort: Desc)])
+}
+
+model DailyStreak {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  current       Int      @default(0)
+  longest       Int      @default(0)
+  /// Civil date YYYY-MM-DD in the user's timezone of last completed session.
+  lastStudyDate String?
+  updatedAt     DateTime @updatedAt
+}
+
+/// Runtime toggles (APS-16). Content/exam tracks stay gated when off.
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  enabled   Boolean  @default(false)
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,6 @@
+{
+  "ports": [
+    { "name": "frontend", "port": 43123 },
+    { "name": "backend", "port": 43124 }
+  ]
+}
