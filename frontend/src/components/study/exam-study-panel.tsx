@@ -11,6 +11,7 @@ import {
   type StudySize,
 } from "@aps/shared";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { getStoredToken } from "@/lib/api";
 import { answerStudy, startStudySession } from "@/lib/study-api";
 import { cn } from "@/lib/utils";
@@ -156,7 +157,13 @@ export function ExamStudyPanel() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button onClick={onStart} disabled={pending}>
-              {pending ? "Preparando…" : "Empezar estudio"}
+              {pending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner /> Preparando…
+                </span>
+              ) : (
+                "Empezar estudio"
+              )}
             </Button>
             <Link
               href="/login"
@@ -207,7 +214,13 @@ export function ExamStudyPanel() {
             onClick={onSubmitAnswer}
             disabled={selected === null || pending}
           >
-            {pending ? "Enviando…" : "Comprobar"}
+            {pending ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner /> Enviando…
+              </span>
+            ) : (
+              "Comprobar"
+            )}
           </Button>
         </section>
       ) : null}

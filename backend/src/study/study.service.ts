@@ -179,13 +179,31 @@ export function requeueMiss(
   return next;
 }
 
+/** Short in-memory cache so each flash answer does not re-query all knowledge. */
+const KNOWLEDGE_CACHE_TTL_MS = 20_000;
+
 @Injectable()
 export class StudyService {
+  private knowledgeCache: { at: number; items: KnowledgeItem[] } | null = null;
+
   constructor(
     private readonly store: StudyStore,
     private readonly content: ContentService,
     private readonly prisma: PrismaService,
   ) {}
+
+  private async publishedKnowledge(): Promise<KnowledgeItem[]> {
+    const now = Date.now();
+    if (
+      this.knowledgeCache &&
+      now - this.knowledgeCache.at < KNOWLEDGE_CACHE_TTL_MS
+    ) {
+      return this.knowledgeCache.items;
+    }
+    const items = await this.content.listKnowledge({ publishedOnly: true });
+    this.knowledgeCache = { at: now, items };
+    return items;
+  }
 
   async startSession(opts: {
     user: User;
@@ -517,7 +535,7 @@ export class StudyService {
     }
 
     const topicIds = opts.topicIds?.filter(Boolean) ?? [];
-    let pool = await this.content.listKnowledge({ publishedOnly: true });
+    let pool = await this.publishedKnowledge();
     if (topicIds.length) {
       const set = new Set(topicIds);
       pool = pool.filter((k) => set.has(k.topicId));
@@ -598,7 +616,7 @@ export class StudyService {
       throw new BadRequestException('choiceIndex must be 0..3');
     }
 
-    const pool = await this.content.listKnowledge({ publishedOnly: true });
+    const pool = await this.publishedKnowledge();
     const correct = dto.choiceIndex === current.correctIndex;
 
     await this.prisma.attempt.create({
@@ -1539,9 +1557,7 @@ export class StudyService {
     const bank: StudySessionRecord['bank'] = new Map();
     const itemTypesMap = new Map<string, 'KNOWLEDGE' | 'EXAM_QUESTION'>();
     const playQueue: QueueEntry[] = [];
-    const knowledgePool = await this.content.listKnowledge({
-      publishedOnly: true,
-    });
+    const knowledgePool = await this.publishedKnowledge();
 
     for (const w of weak.items) {
       if (w.itemType === 'KNOWLEDGE') {

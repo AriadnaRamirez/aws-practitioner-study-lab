@@ -161,11 +161,26 @@ export function DashboardClient() {
         </section>
       ) : null}
 
-      <section className="mt-10 grid gap-4 sm:grid-cols-3">
+      <section className="mt-10">
+        <Link
+          href="/estudiar?start=10"
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "inline-flex w-full justify-center sm:w-auto",
+          )}
+        >
+          Empezar 10 flashcards
+        </Link>
+        <p className="mt-2 text-xs text-[var(--foreground-muted)]">
+          Happy path: un clic crea la sesión y te pone la primera carta.
+        </p>
+      </section>
+
+      <section className="mt-8 grid gap-4 sm:grid-cols-3">
         {[
           {
             href: "/estudiar",
-            title: "Flash + estudio",
+            title: "Flashcards",
             body: "MCQ con miss-repeat y dominio.",
           },
           {
