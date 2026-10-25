@@ -1,7 +1,11 @@
 import type { AdminGuestRow, AdminUserRow, UsageSummary } from "@aps/shared";
 
+/** Browser: same-origin proxy. Server components: hit Nest directly. */
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ??
+  (typeof window === "undefined"
+    ? "http://127.0.0.1:43124/api/v1"
+    : "/api/v1");
 
 const ADMIN_TOKEN =
   process.env.NEXT_PUBLIC_ADMIN_TOKEN ??
