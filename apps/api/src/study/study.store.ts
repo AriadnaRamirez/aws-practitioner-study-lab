@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import type { StudyMode } from '@aps/shared';
+import type {
+  ExamTimedSummary,
+  SessionSize,
+  StudyMode,
+  TimedSessionStatus,
+} from '@aps/shared';
 
 export interface QueueEntry {
   queueItemId: string;
@@ -11,9 +16,10 @@ export interface BankItem {
   choices: [string, string, string, string];
   correctIndex: 0 | 1 | 2 | 3;
   explanation: string;
+  topicId?: string;
 }
 
-/** In-memory study sessions (APS-8/9 stub — Prisma persistence lands with APS-8 full). */
+/** In-memory study sessions (Prisma persistence lands with APS-8). */
 export interface StudySessionRecord {
   id: string;
   userId: string;
@@ -33,7 +39,26 @@ export interface StudySessionRecord {
   endedAt?: string;
 }
 
+/** EXAM_TIMED session (no miss-repeat / live streak). */
+export interface TimedSessionRecord {
+  id: string;
+  userId: string;
+  mode: 'EXAM_TIMED';
+  size: SessionSize;
+  timeLimitSec: number;
+  startedAt: Date;
+  endsAt: Date;
+  endedAt?: Date;
+  status: TimedSessionStatus;
+  timezone: string;
+  questionIds: string[];
+  answers: Map<string, 0 | 1 | 2 | 3 | null>;
+  markedForReview: Set<string>;
+  summary?: ExamTimedSummary;
+}
+
 @Injectable()
 export class StudyStore {
   readonly sessions = new Map<string, StudySessionRecord>();
+  readonly timedSessions = new Map<string, TimedSessionRecord>();
 }

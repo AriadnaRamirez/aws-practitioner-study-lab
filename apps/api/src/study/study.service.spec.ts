@@ -1,4 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
+import {
+  EXAM_TIMED_LIMIT_SEC,
+  examTimedLimitSec,
+  type ExamTimedSessionView,
+  type StudySessionView,
+} from '@aps/shared';
 import { ContentService } from '../content/content.service';
 import { ContentStore } from '../content/content.store';
 import { requeueMiss, StudyService } from './study.service';
@@ -68,7 +74,7 @@ describe('StudyService EXAM_STUDY', () => {
       userId: 'user-1',
       mode: 'EXAM_STUDY',
       size: 10,
-    });
+    }) as StudySessionView;
     expect(session.mode).toBe('EXAM_STUDY');
     expect(session.status).toBe('active');
     expect(session.current).not.toBeNull();
@@ -82,7 +88,7 @@ describe('StudyService EXAM_STUDY', () => {
       userId: 'user-1',
       mode: 'EXAM_STUDY',
       size: 10,
-    });
+    }) as StudySessionView;
     const prompt = session.current!;
     const remainingBefore = session.remaining;
 
@@ -105,7 +111,7 @@ describe('StudyService EXAM_STUDY', () => {
     expect(res.remaining).toBe(remainingBefore);
   });
 
-  it('rejects non-EXAM_STUDY modes in APS-9 stub', () => {
+  it('rejects FLASH_STUDY until APS-8', () => {
     expect(() =>
       service.startSession({
         userId: 'user-1',
@@ -120,11 +126,85 @@ describe('StudyService EXAM_STUDY', () => {
       userId: 'user-1',
       mode: 'EXAM_STUDY',
       size: 10,
-    });
+    }) as StudySessionView;
     const summary = drainSession(session.sessionId, 'user-1');
     expect(summary).toBeDefined();
     expect(summary!.uniqueItems).toBe(session.uniqueItems);
     expect(summary!.correctAnswers).toBeGreaterThan(0);
     expect(summary!.accuracyPct).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('examTimedLimitSec', () => {
+  it('matches maestro timer table', () => {
+    expect(examTimedLimitSec(10)).toBe(14 * 60);
+    expect(examTimedLimitSec(20)).toBe(28 * 60);
+    expect(examTimedLimitSec(30)).toBe(42 * 60);
+    expect(examTimedLimitSec(50)).toBe(69 * 60);
+    expect(examTimedLimitSec(65)).toBe(90 * 60);
+    expect(EXAM_TIMED_LIMIT_SEC[65]).toBe(5400);
+  });
+});
+
+describe('StudyService EXAM_TIMED', () => {
+  let service: StudyService;
+
+  beforeEach(() => {
+    const contentStore = new ContentStore();
+    const content = new ContentService(contentStore);
+    service = new StudyService(new StudyStore(), content);
+  });
+
+  it('starts with timeLimitSec and no correct keys in view', () => {
+    const view = service.startSession({
+      userId: 'user-1',
+      mode: 'EXAM_TIMED',
+      size: 10,
+    }) as ExamTimedSessionView;
+    expect(view.mode).toBe('EXAM_TIMED');
+    expect(view.size).toBe(10);
+    expect(view.timeLimitSec).toBe(840);
+    expect(view.questions).toHaveLength(10);
+    expect(view.status).toBe('IN_PROGRESS');
+    expect(JSON.stringify(view)).not.toContain('correctIndex');
+    expect(JSON.stringify(view)).not.toContain('explanation');
+  });
+
+  it('answers without revealing correctness until submit', () => {
+    const view = service.startSession({
+      userId: 'user-1',
+      mode: 'EXAM_TIMED',
+      size: 10,
+    }) as ExamTimedSessionView;
+    const qid = view.questions[0]!.id;
+    const after = service.answerTimed('user-1', view.id, qid, 0);
+    expect(after.answers[qid]).toBe(0);
+    expect(after.answeredCount).toBe(1);
+    const summary = service.submitTimed('user-1', view.id);
+    expect(summary.totalCount).toBe(10);
+    expect(summary.correctCount + summary.mistakes.length).toBe(10);
+    expect(summary.mistakes.every((m) => m.explanation)).toBe(true);
+  });
+
+  it('supports mark for review', () => {
+    const view = service.startSession({
+      userId: 'user-1',
+      mode: 'EXAM_TIMED',
+      size: 10,
+    }) as ExamTimedSessionView;
+    const qid = view.questions[1]!.id;
+    const marked = service.markTimedReview('user-1', view.id, qid, true);
+    expect(marked.markedForReview).toContain(qid);
+  });
+
+  it('starts mock 65 with 90 minutes', () => {
+    const view = service.startSession({
+      userId: 'user-1',
+      mode: 'EXAM_TIMED',
+      size: 65,
+    }) as ExamTimedSessionView;
+    expect(view.size).toBe(65);
+    expect(view.timeLimitSec).toBe(5400);
+    expect(view.questions).toHaveLength(65);
   });
 });

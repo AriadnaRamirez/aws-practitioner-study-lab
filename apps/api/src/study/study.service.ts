@@ -1,12 +1,21 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import {
+  EXAM_TIMED_SIZES,
   MISS_REPEAT_OFFSET,
+  STUDY_SIZES,
+  examTimedLimitSec,
   type AnswerStudyResponse,
   type ExamQuestion,
+  type ExamTimedMistake,
+  type ExamTimedQuestionView,
+  type ExamTimedSessionView,
+  type ExamTimedSummary,
+  type SessionSize,
   type StudyMode,
   type StudyPrompt,
   type StudySessionSummary,
@@ -18,6 +27,7 @@ import {
   type BankItem,
   type QueueEntry,
   type StudySessionRecord,
+  type TimedSessionRecord,
   StudyStore,
 } from './study.store';
 
@@ -109,12 +119,25 @@ export class StudyService {
   startSession(opts: {
     userId: string;
     mode: StudyMode;
-    size: StudySize;
+    size: SessionSize;
     topicIds?: string[];
-  }): StudySessionView {
+    timezone?: string;
+  }): StudySessionView | ExamTimedSessionView {
+    if (opts.mode === 'EXAM_TIMED') {
+      return this.startExamTimed(opts.userId, {
+        size: opts.size,
+        topicIds: opts.topicIds,
+        timezone: opts.timezone,
+      });
+    }
     if (opts.mode !== 'EXAM_STUDY') {
       throw new BadRequestException(
-        `Mode ${opts.mode} not available yet (APS-9 delivers EXAM_STUDY; FLASH_STUDY is APS-8)`,
+        `Mode ${opts.mode} not available yet (APS-9 delivers EXAM_STUDY; FLASH_STUDY is APS-8; EXAM_TIMED is APS-10)`,
+      );
+    }
+    if (!(STUDY_SIZES as readonly number[]).includes(opts.size)) {
+      throw new BadRequestException(
+        'EXAM_STUDY solo admite tamaños 10/20/30/50',
       );
     }
 
@@ -129,9 +152,10 @@ export class StudyService {
       );
     }
 
+    const studySize = opts.size as StudySize;
     const picked = shuffle(questions).slice(
       0,
-      Math.min(opts.size, questions.length),
+      Math.min(studySize, questions.length),
     ) as ExamQuestion[];
 
     const bank: StudySessionRecord['bank'] = new Map();
@@ -142,6 +166,7 @@ export class StudyService {
         choices: q.choices,
         correctIndex: q.correctIndex,
         explanation: q.explanation,
+        topicId: q.topicId,
       });
       queue.push({ queueItemId: newId('qi'), itemId: q.id });
     }
@@ -150,7 +175,7 @@ export class StudyService {
       id: newId('ss'),
       userId: opts.userId,
       mode: opts.mode,
-      size: opts.size,
+      size: studySize,
       uniqueItems: picked.length,
       queue,
       bank,
@@ -259,5 +284,287 @@ export class StudyService {
       throw new NotFoundException(`Session ${sessionId} not found`);
     }
     return session;
+  }
+
+  /* —— EXAM_TIMED —— */
+
+  startExamTimed(
+    userId: string,
+    opts: { size: SessionSize; topicIds?: string[]; timezone?: string },
+  ): ExamTimedSessionView {
+    if (!(EXAM_TIMED_SIZES as readonly number[]).includes(opts.size)) {
+      throw new BadRequestException(
+        'EXAM_TIMED admite 10/20/30/50/65',
+      );
+    }
+    const pool = this.pickTimedQuestions(opts.size, opts.topicIds);
+    const now = new Date();
+    const timeLimitSec = examTimedLimitSec(opts.size);
+    const endsAt = new Date(now.getTime() + timeLimitSec * 1000);
+    const id = newId('sess');
+    const answers = new Map<string, 0 | 1 | 2 | 3 | null>();
+    for (const q of pool) answers.set(q.id, null);
+
+    const record: TimedSessionRecord = {
+      id,
+      userId,
+      mode: 'EXAM_TIMED',
+      size: opts.size,
+      timeLimitSec,
+      startedAt: now,
+      endsAt,
+      status: 'IN_PROGRESS',
+      timezone: opts.timezone ?? 'UTC',
+      questionIds: pool.map((q) => q.id),
+      answers,
+      markedForReview: new Set(),
+    };
+    this.store.timedSessions.set(id, record);
+    return this.toTimedView(record);
+  }
+
+  getAnySession(
+    userId: string,
+    sessionId: string,
+  ): StudySessionView | ExamTimedSessionView {
+    if (this.store.timedSessions.has(sessionId)) {
+      return this.getTimedSession(userId, sessionId);
+    }
+    return this.getSession(sessionId, userId);
+  }
+
+  getAnySummary(
+    userId: string,
+    sessionId: string,
+  ): StudySessionSummary | ExamTimedSummary {
+    if (this.store.timedSessions.has(sessionId)) {
+      return this.getTimedSummary(userId, sessionId);
+    }
+    return this.getSummary(sessionId, userId);
+  }
+
+  getTimedSession(userId: string, sessionId: string): ExamTimedSessionView {
+    const record = this.requireTimedOwned(userId, sessionId);
+    this.refreshTimedExpiry(record);
+    return this.toTimedView(record);
+  }
+
+  answerTimed(
+    userId: string,
+    sessionId: string,
+    questionId: string,
+    choiceIndex: 0 | 1 | 2 | 3,
+  ): ExamTimedSessionView {
+    const record = this.requireTimedActive(userId, sessionId);
+    if (!record.answers.has(questionId)) {
+      throw new BadRequestException('Pregunta fuera de esta sesión');
+    }
+    record.answers.set(questionId, choiceIndex);
+    // No live feedback / miss-repeat / streak — maestro §4.3
+    return this.toTimedView(record);
+  }
+
+  markTimedReview(
+    userId: string,
+    sessionId: string,
+    questionId: string,
+    marked: boolean,
+  ): ExamTimedSessionView {
+    const record = this.requireTimedActive(userId, sessionId);
+    if (!record.answers.has(questionId)) {
+      throw new BadRequestException('Pregunta fuera de esta sesión');
+    }
+    if (marked) record.markedForReview.add(questionId);
+    else record.markedForReview.delete(questionId);
+    return this.toTimedView(record);
+  }
+
+  submitTimed(userId: string, sessionId: string): ExamTimedSummary {
+    const record = this.requireTimedOwned(userId, sessionId);
+    this.refreshTimedExpiry(record);
+    if (record.summary) return record.summary;
+    if (record.status === 'IN_PROGRESS') {
+      record.status = 'SUBMITTED';
+    }
+    record.endedAt = new Date();
+    record.summary = this.buildTimedSummary(record);
+    return record.summary;
+  }
+
+  getTimedSummary(userId: string, sessionId: string): ExamTimedSummary {
+    const record = this.requireTimedOwned(userId, sessionId);
+    this.refreshTimedExpiry(record);
+    if (!record.summary) {
+      if (record.status === 'IN_PROGRESS') {
+        throw new BadRequestException(
+          'El examen sigue en curso; envíalo para ver el resultado',
+        );
+      }
+      record.endedAt = record.endedAt ?? new Date();
+      record.summary = this.buildTimedSummary(record);
+    }
+    return record.summary;
+  }
+
+  private pickTimedQuestions(
+    size: SessionSize,
+    topicIds?: string[],
+  ): ExamQuestion[] {
+    let pool = this.content.listQuestions({ publishedOnly: true });
+    if (topicIds?.length) {
+      const set = new Set(topicIds);
+      pool = pool.filter((q) => set.has(q.topicId));
+    }
+    if (pool.length === 0) {
+      throw new BadRequestException(
+        'No hay preguntas publicadas para el alcance pedido',
+      );
+    }
+    if (pool.length < size) {
+      throw new BadRequestException(
+        `Se necesitan al menos ${size} preguntas publicadas (hay ${pool.length})`,
+      );
+    }
+    return shuffle(pool).slice(0, size);
+  }
+
+  private requireTimedOwned(
+    userId: string,
+    sessionId: string,
+  ): TimedSessionRecord {
+    const record = this.store.timedSessions.get(sessionId);
+    if (!record) throw new NotFoundException('Sesión no encontrada');
+    if (record.userId !== userId) {
+      throw new ForbiddenException('No puedes acceder a esta sesión');
+    }
+    return record;
+  }
+
+  private requireTimedActive(
+    userId: string,
+    sessionId: string,
+  ): TimedSessionRecord {
+    const record = this.requireTimedOwned(userId, sessionId);
+    this.refreshTimedExpiry(record);
+    if (record.status !== 'IN_PROGRESS') {
+      throw new BadRequestException('El examen ya terminó');
+    }
+    return record;
+  }
+
+  private refreshTimedExpiry(record: TimedSessionRecord): void {
+    if (record.status !== 'IN_PROGRESS') return;
+    if (Date.now() >= record.endsAt.getTime()) {
+      record.status = 'EXPIRED';
+      record.endedAt = record.endsAt;
+      record.summary = this.buildTimedSummary(record);
+    }
+  }
+
+  private remainingTimedSec(record: TimedSessionRecord): number {
+    if (record.status !== 'IN_PROGRESS') return 0;
+    return Math.max(
+      0,
+      Math.ceil((record.endsAt.getTime() - Date.now()) / 1000),
+    );
+  }
+
+  private toTimedView(record: TimedSessionRecord): ExamTimedSessionView {
+    const questions: ExamTimedQuestionView[] = record.questionIds.map((id) => {
+      const q = this.content.getQuestion(id);
+      return {
+        id: q.id,
+        stem: q.stem,
+        choices: q.choices,
+        topicId: q.topicId,
+      };
+    });
+    const answers: ExamTimedSessionView['answers'] = {};
+    let answeredCount = 0;
+    for (const [qid, val] of record.answers) {
+      answers[qid] = val;
+      if (val !== null) answeredCount += 1;
+    }
+    return {
+      id: record.id,
+      mode: 'EXAM_TIMED',
+      size: record.size,
+      timeLimitSec: record.timeLimitSec,
+      startedAt: record.startedAt.toISOString(),
+      endsAt: record.endsAt.toISOString(),
+      status: record.status,
+      remainingSec: this.remainingTimedSec(record),
+      questions,
+      answers,
+      markedForReview: [...record.markedForReview],
+      answeredCount,
+    };
+  }
+
+  private buildTimedSummary(record: TimedSessionRecord): ExamTimedSummary {
+    const endedAt = record.endedAt ?? new Date();
+    const timeUsedSec = Math.min(
+      record.timeLimitSec,
+      Math.max(
+        0,
+        Math.round((endedAt.getTime() - record.startedAt.getTime()) / 1000),
+      ),
+    );
+    let correctCount = 0;
+    let unansweredCount = 0;
+    const mistakes: ExamTimedMistake[] = [];
+
+    for (const id of record.questionIds) {
+      const q = this.content.getQuestion(id);
+      const selected = record.answers.get(id) ?? null;
+      if (selected === null) {
+        unansweredCount += 1;
+        mistakes.push({
+          questionId: q.id,
+          stem: q.stem,
+          choices: q.choices,
+          selectedIndex: null,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+          topicId: q.topicId,
+        });
+        continue;
+      }
+      if (selected === q.correctIndex) {
+        correctCount += 1;
+      } else {
+        mistakes.push({
+          questionId: q.id,
+          stem: q.stem,
+          choices: q.choices,
+          selectedIndex: selected,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+          topicId: q.topicId,
+        });
+      }
+    }
+
+    const totalCount = record.questionIds.length;
+    const scorePercent =
+      totalCount === 0
+        ? 0
+        : Math.round((correctCount / totalCount) * 1000) / 10;
+
+    return {
+      sessionId: record.id,
+      mode: 'EXAM_TIMED',
+      size: record.size,
+      status: record.status === 'EXPIRED' ? 'EXPIRED' : 'SUBMITTED',
+      scorePercent,
+      correctCount,
+      totalCount,
+      unansweredCount,
+      timeLimitSec: record.timeLimitSec,
+      timeUsedSec,
+      startedAt: record.startedAt.toISOString(),
+      endedAt: endedAt.toISOString(),
+      mistakes,
+    };
   }
 }

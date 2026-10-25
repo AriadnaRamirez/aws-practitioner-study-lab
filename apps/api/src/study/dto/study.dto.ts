@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayUnique,
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -10,21 +11,26 @@ import {
   Min,
 } from 'class-validator';
 import {
+  EXAM_TIMED_SIZES,
   STUDY_MODES,
-  STUDY_SIZES,
+  type SessionSize,
   type StudyMode,
-  type StudySize,
 } from '@aps/shared';
+
+const ALL_SIZES = [...EXAM_TIMED_SIZES] as number[];
 
 export class StartStudySessionDto {
   @ApiProperty({ enum: STUDY_MODES })
   @IsIn([...STUDY_MODES])
   mode!: StudyMode;
 
-  @ApiProperty({ enum: STUDY_SIZES })
+  @ApiProperty({
+    enum: EXAM_TIMED_SIZES,
+    description: 'EXAM_STUDY: 10–50. EXAM_TIMED: también 65 (mock).',
+  })
   @IsInt()
-  @IsIn([...STUDY_SIZES])
-  size!: StudySize;
+  @IsIn(ALL_SIZES)
+  size!: SessionSize;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
@@ -32,6 +38,11 @@ export class StartStudySessionDto {
   @ArrayUnique()
   @IsString({ each: true })
   topicIds?: string[];
+
+  @ApiPropertyOptional({ example: 'America/Mexico_City' })
+  @IsOptional()
+  @IsString()
+  timezone?: string;
 }
 
 export class AnswerStudyDto {
@@ -44,4 +55,26 @@ export class AnswerStudyDto {
   @Min(0)
   @Max(3)
   choiceIndex!: 0 | 1 | 2 | 3;
+}
+
+export class AnswerExamTimedDto {
+  @ApiProperty()
+  @IsString()
+  questionId!: string;
+
+  @ApiProperty({ minimum: 0, maximum: 3 })
+  @IsInt()
+  @Min(0)
+  @Max(3)
+  choiceIndex!: 0 | 1 | 2 | 3;
+}
+
+export class MarkReviewDto {
+  @ApiProperty()
+  @IsString()
+  questionId!: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  marked!: boolean;
 }

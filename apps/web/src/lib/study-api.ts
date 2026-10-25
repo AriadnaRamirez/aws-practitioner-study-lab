@@ -1,6 +1,11 @@
 import type {
+  AnswerExamTimedRequest,
   AnswerStudyRequest,
   AnswerStudyResponse,
+  ExamTimedSessionView,
+  ExamTimedSummary,
+  MarkReviewRequest,
+  SessionSize,
   StartStudySessionRequest,
   StudySessionSummary,
   StudySessionView,
@@ -53,10 +58,7 @@ export function startStudySession(body: StartStudySessionRequest) {
   });
 }
 
-export function answerStudy(
-  sessionId: string,
-  body: AnswerStudyRequest,
-) {
+export function answerStudy(sessionId: string, body: AnswerStudyRequest) {
   return studyFetch<AnswerStudyResponse>(
     `/study/sessions/${sessionId}/answer`,
     {
@@ -68,6 +70,50 @@ export function answerStudy(
 
 export function fetchStudySummary(sessionId: string) {
   return studyFetch<StudySessionSummary>(
+    `/study/sessions/${sessionId}/summary`,
+  );
+}
+
+export function startExamTimed(size: SessionSize, timezone?: string) {
+  return studyFetch<ExamTimedSessionView>("/study/sessions", {
+    method: "POST",
+    body: JSON.stringify({
+      mode: "EXAM_TIMED",
+      size,
+      timezone,
+    }),
+  });
+}
+
+export function getExamSession(sessionId: string) {
+  return studyFetch<ExamTimedSessionView>(`/study/sessions/${sessionId}`);
+}
+
+export function answerExamTimed(
+  sessionId: string,
+  body: AnswerExamTimedRequest,
+) {
+  return studyFetch<ExamTimedSessionView>(
+    `/study/sessions/${sessionId}/exam-answer`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export function markExamReview(sessionId: string, body: MarkReviewRequest) {
+  return studyFetch<ExamTimedSessionView>(
+    `/study/sessions/${sessionId}/mark-review`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
+export function submitExamTimed(sessionId: string) {
+  return studyFetch<ExamTimedSummary>(`/study/sessions/${sessionId}/submit`, {
+    method: "POST",
+  });
+}
+
+export function getExamSummary(sessionId: string) {
+  return studyFetch<ExamTimedSummary>(
     `/study/sessions/${sessionId}/summary`,
   );
 }
