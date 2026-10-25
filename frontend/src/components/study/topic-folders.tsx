@@ -14,18 +14,19 @@ type Props = {
   className?: string;
 };
 
+/** Keycap faces — orange accent vs soft grey, matching the landing grid. */
 const FOLDER_FACE: Record<StudyCategory["tone"], string> = {
-  orange: "bg-[var(--accent)] text-[var(--accent-foreground)]",
-  ink: "bg-[var(--background)] text-white ring-1 ring-[var(--border)]",
-  slate: "bg-[var(--surface-elevated)] text-white ring-1 ring-[var(--border)]",
-  cream: "bg-[#f2f3f3] text-[var(--accent-foreground)]",
+  orange: "keycap keycap-accent",
+  ink: "keycap",
+  slate: "keycap",
+  cream: "keycap",
 };
 
 const TAB_FACE: Record<StudyCategory["tone"], string> = {
   orange: "bg-[var(--accent)]",
-  ink: "bg-[var(--background)] ring-1 ring-[var(--border)]",
-  slate: "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)]",
-  cream: "bg-[#f2f3f3]",
+  ink: "bg-[var(--keycap)]",
+  slate: "bg-[var(--keycap)]",
+  cream: "bg-[var(--keycap)]",
 };
 
 export function TopicFolders({ topics, className }: Props) {
@@ -54,18 +55,14 @@ export function TopicFolders({ topics, className }: Props) {
 
   return (
     <section className={cn("w-full min-w-0", className)}>
-      <ul className="flex w-full min-w-0 flex-col">
+      <ul className="flex w-full min-w-0 flex-col gap-3">
         {folders.map(({ cat, pct }, i) => {
           const href = `/estudiar?category=${encodeURIComponent(cat.id)}&start=10`;
           return (
-            <li
-              key={cat.id}
-              className={cn("relative min-w-0", i > 0 && "-mt-1")}
-              style={{ zIndex: i + 1 }}
-            >
+            <li key={cat.id} className="relative min-w-0" style={{ zIndex: i + 1 }}>
               <div
                 className={cn(
-                  "ml-3 h-4 w-[30%] max-w-[7.5rem] rounded-t-lg sm:ml-4",
+                  "ml-3 h-3 w-[28%] max-w-[6.5rem] rounded-t-xl sm:ml-4",
                   TAB_FACE[cat.tone],
                 )}
                 aria-hidden
@@ -73,13 +70,13 @@ export function TopicFolders({ topics, className }: Props) {
               <Link
                 href={href}
                 className={cn(
-                  "flex min-w-0 items-center justify-between gap-3 rounded-lg rounded-tl-none px-4 py-4 sm:px-5",
+                  "flex min-w-0 items-center justify-between gap-3 rounded-2xl rounded-tl-none px-4 py-4 sm:px-5",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
                   FOLDER_FACE[cat.tone],
                 )}
                 aria-label={cat.title}
               >
-                <p className="font-display min-w-0 truncate text-lg font-semibold tracking-tight sm:text-xl">
+                <p className="font-display min-w-0 truncate text-lg font-semibold lowercase tracking-tight sm:text-xl">
                   {cat.title}
                 </p>
                 <p className="shrink-0 font-mono text-sm tabular-nums opacity-80">

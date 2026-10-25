@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { SiteFooter } from "@/components/shell/site-footer";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function ByeBanner() {
@@ -15,8 +14,30 @@ function ByeBanner() {
       role="status"
       className="border-b border-[var(--border)] px-4 py-2 text-center text-sm text-[var(--foreground-muted)]"
     >
-      Sesión cerrada.
+      sesión cerrada
     </p>
+  );
+}
+
+function ArrowGlyph({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex size-10 items-center justify-center rounded-xl bg-black/15 sm:size-12",
+        className,
+      )}
+      aria-hidden
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M5 12h12M13 6l6 6-6 6"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -27,44 +48,77 @@ export function LandingHero() {
         <ByeBanner />
       </Suspense>
 
-      <header className="border-b border-[var(--border)]">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <p className="font-display text-sm font-semibold tracking-tight">
-            Study Lab
+      <header className="border-b border-[var(--border)]/60">
+        <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-4 px-4 py-4 sm:px-6">
+          <p className="font-display text-sm font-semibold lowercase tracking-tight">
+            study lab
           </p>
-          <nav className="flex items-center gap-4 text-sm">
+          <nav className="flex items-center gap-3 text-sm lowercase">
             <Link
               href="/login"
               className="text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
             >
-              Entrar
+              entrar
             </Link>
-            <Link href="/register" className={cn(buttonVariants({ size: "sm" }))}>
-              Registro
+            <Link
+              href="/register"
+              className="keycap keycap-accent h-9 px-4 text-xs"
+            >
+              registro
             </Link>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full min-w-0 max-w-3xl flex-1 flex-col justify-center px-4 py-16 sm:px-6">
-        <h1 className="font-display max-w-xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-          AWS Cloud Practitioner
+      <main className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col justify-center px-4 py-12 sm:px-6 sm:py-16">
+        <h1 className="font-display text-center text-3xl font-semibold lowercase tracking-tight sm:text-4xl">
+          study lab
         </h1>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <p className="mt-2 text-center text-sm lowercase text-[var(--foreground-muted)]">
+          aws cloud practitioner
+        </p>
+
+        <div
+          className="mt-10 grid grid-cols-3 gap-3 sm:gap-4"
+          role="group"
+          aria-label="acciones"
+        >
           <Link
             href="/register"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "w-full justify-center sm:w-auto",
-            )}
+            className="keycap keycap-accent animate-key-pop aspect-square text-base sm:text-lg"
           >
-            Crear cuenta
+            estudia
+          </Link>
+          <span
+            className="keycap animate-key-pop-1 aspect-square text-base sm:text-lg"
+            aria-hidden
+          >
+            aws
+          </span>
+          <span
+            className="keycap animate-key-pop-2 aspect-square text-base sm:text-lg"
+            aria-hidden
+          >
+            hoy
+          </span>
+          <Link
+            href="/register"
+            className="keycap keycap-accent animate-key-pop-3 aspect-square"
+            aria-label="empezar"
+          >
+            <ArrowGlyph />
+          </Link>
+          <Link
+            href="/login"
+            className="keycap animate-key-pop-4 aspect-square text-base sm:text-lg"
+          >
+            entra
           </Link>
           <Link
             href="/guest"
-            className="text-center text-sm text-[var(--accent)] underline-offset-4 hover:underline sm:text-left"
+            className="keycap animate-key-pop-5 aspect-square text-base sm:text-lg"
           >
-            Probar
+            prueba
           </Link>
         </div>
       </main>

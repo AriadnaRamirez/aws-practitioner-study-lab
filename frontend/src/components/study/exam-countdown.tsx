@@ -42,17 +42,10 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
 
   if (!examDate || days === null || Number.isNaN(days)) {
     return (
-      <aside
-        className={cn(
-          "border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3",
-          className,
-        )}
-      >
-        <p className="text-sm text-[var(--foreground-muted)]">
-          <Link href="/cuenta" className="text-[var(--accent)] hover:underline">
-            Agregar fecha
-          </Link>
-        </p>
+      <aside className={cn("keycap w-full justify-start px-4 py-3", className)}>
+        <Link href="/cuenta" className="text-sm hover:underline">
+          agregar fecha
+        </Link>
       </aside>
     );
   }
@@ -82,48 +75,45 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
   return (
     <aside
       className={cn(
-        "flex min-w-0 items-center gap-3 border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-3 sm:gap-4 sm:px-4",
+        "keycap flex w-full min-w-0 items-center justify-start gap-3 px-3 py-3 sm:gap-4 sm:px-4",
         className,
       )}
       aria-live="polite"
     >
       <div
         className={cn(
-          "flex shrink-0 flex-col overflow-hidden rounded-md text-center",
+          "flex shrink-0 flex-col overflow-hidden rounded-xl text-center shadow-[var(--keycap-accent-shadow)]",
           compact ? "w-12" : "w-14",
         )}
       >
-        <div className="bg-[var(--accent)] px-1 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]">
+        <div className="bg-[var(--accent)] px-1 py-0.5 text-[10px] font-bold lowercase tracking-wider text-[var(--accent-foreground)]">
           {(monthShort ?? "—").replace(/\.$/, "").slice(0, 3)}
         </div>
-        <div className="bg-white px-1 py-1.5">
-          <p className="font-display text-xl font-bold leading-none text-black">
+        <div className="bg-[var(--keycap)] px-1 py-1.5">
+          <p className="font-display text-xl font-bold leading-none text-[var(--keycap-fg)]">
             {dayNum}
           </p>
         </div>
       </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="font-display text-sm font-semibold leading-snug sm:text-base">
+      <div className="min-w-0 flex-1 text-left normal-case">
+        <p className="font-display text-sm font-semibold leading-snug lowercase sm:text-base">
           {headline}
         </p>
         {!compact ? (
-          <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+          <p className="mt-1 text-xs lowercase text-[var(--foreground-muted)]">
             {formatLongDate(examDate)}
             {" · "}
-            <Link
-              href="/cuenta"
-              className="font-medium text-[var(--accent)] underline-offset-4 hover:underline"
-            >
-              Cambiar
+            <Link href="/cuenta" className="text-[var(--accent)] hover:underline">
+              cambiar
             </Link>
           </p>
         ) : (
           <Link
             href="/cuenta"
-            className="mt-0.5 inline-block text-xs text-[var(--accent)] underline-offset-4 hover:underline"
+            className="mt-0.5 inline-block text-xs lowercase text-[var(--accent)] hover:underline"
           >
-            Fecha
+            fecha
           </Link>
         )}
       </div>

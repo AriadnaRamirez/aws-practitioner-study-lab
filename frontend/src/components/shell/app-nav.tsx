@@ -90,7 +90,7 @@ export function AppNav() {
             href={user ? "/dashboard" : "/"}
             className="font-display min-w-0 truncate text-sm font-semibold tracking-tight"
           >
-            Study Lab
+            study lab
           </Link>
           {masteryPct != null ? (
             <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">
@@ -101,37 +101,37 @@ export function AppNav() {
 
         <nav
           aria-label="Principal"
-          className="hidden items-center gap-5 sm:flex"
+          className="hidden items-center gap-4 sm:flex"
         >
           {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={linkClass(isActive(item))}
+              className={cn(linkClass(isActive(item)), "lowercase")}
               aria-current={isActive(item) ? "page" : undefined}
             >
               {item.label}
             </Link>
           ))}
           {user ? (
-            <Link href="/logout" className={linkClass(false)}>
-              Salir
+            <Link href="/logout" className={cn(linkClass(false), "lowercase")}>
+              salir
             </Link>
           ) : (
-            <Link href="/login" className={linkClass(false)}>
-              Entrar
+            <Link href="/login" className={cn(linkClass(false), "lowercase")}>
+              entrar
             </Link>
           )}
         </nav>
 
         <button
           type="button"
-          className="inline-flex items-center border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--foreground)] sm:hidden"
+          className="keycap h-9 px-3 text-xs sm:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((o) => !o)}
         >
-          {menuOpen ? "Cerrar" : "Menú"}
+          {menuOpen ? "cerrar" : "menú"}
         </button>
       </div>
 

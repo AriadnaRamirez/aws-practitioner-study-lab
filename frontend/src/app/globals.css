@@ -1,68 +1,73 @@
 @import "tailwindcss";
 
 /*
-  Estética AWS flat — squid ink + naranja sólido #ff9900.
-  Sin degradados dorado/amarillo; acentos planos como el smile del logo.
+  Keycap stage — soft grey field + AWS orange / off-white keys.
+  Flat solids only (no gold gradients). Tactile depth via soft shadow.
 */
 :root {
-  --background: #0b1118;
-  --foreground: #ffffff;
-  --foreground-muted: #aab7b8;
-  --surface: #161d26;
-  --surface-elevated: #232f3e;
-  --surface-hover: #2d3a4a;
-  --border: #37475a;
-  --border-strong: #545b64;
+  --background: #cfcfcf;
+  --foreground: #1a1a1a;
+  --foreground-muted: #5a5a5a;
+  --surface: #e4e4e4;
+  --surface-elevated: #efefef;
+  --surface-hover: #f7f7f7;
+  --border: #b8b8b8;
+  --border-strong: #8a8a8a;
   --accent: #ff9900;
   --accent-hover: #ec7211;
-  --accent-foreground: #161d26;
-  --accent-soft: rgba(255, 153, 0, 0.14);
+  --accent-foreground: #ffffff;
+  --accent-soft: rgba(255, 153, 0, 0.18);
   --accent-deep: #ec7211;
   --accent-warm: #ff9900;
   --ring: #ff9900;
-  --glow: rgba(255, 153, 0, 0.18);
-  --glow-secondary: rgba(35, 47, 62, 0.5);
-  --hero-mesh-a: rgba(35, 47, 62, 0.45);
-  --hero-mesh-b: rgba(35, 47, 62, 0.7);
-  --hero-mesh-c: rgba(35, 47, 62, 0.35);
-  --nav-bg: rgba(11, 17, 24, 0.88);
+  --glow: rgba(255, 153, 0, 0.22);
+  --glow-secondary: rgba(0, 0, 0, 0.06);
+  --hero-mesh-a: rgba(255, 153, 0, 0.12);
+  --hero-mesh-b: rgba(0, 0, 0, 0.04);
+  --hero-mesh-c: rgba(255, 255, 255, 0.35);
+  --nav-bg: rgba(207, 207, 207, 0.92);
   --card-face: #ffffff;
-  --card-face-fg: #161d26;
+  --card-face-fg: #1a1a1a;
   --success: #1d8102;
   --danger: #d13212;
-  /* Solid deck faces — no gold gradient */
   --deck-face: #ff9900;
   --deck-mid: #232f3e;
   --deck-back: #161d26;
   --deck-grad-1: #ff9900;
   --deck-grad-2: #232f3e;
   --deck-grad-3: #161d26;
+  --keycap: #efefef;
+  --keycap-fg: #1a1a1a;
+  --keycap-shadow: 0 4px 0 #a8a8a8, 0 8px 18px -6px rgba(0, 0, 0, 0.28);
+  --keycap-shadow-active: 0 1px 0 #a8a8a8, 0 3px 8px -4px rgba(0, 0, 0, 0.22);
+  --keycap-accent-shadow: 0 4px 0 #c77700, 0 8px 18px -6px rgba(200, 100, 0, 0.35);
+  --keycap-accent-shadow-active: 0 1px 0 #c77700, 0 3px 8px -4px rgba(200, 100, 0, 0.28);
 }
 
 .dark {
-  --background: #0b1118;
-  --foreground: #ffffff;
-  --foreground-muted: #aab7b8;
-  --surface: #161d26;
-  --surface-elevated: #232f3e;
-  --surface-hover: #2d3a4a;
-  --border: #37475a;
-  --border-strong: #545b64;
+  --background: #cfcfcf;
+  --foreground: #1a1a1a;
+  --foreground-muted: #5a5a5a;
+  --surface: #e4e4e4;
+  --surface-elevated: #efefef;
+  --surface-hover: #f7f7f7;
+  --border: #b8b8b8;
+  --border-strong: #8a8a8a;
   --accent: #ff9900;
   --accent-hover: #ec7211;
-  --accent-foreground: #161d26;
-  --accent-soft: rgba(255, 153, 0, 0.14);
+  --accent-foreground: #ffffff;
+  --accent-soft: rgba(255, 153, 0, 0.18);
   --accent-deep: #ec7211;
   --accent-warm: #ff9900;
   --ring: #ff9900;
-  --glow: rgba(255, 153, 0, 0.18);
-  --glow-secondary: rgba(35, 47, 62, 0.5);
-  --hero-mesh-a: rgba(35, 47, 62, 0.45);
-  --hero-mesh-b: rgba(35, 47, 62, 0.7);
-  --hero-mesh-c: rgba(35, 47, 62, 0.35);
-  --nav-bg: rgba(11, 17, 24, 0.88);
+  --glow: rgba(255, 153, 0, 0.22);
+  --glow-secondary: rgba(0, 0, 0, 0.06);
+  --hero-mesh-a: rgba(255, 153, 0, 0.12);
+  --hero-mesh-b: rgba(0, 0, 0, 0.04);
+  --hero-mesh-c: rgba(255, 255, 255, 0.35);
+  --nav-bg: rgba(207, 207, 207, 0.92);
   --card-face: #ffffff;
-  --card-face-fg: #161d26;
+  --card-face-fg: #1a1a1a;
   --success: #1d8102;
   --danger: #d13212;
   --deck-face: #ff9900;
@@ -71,6 +76,12 @@
   --deck-grad-1: #ff9900;
   --deck-grad-2: #232f3e;
   --deck-grad-3: #161d26;
+  --keycap: #efefef;
+  --keycap-fg: #1a1a1a;
+  --keycap-shadow: 0 4px 0 #a8a8a8, 0 8px 18px -6px rgba(0, 0, 0, 0.28);
+  --keycap-shadow-active: 0 1px 0 #a8a8a8, 0 3px 8px -4px rgba(0, 0, 0, 0.22);
+  --keycap-accent-shadow: 0 4px 0 #c77700, 0 8px 18px -6px rgba(200, 100, 0, 0.35);
+  --keycap-accent-shadow-active: 0 1px 0 #c77700, 0 3px 8px -4px rgba(200, 100, 0, 0.28);
 }
 
 @theme inline {
@@ -92,23 +103,14 @@
   }
 }
 
-@keyframes drift {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
+@keyframes key-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
   }
-  50% {
-    transform: translate(2%, -3%) scale(1.04);
-  }
-}
-
-@keyframes soft-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 0.55;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -167,7 +169,6 @@ svg {
   height: auto;
 }
 
-/* Long tokens / monospace must wrap instead of forcing page width */
 pre,
 code,
 .font-mono {
@@ -179,7 +180,6 @@ code,
   font-family: var(--font-syne), ui-sans-serif, sans-serif;
 }
 
-/* Flat AWS orange — no gold/yellow gradient */
 .text-gradient-aws,
 .text-accent-aws {
   color: var(--accent);
@@ -188,28 +188,76 @@ code,
   background-clip: unset;
 }
 
+/* Physical keycap face */
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: var(--keycap);
+  color: var(--keycap-fg);
+  box-shadow: var(--keycap-shadow);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.12s ease;
+  user-select: none;
+}
+
+.keycap-accent {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  box-shadow: var(--keycap-accent-shadow);
+}
+
+.keycap:hover {
+  background: var(--surface-hover);
+}
+
+.keycap-accent:hover {
+  background: var(--accent-hover);
+}
+
+.keycap:active,
+.keycap-pressed {
+  transform: translateY(3px);
+  box-shadow: var(--keycap-shadow-active);
+}
+
+.keycap-accent:active,
+.keycap-accent.keycap-pressed {
+  box-shadow: var(--keycap-accent-shadow-active);
+}
+
 .animate-fade-up {
   animation: fade-up 0.7s ease-out both;
 }
 
-.animate-fade-up-delay-1 {
-  animation: fade-up 0.7s ease-out 0.12s both;
+.animate-key-pop {
+  animation: key-pop 0.45s ease-out both;
 }
 
-.animate-fade-up-delay-2 {
-  animation: fade-up 0.7s ease-out 0.24s both;
+.animate-key-pop-1 {
+  animation: key-pop 0.45s ease-out 0.06s both;
 }
 
-.animate-fade-up-delay-3 {
-  animation: fade-up 0.7s ease-out 0.36s both;
+.animate-key-pop-2 {
+  animation: key-pop 0.45s ease-out 0.12s both;
 }
 
-.animate-drift {
-  animation: drift 18s ease-in-out infinite;
+.animate-key-pop-3 {
+  animation: key-pop 0.45s ease-out 0.18s both;
 }
 
-.animate-soft-pulse {
-  animation: soft-pulse 6s ease-in-out infinite;
+.animate-key-pop-4 {
+  animation: key-pop 0.45s ease-out 0.24s both;
+}
+
+.animate-key-pop-5 {
+  animation: key-pop 0.45s ease-out 0.3s both;
 }
 
 .animate-deck-in {
@@ -227,15 +275,21 @@ code,
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
-  .animate-fade-up-delay-1,
-  .animate-fade-up-delay-2,
-  .animate-fade-up-delay-3,
-  .animate-drift,
-  .animate-soft-pulse,
+  .animate-key-pop,
+  .animate-key-pop-1,
+  .animate-key-pop-2,
+  .animate-key-pop-3,
+  .animate-key-pop-4,
+  .animate-key-pop-5,
   .animate-spin,
   .animate-pulse,
   .animate-deck-in,
   .animate-shimmer {
     animation: none;
+  }
+
+  .keycap:active,
+  .keycap-pressed {
+    transform: none;
   }
 }

@@ -401,10 +401,10 @@ export function FlashStudyClient() {
             >
               {pending ? (
                 <span className="inline-flex items-center gap-2">
-                  <Spinner /> Preparando…
+                  <Spinner /> …
                 </span>
               ) : (
-                "Empezar 10"
+                "empezar 10"
               )}
             </Button>
             <Button
@@ -414,7 +414,7 @@ export function FlashStudyClient() {
               onClick={() => void onStart(20, [])}
               className="w-full sm:w-auto"
             >
-              Empezar 20
+              empezar 20
             </Button>
           </div>
         </div>
@@ -494,15 +494,13 @@ export function FlashStudyClient() {
                   key={n}
                   type="button"
                   onClick={() => setSize(n)}
-                  className={cn(
-                    "h-11 min-w-14 rounded-md px-4 text-sm font-semibold ring-1 transition-colors",
-                    size === n
-                      ? "bg-[var(--accent)] text-[var(--accent-foreground)] ring-[var(--accent)]"
-                      : "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
-                  )}
-                >
-                  {n}
-                </button>
+                    className={cn(
+                      "keycap h-12 min-w-14 px-4 text-sm",
+                      size === n && "keycap-accent",
+                    )}
+                  >
+                    {n}
+                  </button>
               ))}
             </div>
 
@@ -628,20 +626,16 @@ export function FlashStudyClient() {
                       disabled={pending || phase === "feedback"}
                       onClick={() => void onAnswer(i)}
                       className={cn(
-                        "w-full rounded-xl px-3.5 py-3 text-left text-sm leading-snug transition-[transform,background-color,box-shadow] duration-150 ring-1 active:scale-[0.99] disabled:cursor-wait",
-                        isCorrect && "bg-emerald-100 ring-emerald-500",
-                        isWrongPick && "bg-red-100 ring-red-500",
-                        !showKey &&
-                          "bg-[#f4f4f4] ring-black/10 hover:bg-[#ebebeb] hover:ring-black/20",
-                        !showKey &&
-                          isSelected &&
-                          "bg-orange-50 ring-[var(--accent)]",
+                        "keycap w-full justify-start px-3.5 py-3 text-left text-sm leading-snug normal-case disabled:cursor-wait",
+                        isCorrect && "keycap-accent",
+                        isWrongPick && "!bg-red-500 !text-white !shadow-[0_4px_0_#9b1c1c]",
+                        !showKey && isSelected && "keycap-accent",
                       )}
                     >
-                      <span className="mr-2 font-semibold text-black/45">
+                      <span className="mr-2 font-semibold opacity-45">
                         {String.fromCharCode(65 + i)}.
                       </span>
-                      <span className="text-black">{choice}</span>
+                      <span>{choice}</span>
                       {pending && isSelected ? (
                         <span className="ml-2 inline-flex align-middle">
                           <Spinner label="Enviando respuesta" />
