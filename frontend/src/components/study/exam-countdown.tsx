@@ -69,10 +69,13 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
 
   const cal = examDate.split("-");
   const dayNum = Number(cal[2]);
-  const monthShort = formatLongDate(examDate)
-    .split(" ")
-    .find((p) => /[a-zA-Záéíóúñ]/i.test(p) && p.length > 2)
-    ?.replace(",", "");
+  const monthShort = (() => {
+    const [y, m, d] = examDate.split("-").map(Number);
+    if (!y || !m || !d) return "—";
+    return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
+      month: "short",
+    });
+  })();
 
   let headline: string;
   if (days > 1) {
@@ -110,7 +113,7 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
           className="px-1 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]"
           style={{ background: "var(--deck-grad-1)" }}
         >
-          {monthShort?.slice(0, 3) ?? "—"}
+          {(monthShort ?? "—").replace(/\.$/, "").slice(0, 3)}
         </div>
         <div className="bg-white px-1 py-2">
           <p className="font-display text-2xl font-bold leading-none text-black">
