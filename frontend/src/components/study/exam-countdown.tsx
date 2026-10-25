@@ -49,12 +49,8 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
         )}
       >
         <p className="text-sm text-[var(--foreground-muted)]">
-          Sin fecha de examen.{" "}
-          <Link
-            href="/cuenta"
-            className="font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
-          >
-            Agregar
+          <Link href="/cuenta" className="text-[var(--accent)] hover:underline">
+            Agregar fecha
           </Link>
         </p>
       </aside>
@@ -73,17 +69,14 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
 
   let headline: string;
   if (days > 1) {
-    headline = `Faltan ${days} días para tu examen de AWS Cloud Practitioner`;
+    headline = compact ? `Faltan ${days} días` : `Faltan ${days} días para el examen`;
   } else if (days === 1) {
-    headline = "Mañana es tu examen de AWS Cloud Practitioner";
+    headline = "Mañana es el examen";
   } else if (days === 0) {
-    headline = "¡Hoy es tu examen de AWS Cloud Practitioner!";
+    headline = "Examen hoy";
   } else {
     const ago = Math.abs(days);
-    headline =
-      ago === 1
-        ? "Tu examen de AWS Cloud Practitioner fue ayer"
-        : `Tu examen de AWS Cloud Practitioner fue hace ${ago} días`;
+    headline = ago === 1 ? "Examen ayer" : `Hace ${ago} días`;
   }
 
   return (
@@ -128,9 +121,9 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
         ) : (
           <Link
             href="/cuenta"
-            className="mt-0.5 inline-block text-xs font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+            className="mt-0.5 inline-block text-xs text-[var(--accent)] underline-offset-4 hover:underline"
           >
-            Cambiar fecha
+            Fecha
           </Link>
         )}
       </div>

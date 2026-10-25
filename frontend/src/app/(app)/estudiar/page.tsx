@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ExamStudyPanel } from "@/components/study/exam-study-panel";
 import { FlashStudyClient } from "@/components/study/flash-study-client";
 import { Skeleton, Spinner } from "@/components/ui/spinner";
 
@@ -12,10 +11,7 @@ export const metadata: Metadata = {
 function FlashBootFallback() {
   return (
     <div className="py-10" aria-busy="true">
-      <div className="flex items-center gap-3 text-sm text-[var(--foreground-muted)]">
-        <Spinner label="Cargando" />
-        <span>Cargando…</span>
-      </div>
+      <Spinner label="Cargando" />
       <div className="mt-6 space-y-3">
         <Skeleton className="h-8 w-2/3" />
         <Skeleton className="h-14 w-full" />
@@ -43,10 +39,6 @@ export default function EstudiarPage() {
         <Suspense fallback={<FlashBootFallback />}>
           <FlashStudyClient />
         </Suspense>
-      </section>
-
-      <section className="mt-10 border-t border-[var(--border)] pt-6">
-        <ExamStudyPanel />
       </section>
     </div>
   );

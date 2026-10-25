@@ -34,10 +34,7 @@ export function ProgressClient() {
   if (authed === false) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
-        <h1 className="font-display text-3xl font-bold">Progreso</h1>
-        <p className="mt-3 text-[var(--foreground-muted)]">
-          Inicia sesión para ver el % de dominio por tema.
-        </p>
+        <h1 className="font-display text-2xl font-semibold">Progreso</h1>
         <Link href="/login" className={cn(buttonVariants(), "mt-8 inline-flex")}>
           Entrar
         </Link>
@@ -46,13 +43,10 @@ export function ProgressClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-bold tracking-tight">
-        Progreso por tema
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <h1 className="font-display text-2xl font-semibold tracking-tight">
+        Progreso
       </h1>
-      <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-        Ítems dominados (3 aciertos seguidos) sobre el banco publicado.
-      </p>
       {error ? (
         <p className="mt-4 text-sm text-red-600" role="alert">
           {error}

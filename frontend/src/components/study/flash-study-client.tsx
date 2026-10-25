@@ -77,7 +77,6 @@ export function FlashStudyClient() {
   const [summary, setSummary] = useState<StudySessionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [autoIn, setAutoIn] = useState<number | null>(null);
   const [, startTransition] = useTransition();
   const startedAt = useRef<number>(Date.now());
   const nextPromptRef = useRef<StudyPrompt | null>(null);
@@ -220,7 +219,6 @@ export function FlashStudyClient() {
       clearTimeout(autoTimer.current);
       autoTimer.current = null;
     }
-    setAutoIn(null);
     if (summaryRef.current) {
       setSummary(summaryRef.current);
       setPhase("summary");
@@ -290,7 +288,6 @@ export function FlashStudyClient() {
           nextPromptRef.current = null;
         }
         const delay = res.correct ? AUTO_NEXT_CORRECT_MS : AUTO_NEXT_WRONG_MS;
-        setAutoIn(Math.ceil(delay / 1000));
         if (autoTimer.current) clearTimeout(autoTimer.current);
         autoTimer.current = setTimeout(() => {
           goNext();
@@ -366,22 +363,10 @@ export function FlashStudyClient() {
 
   if (phase === "boot" || phase === "starting") {
     return (
-      <section className="mx-auto w-full min-w-0 max-w-2xl py-8" aria-busy="true">
-        <div className="flex items-center gap-3 text-sm text-[var(--foreground-muted)]">
-          <Spinner label="Preparando sesión" />
-          <span>
-            {phase === "starting"
-              ? "Barajando tu mazo…"
-              : "Cargando estudio…"}
-          </span>
-        </div>
-        <div className="mt-10">
-          <FlashDeck
-            loading
-            eyebrow="FLASH"
-            title="Preparando cartas…"
-            footer="Un momento"
-          />
+      <section className="py-8" aria-busy="true">
+        <Spinner label="Cargando" />
+        <div className="mt-8">
+          <FlashDeck loading eyebrow="FLASH" title="…" />
         </div>
       </section>
     );
@@ -389,19 +374,14 @@ export function FlashStudyClient() {
 
   if (phase === "auth") {
     return (
-      <section className="mx-auto w-full min-w-0 max-w-lg py-12">
-        <h1 className="font-display text-3xl font-bold tracking-tight">
-          Flashcards
-        </h1>
-        <p className="mt-3 text-[var(--foreground-muted)]">
-          Necesitas una cuenta para guardar progreso, dominio y rachas.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+      <section className="py-8">
+        <p className="text-sm text-[var(--foreground-muted)]">Entrá para estudiar.</p>
+        <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/login">
-            <Button>Iniciar sesión</Button>
+            <Button>Entrar</Button>
           </Link>
           <Link href="/register">
-            <Button variant="secondary">Crear cuenta</Button>
+            <Button variant="secondary">Registro</Button>
           </Link>
         </div>
       </section>
@@ -482,75 +462,57 @@ export function FlashStudyClient() {
         </button>
 
         {customize ? (
-          <div className="mt-6 space-y-8 animate-[fade-up_0.3s_ease-out]">
-            <div>
-              <h2 className="font-display text-lg font-semibold">Alcance</h2>
-              <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-                Sin selección = mixto (todos los temas publicados).
-              </p>
-              <ul className="mt-4 flex flex-col gap-2">
-                {topics.map((t) => {
-                  const on = selectedTopics.includes(t.id);
-                  return (
-                    <li key={t.id}>
-                      <button
-                        type="button"
-                        onClick={() => toggleTopic(t.id)}
-                        className={cn(
-                          "flex w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm transition-colors",
-                          on
-                            ? "bg-[var(--accent-soft)] text-[var(--foreground)] ring-1 ring-[var(--accent)]"
-                            : "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
-                        )}
-                      >
-                        <span>
-                          {t.name}
-                          <span className="ml-2 text-xs text-[var(--foreground-muted)]">
-                            {t.type === "SERVICE" ? "Servicio" : "Concepto"}
-                          </span>
-                        </span>
-                        <span className="text-xs font-semibold text-[var(--accent)]">
-                          {on ? "Incluido" : "Añadir"}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+          <div className="mt-6 space-y-6 animate-[fade-up_0.3s_ease-out]">
+            <ul className="flex flex-col gap-2">
+              {topics.map((t) => {
+                const on = selectedTopics.includes(t.id);
+                return (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleTopic(t.id)}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm transition-colors",
+                        on
+                          ? "bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]"
+                          : "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
+                      )}
+                    >
+                      <span>{t.name}</span>
+                      <span className="text-xs font-semibold text-[var(--accent)]">
+                        {on ? "✓" : "+"}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="flex flex-wrap gap-2">
+              {STUDY_SIZES.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setSize(n)}
+                  className={cn(
+                    "h-11 min-w-14 rounded-md px-4 text-sm font-semibold ring-1 transition-colors",
+                    size === n
+                      ? "bg-[var(--accent)] text-[var(--accent-foreground)] ring-[var(--accent)]"
+                      : "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
             </div>
 
-            <div>
-              <h2 className="font-display text-lg font-semibold">Tamaño</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {STUDY_SIZES.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setSize(n)}
-                    className={cn(
-                      "h-11 min-w-14 rounded-md px-4 text-sm font-semibold ring-1 transition-colors",
-                      size === n
-                        ? "bg-[var(--accent)] text-[var(--accent-foreground)] ring-[var(--accent)]"
-                        : "bg-[var(--surface-elevated)] text-[var(--foreground)] ring-[var(--border)] hover:bg-[var(--surface-hover)]",
-                    )}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Button
-              size="lg"
-              disabled={pending}
-              onClick={() => void onStart()}
-            >
+            <Button size="lg" disabled={pending} onClick={() => void onStart()}>
               {pending ? (
                 <span className="inline-flex items-center gap-2">
-                  <Spinner /> Preparando…
+                  <Spinner /> …
                 </span>
               ) : (
-                `Empezar ${size} personalizadas`
+                `Empezar ${size}`
               )}
             </Button>
           </div>
@@ -567,11 +529,8 @@ export function FlashStudyClient() {
 
   if (phase === "summary" && summary) {
     return (
-      <section className="mx-auto w-full min-w-0 max-w-lg py-10 animate-[fade-up_0.35s_ease-out]">
-        <h1 className="font-display text-3xl font-bold tracking-tight">
-          Sesión terminada
-        </h1>
-        <dl className="mt-8 grid grid-cols-2 gap-4 text-sm">
+      <section className="py-8 animate-[fade-up_0.35s_ease-out]">
+        <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-[var(--foreground-muted)]">Precisión</dt>
             <dd className="font-display text-2xl font-bold">
@@ -579,38 +538,21 @@ export function FlashStudyClient() {
             </dd>
           </div>
           <div>
-            <dt className="text-[var(--foreground-muted)]">Racha máx.</dt>
-            <dd className="font-display text-2xl font-bold">
-              {summary.maxSessionStreak}
-            </dd>
-          </div>
-          <div>
             <dt className="text-[var(--foreground-muted)]">Aciertos</dt>
-            <dd className="text-lg font-semibold">
+            <dd className="font-display text-2xl font-bold">
               {summary.correctAnswers}/{summary.answered}
             </dd>
           </div>
           <div>
-            <dt className="text-[var(--foreground-muted)]">Miss-repeat</dt>
-            <dd className="text-lg font-semibold">{summary.missRepeats}</dd>
+            <dt className="text-[var(--foreground-muted)]">Racha</dt>
+            <dd className="text-lg font-semibold">{summary.maxSessionStreak}</dd>
           </div>
           <div>
             <dt className="text-[var(--foreground-muted)]">Dominados</dt>
-            <dd className="text-lg font-semibold">
-              {summary.masteredInSession}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--foreground-muted)]">Racha diaria</dt>
-            <dd className="text-lg font-semibold">
-              {summary.dailyStreak}{" "}
-              <span className="text-xs text-[var(--foreground-muted)]">
-                (máx. {summary.longestDailyStreak})
-              </span>
-            </dd>
+            <dd className="text-lg font-semibold">{summary.masteredInSession}</dd>
           </div>
         </dl>
-        <div className="mt-10 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap gap-3">
           <Button
             onClick={() => {
               setSummary(null);
@@ -627,7 +569,7 @@ export function FlashStudyClient() {
               setPhase("setup");
             }}
           >
-            Ajustar y empezar
+            Ajustar
           </Button>
         </div>
       </section>
@@ -635,18 +577,11 @@ export function FlashStudyClient() {
   }
 
   return (
-    <section className="mx-auto w-full min-w-0 max-w-2xl py-2 sm:py-4">
-      <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
-            Racha · {sessionStreak}
-          </p>
-          <h1 className="font-display text-2xl font-bold tracking-tight">
-            Tu mazo
-          </h1>
-        </div>
-        <p className="text-sm text-[var(--foreground-muted)]">
-          Quedan {remaining} · {answered} hechas
+    <section className="min-w-0 py-2">
+      <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+        <p className="font-semibold text-[var(--accent)]">Racha {sessionStreak}</p>
+        <p className="text-[var(--foreground-muted)]">
+          {answered}/{uniqueItems || size} · quedan {remaining}
         </p>
       </div>
 
@@ -728,29 +663,22 @@ export function FlashStudyClient() {
       {phase === "feedback" && feedback ? (
         <div
           className={cn(
-            "mt-6 rounded-2xl px-4 py-4 text-sm ring-1 animate-[fade-up_0.25s_ease-out]",
+            "mt-6 rounded-xl px-4 py-3 text-sm ring-1 animate-[fade-up_0.25s_ease-out]",
             feedback.correct
               ? "bg-emerald-500/15 ring-emerald-500/40"
               : "bg-red-500/15 ring-red-500/40",
           )}
         >
-          <p className="font-semibold text-white">
-            {feedback.correct ? "Correcto" : "Incorrecto — vuelve más adelante"}
-            {feedback.itemMastered ? " · ¡Dominado!" : null}
+          <p className="font-semibold">
+            {feedback.correct ? "Correcto" : "Incorrecto"}
+            {feedback.itemMastered ? " · Dominado" : null}
           </p>
           <p className="mt-2 text-[var(--foreground-muted)]">
             {feedback.explanation}
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button onClick={goNext}>
-              {summaryRef.current ? "Ver resumen" : "Siguiente carta"}
-            </Button>
-            <span className="text-xs text-[var(--foreground-muted)]">
-              {autoIn != null
-                ? "Siguiente automático…"
-                : "Enter o Espacio"}
-            </span>
-          </div>
+          <Button className="mt-3" onClick={goNext}>
+            {summaryRef.current ? "Resumen" : "Siguiente"}
+          </Button>
         </div>
       ) : null}
 

@@ -76,18 +76,11 @@ function LoginForm() {
         href="/"
         className="font-display text-sm font-semibold text-[var(--foreground)]"
       >
-        AWS Practitioner Study Lab
+        Study Lab
       </Link>
-      <h1 className="font-display mt-8 text-3xl font-bold tracking-tight">
+      <h1 className="font-display mt-8 text-2xl font-semibold tracking-tight">
         Entrar
       </h1>
-      <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-        Usa tu{" "}
-        <strong className="font-medium text-[var(--foreground)]">
-          email o username
-        </strong>{" "}
-        en el mismo campo, junto con la contraseña.
-      </p>
       {hint ? (
         <p className="mt-2 text-sm text-[var(--accent)]">{hint}</p>
       ) : null}
@@ -133,54 +126,33 @@ function LoginForm() {
         </button>
       </form>
 
-      <aside className="mt-8 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground-muted)]">
-          Entrar en un clic (local)
-        </p>
-        <ul className="mt-3 space-y-2">
-          {DEMO_ACCOUNTS.map((acc) => (
-            <li key={acc.identifier}>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => void enterAs(acc.identifier, acc.password)}
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-left text-sm transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] disabled:opacity-60"
-              >
-                <span className="font-medium">Entrar como {acc.label}</span>
-                <span className="mt-0.5 block font-mono text-xs text-[var(--foreground-muted)]">
-                  {acc.identifier} / {acc.password}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-[var(--foreground-muted)]">
-          También sirve <code className="font-mono">estudiante</code> con la
-          misma clave que demo (<code className="font-mono">StudyPass1!</code>
-          ).
-        </p>
-      </aside>
+      <ul className="mt-8 space-y-2">
+        {DEMO_ACCOUNTS.map((acc) => (
+          <li key={acc.identifier}>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => void enterAs(acc.identifier, acc.password)}
+              className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-left text-sm hover:border-[var(--accent)] disabled:opacity-60"
+            >
+              {acc.label}
+              <span className="ml-2 font-mono text-xs text-[var(--foreground-muted)]">
+                {acc.identifier}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
 
-      <p className="mt-6 text-sm text-[var(--foreground-muted)]">
-        <Link
-          href="/forgot-password"
-          className="text-[var(--accent)] underline-offset-4 hover:underline"
-        >
-          ¿Olvidaste tu contraseña?
+      <p className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        <Link href="/forgot-password" className="text-[var(--accent)] hover:underline">
+          Contraseña
         </Link>
-        {" · "}
-        <Link
-          href="/register"
-          className="text-[var(--accent)] underline-offset-4 hover:underline"
-        >
-          Crear cuenta
+        <Link href="/register" className="text-[var(--accent)] hover:underline">
+          Registro
         </Link>
-        {" · "}
-        <Link
-          href="/guest"
-          className="text-[var(--accent)] underline-offset-4 hover:underline"
-        >
-          Probar sin cuenta
+        <Link href="/guest" className="text-[var(--accent)] hover:underline">
+          Probar
         </Link>
       </p>
     </main>

@@ -164,32 +164,20 @@ export function GuestTrial() {
         href="/"
         className="font-display text-sm font-semibold tracking-tight text-[var(--foreground)]"
       >
-        AWS Practitioner Study Lab
+        Study Lab
       </Link>
 
-      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-        Prueba sin cuenta
-      </p>
-      <h1 className="font-display mt-2 text-3xl font-bold tracking-tight md:text-4xl">
-        Sesión limitada de marketing
+      <h1 className="font-display mt-8 text-2xl font-semibold tracking-tight">
+        Prueba
       </h1>
-      <p className="mt-3 max-w-xl text-base leading-relaxed text-[var(--foreground-muted)]">
-        Prueba {GUEST_SAMPLE_SIZE} preguntas de muestra. Crea una cuenta para
-        guardar progreso y subir al podio. Hasta {GUEST_MAX_SESSIONS} sesiones
-        guest.
-      </p>
-
       {probe ? (
-        <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-          Sesiones usadas: {probe.sessionsCount}/{GUEST_MAX_SESSIONS} · quedan{" "}
-          {probe.sessionsRemaining}
+        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+          {probe.sessionsRemaining}/{GUEST_MAX_SESSIONS} restantes
         </p>
       ) : null}
 
       {phase === "loading" ? (
-        <p className="mt-10 text-sm text-[var(--foreground-muted)]">
-          Preparando tu prueba…
-        </p>
+        <p className="mt-10 text-sm text-[var(--foreground-muted)]">…</p>
       ) : null}
 
       {phase === "error" ? (
@@ -204,49 +192,34 @@ export function GuestTrial() {
       ) : null}
 
       {phase === "capped" ? (
-        <div className="mt-10 space-y-4">
-          <p className="text-base text-[var(--foreground)]">
-            Llegaste al tope de sesiones guest. Crea una cuenta para seguir
-            estudiando con historial y podio.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={registerHref}
-              className={cn(buttonVariants({ size: "lg" }))}
-            >
-              Crear cuenta
-            </Link>
-            <Link
-              href="/login"
-              className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}
-            >
-              Entrar
-            </Link>
-          </div>
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link href={registerHref} className={cn(buttonVariants({ size: "lg" }))}>
+            Crear cuenta
+          </Link>
+          <Link
+            href="/login"
+            className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}
+          >
+            Entrar
+          </Link>
         </div>
       ) : null}
 
       {phase === "intro" ? (
-        <div className="mt-10 space-y-6">
-          <p className="text-base leading-relaxed text-[var(--foreground)]">
-            No guardamos progreso ni entras al podio como invitado. Esta
-            muestra solo sirve para engancharte al lab.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              className={cn(buttonVariants({ size: "lg" }))}
-              onClick={() => setPhase("quiz")}
-            >
-              Empezar muestra
-            </button>
-            <Link
-              href={registerHref}
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-            >
-              Mejor crear cuenta
-            </Link>
-          </div>
+        <div className="mt-10 flex flex-wrap gap-3">
+          <button
+            type="button"
+            className={cn(buttonVariants({ size: "lg" }))}
+            onClick={() => setPhase("quiz")}
+          >
+            Empezar {GUEST_SAMPLE_SIZE}
+          </button>
+          <Link
+            href={registerHref}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+          >
+            Registro
+          </Link>
         </div>
       ) : null}
 
@@ -294,9 +267,7 @@ export function GuestTrial() {
                 className={cn(buttonVariants({ size: "lg" }))}
                 onClick={onNext}
               >
-                {index + 1 >= samples.length
-                  ? "Terminar sesión guest"
-                  : "Siguiente"}
+                {index + 1 >= samples.length ? "Terminar" : "Siguiente"}
               </button>
             </div>
           ) : null}
@@ -304,19 +275,12 @@ export function GuestTrial() {
       ) : null}
 
       {phase === "done" ? (
-        <div className="mt-10 space-y-5">
-          <p className="text-lg font-medium text-[var(--foreground)]">
-            Sesión guest completada · {correctCount}/{samples.length} aciertos
-          </p>
-          <p className="text-base leading-relaxed text-[var(--foreground-muted)]">
-            Prueba una sesión; crea cuenta para guardar progreso y subir al
-            podio.
+        <div className="mt-10 space-y-4">
+          <p className="font-display text-xl font-semibold">
+            {correctCount}/{samples.length}
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link
-              href={registerHref}
-              className={cn(buttonVariants({ size: "lg" }))}
-            >
+            <Link href={registerHref} className={cn(buttonVariants({ size: "lg" }))}>
               Crear cuenta
             </Link>
             {probe && probe.sessionsRemaining > 0 ? (
@@ -333,24 +297,12 @@ export function GuestTrial() {
                   setPhase("intro");
                 }}
               >
-                Otra sesión guest ({probe.sessionsRemaining} restantes)
+                Otra
               </button>
             ) : null}
           </div>
         </div>
       ) : null}
-
-      <aside className="mt-auto border-t border-[var(--border)] pt-8">
-        <p className="text-sm text-[var(--foreground-muted)]">
-          ¿Listo para guardar rachas y aparecer en el podio?
-        </p>
-        <Link
-          href={registerHref}
-          className="mt-2 inline-flex text-sm font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
-        >
-          Crear cuenta gratis →
-        </Link>
-      </aside>
     </main>
   );
 }

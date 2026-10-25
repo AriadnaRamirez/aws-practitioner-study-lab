@@ -63,10 +63,10 @@ export function DashboardClient() {
   if (!user) {
     return (
       <div
-        className="mx-auto flex max-w-md flex-col items-center gap-2 px-4 py-20 text-sm text-[var(--foreground-muted)]"
+        className="mx-auto px-4 py-20 text-center text-sm text-[var(--foreground-muted)]"
         aria-busy="true"
       >
-        {error ? <p className="text-red-600">{error}</p> : <p>Cargando…</p>}
+        {error ?? "…"}
       </div>
     );
   }
@@ -74,86 +74,56 @@ export function DashboardClient() {
   const pct = overview?.masteryPct ?? 0;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-12">
-      <header className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Panel de estudio
+    <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-10">
+      <header className="flex min-w-0 items-baseline justify-between gap-3">
+        <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight">
+          @{user.username}
+        </h1>
+        <p className="shrink-0 font-mono text-sm tabular-nums text-[var(--accent)]">
+          {pct}%
         </p>
-        <div className="mt-2 flex min-w-0 items-baseline justify-between gap-3">
-          <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight sm:text-3xl">
-            @{user.username}
-          </h1>
-          <p className="shrink-0 font-mono text-sm tabular-nums text-[var(--foreground-muted)]">
-            Dominio {pct}%
-          </p>
-        </div>
       </header>
 
-      <ExamCountdown className="mt-6" examDate={user.examDate} compact />
+      <ExamCountdown className="mt-5" examDate={user.examDate} compact />
 
-      <TopicFolders topics={topics} className="mt-8" />
+      <TopicFolders topics={topics} className="mt-7" />
 
-      <div className="mt-8">
-        <Link
-          href="/estudiar?start=10"
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            "inline-flex w-full justify-center",
-          )}
-        >
-          Empezar 10 flashcards
-        </Link>
-      </div>
+      <Link
+        href="/estudiar?start=10"
+        className={cn(
+          buttonVariants({ size: "lg" }),
+          "mt-7 inline-flex w-full justify-center",
+        )}
+      >
+        Empezar 10
+      </Link>
 
       {overview?.activeSessions?.length ? (
-        <section className="mt-8 border-t border-[var(--border)] pt-6">
-          <h2 className="text-sm font-medium text-[var(--foreground-muted)]">
-            En curso
-          </h2>
-          <ul className="mt-3 space-y-2">
-            {overview.activeSessions.map((s) => (
-              <li
-                key={s.id}
-                className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3 last:border-0"
+        <ul className="mt-8 space-y-0 border-t border-[var(--border)]">
+          {overview.activeSessions.map((s) => (
+            <li
+              key={s.id}
+              className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3"
+            >
+              <p className="min-w-0 truncate text-sm text-[var(--foreground-muted)]">
+                {STUDY_MODE_LABELS[s.mode]} {s.answered}/{s.size}
+              </p>
+              <Link
+                href={
+                  s.mode === "EXAM_TIMED"
+                    ? `/estudiar/examen?session=${s.id}`
+                    : s.mode === "WEAK_REVIEW"
+                      ? "/mas-falladas"
+                      : `/estudiar?session=${s.id}`
+                }
+                className="shrink-0 text-sm font-semibold text-[var(--accent)]"
               >
-                <p className="min-w-0 truncate text-sm">
-                  {STUDY_MODE_LABELS[s.mode]} · {s.answered}/{s.size}
-                </p>
-                <Link
-                  href={
-                    s.mode === "EXAM_TIMED"
-                      ? `/estudiar/examen?session=${s.id}`
-                      : s.mode === "WEAK_REVIEW"
-                        ? "/mas-falladas"
-                        : `/estudiar?session=${s.id}`
-                  }
-                  className="shrink-0 text-sm font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
-                >
-                  Continuar
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+                Continuar
+              </Link>
+            </li>
+          ))}
+        </ul>
       ) : null}
-
-      <nav
-        className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-[var(--border)] pt-6 text-sm"
-        aria-label="Secciones"
-      >
-        <Link href="/progreso" className="text-[var(--foreground-muted)] hover:text-[var(--accent)]">
-          Progreso
-        </Link>
-        <Link href="/mas-falladas" className="text-[var(--foreground-muted)] hover:text-[var(--accent)]">
-          Más falladas{overview?.weakItems ? ` (${overview.weakItems})` : ""}
-        </Link>
-        <Link href="/estudiar/examen" className="text-[var(--foreground-muted)] hover:text-[var(--accent)]">
-          Examen
-        </Link>
-        <Link href="/podio" className="text-[var(--foreground-muted)] hover:text-[var(--accent)]">
-          Podio
-        </Link>
-      </nav>
     </div>
   );
 }

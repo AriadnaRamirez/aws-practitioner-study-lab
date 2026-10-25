@@ -124,13 +124,9 @@ export function MasFalladasClient() {
   if (authed === false) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
-        <h1 className="font-display text-3xl font-bold tracking-tight">
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
           Más falladas
         </h1>
-        <p className="mt-3 text-base text-[var(--foreground-muted)]">
-          Inicia sesión para ver tu cola personal de preguntas y tarjetas más
-          falladas.
-        </p>
         <Link
           href="/login"
           className={cn(buttonVariants({ size: "lg" }), "mt-8 inline-flex")}
@@ -143,16 +139,9 @@ export function MasFalladasClient() {
 
   if (phase === "play" && prompt) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-        <p className="text-sm font-medium text-[var(--accent)]">
-          Refuerzo · WEAK_REVIEW
-        </p>
-        <h1 className="font-display mt-1 text-2xl font-bold tracking-tight">
-          Estudiar solo estas
-        </h1>
-        <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-          Quedan {remaining} · racha {sessionStreak}
-          {started ? ` · cola ${started.size}` : null}
+      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        <p className="text-sm text-[var(--foreground-muted)]">
+          {remaining} · racha {sessionStreak}
         </p>
         {error ? (
           <p className="mt-4 text-sm text-red-600" role="alert">
@@ -209,80 +198,48 @@ export function MasFalladasClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <p className="text-sm font-medium text-[var(--accent)]">Progreso</p>
-      <h1 className="font-display mt-1 text-3xl font-bold tracking-tight">
-        Tus más falladas
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <h1 className="font-display text-2xl font-semibold tracking-tight">
+        Más falladas
       </h1>
-      <p className="mt-3 text-base leading-relaxed text-[var(--foreground-muted)]">
-        Ordenadas por número de fallos. Armá una sesión solo con estas para
-        reforzar (miss-repeat on).
-      </p>
 
       {error ? (
-        <p className="mt-6 text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
           {error}
         </p>
       ) : null}
 
       {phase === "done" && started ? (
-        <div className="mt-6 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4">
-          <p className="text-sm font-semibold">Sesión de refuerzo completada</p>
-          <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-            Modo WEAK_REVIEW · {started.size} ítems en cola. El progreso queda
-            en tu historial.
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <p className="text-sm text-[var(--foreground-muted)]">
+            Listo · {started.size}
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button type="button" onClick={() => setPhase("list")}>
-              Volver a la lista
-            </Button>
-            <Link
-              href="/cuenta#historial"
-              className={cn(buttonVariants({ variant: "secondary" }))}
-            >
-              Ver historial
-            </Link>
-          </div>
+          <Button type="button" onClick={() => setPhase("list")}>
+            Lista
+          </Button>
         </div>
       ) : null}
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="mt-6">
         <Button
           type="button"
           size="lg"
           disabled={pending || !items?.length}
           onClick={() => void onStudyWeak()}
         >
-          {pending ? "Creando sesión…" : "Estudiar solo estas"}
+          {pending ? "…" : "Estudiar"}
         </Button>
-        <Link
-          href="/cuenta#historial"
-          className={cn(buttonVariants({ variant: "ghost" }))}
-        >
-          Historial de sesiones
-        </Link>
       </div>
 
       {items == null ? (
-        <p className="mt-10 text-sm text-[var(--foreground-muted)]">
-          Cargando…
-        </p>
+        <p className="mt-8 text-sm text-[var(--foreground-muted)]">…</p>
       ) : items.length === 0 ? (
-        <div className="mt-10 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-10 text-center">
-          <p className="text-sm text-[var(--foreground-muted)]">
-            Todavía no hay fallos registrados. Cuando estudies y te equivoques,
-            aparecerán aquí.
-          </p>
-          <Link
-            href="/estudiar"
-            className={cn(
-              buttonVariants({ variant: "secondary" }),
-              "mt-4 inline-flex",
-            )}
-          >
-            Ir a estudiar
+        <p className="mt-8 text-sm text-[var(--foreground-muted)]">
+          Sin fallos.{" "}
+          <Link href="/estudiar" className="text-[var(--accent)] hover:underline">
+            Estudiar
           </Link>
-        </div>
+        </p>
       ) : (
         <ol className="mt-10 space-y-3">
           {items.map((item, index) => (

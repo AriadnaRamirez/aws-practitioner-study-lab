@@ -133,17 +133,13 @@ export function ExamRunner() {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
         <h1 className="font-display text-2xl font-semibold text-[var(--foreground)]">
-          Modo Examen
+          Examen
         </h1>
-        <p className="mt-3 text-[var(--foreground-muted)]">
-          Inicia sesión para hacer un examen cronometrado y guardar el
-          resultado.
-        </p>
         <Link
           href="/login"
           className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--accent-foreground)]"
         >
-          Iniciar sesión
+          Entrar
         </Link>
       </div>
     );
@@ -164,7 +160,7 @@ export function ExamRunner() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
-              Modo Examen · sin feedback en vivo
+              Examen
             </p>
             <p className="mt-1 text-sm text-[var(--foreground)]">
               Pregunta {index + 1} de {total}
@@ -283,24 +279,14 @@ export function ExamRunner() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-12 sm:px-6">
-      <header className="space-y-3 animate-[fade-up_0.45s_ease-out]">
-        <p className="text-sm font-medium text-[var(--accent)]">
-          AWS Practitioner Study Lab
-        </p>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
-          Modo Examen
-        </h1>
-        <p className="max-w-prose text-[var(--foreground-muted)]">
-          Cronometrado como el CLF: sin pistas ni rachas durante la prueba.
-          Al terminar verás el score y las explicaciones de los fallos. Puedes
-          marcar preguntas para revisar.
-        </p>
-      </header>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+        Examen
+      </h1>
 
       <fieldset className="space-y-3">
         <legend className="text-sm font-semibold text-[var(--foreground)]">
-          Tamaño de la sesión
+          Tamaño
         </legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {EXAM_TIMED_SIZES.map((n) => {

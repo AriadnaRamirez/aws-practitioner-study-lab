@@ -125,12 +125,9 @@ export function CuentaProgresoClient() {
   if (authed === false) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
-        <h1 className="font-display text-3xl font-bold tracking-tight">
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
           Cuenta
         </h1>
-        <p className="mt-3 text-base text-[var(--foreground-muted)]">
-          Entrá para ver perfil, seguridad, progreso e historial.
-        </p>
         <Link
           href="/login"
           className={cn(buttonVariants({ size: "lg" }), "mt-8 inline-flex")}
@@ -142,51 +139,36 @@ export function CuentaProgresoClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-bold tracking-tight">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <h1 className="font-display text-2xl font-semibold tracking-tight">
         Cuenta
       </h1>
-      <p className="mt-3 text-base text-[var(--foreground-muted)]">
-        Hub de perfil, seguridad, instructivo e historial — al estilo CCST, con
-        reset de password y timezone.
-      </p>
 
       {error ? (
-        <p className="mt-6 text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
           {error}
         </p>
       ) : null}
       {notice ? (
-        <p className="mt-6 text-sm text-emerald-700 dark:text-emerald-400" role="status">
+        <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-400" role="status">
           {notice}
         </p>
       ) : null}
 
       <nav
-        className="mt-8 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+        className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"
         aria-label="Tu estudio"
       >
-        {[
-          ["/progreso", "Progreso", "Dominio por tema"],
-          ["#historial", "Historial", "Sesiones anteriores"],
-          ["/mas-falladas", "Más falladas", "Cola de refuerzo"],
-          ["/dashboard", "Inicio", "Continuar sesiones"],
-        ].map(([href, label, hint]) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 text-sm last:border-b-0 hover:bg-[var(--surface-hover)]"
-          >
-            <span className="font-medium">{label}</span>
-            <span className="text-[var(--foreground-muted)]">{hint}</span>
-          </Link>
-        ))}
-        <div className="flex items-center justify-between px-2 py-1">
-          <OpenTourButton label="Instructivo" className="justify-start" />
-          <span className="pr-3 text-sm text-[var(--foreground-muted)]">
-            Cómo funciona
-          </span>
-        </div>
+        <Link href="/progreso" className="hover:text-[var(--accent)]">
+          Progreso
+        </Link>
+        <Link href="#historial" className="hover:text-[var(--accent)]">
+          Historial
+        </Link>
+        <Link href="/mas-falladas" className="hover:text-[var(--accent)]">
+          Más falladas
+        </Link>
+        <OpenTourButton label="Guía" className="justify-start" />
       </nav>
 
       {user ? (
@@ -210,21 +192,17 @@ export function CuentaProgresoClient() {
         onSubmit={onSaveProfile}
         className="mt-8 space-y-4 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4"
       >
-        <h2 className="font-display text-lg font-semibold">Preferencias</h2>
+        <h2 className="font-display text-base font-semibold">Preferencias</h2>
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          Fecha del examen AWS Cloud Practitioner
+          Fecha del examen
           <Input
             type="date"
             value={examDate}
             onChange={(e) => setExamDate(e.target.value)}
           />
-          <span className="text-xs font-normal text-[var(--foreground-muted)]">
-            Se muestra en Inicio: «Faltan N días para tu examen…». Déjalo vacío
-            para quitar el contador.
-          </span>
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          Timezone (racha diaria)
+          Zona horaria
           <select
             className="h-10 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
             value={timezone}
@@ -243,14 +221,14 @@ export function CuentaProgresoClient() {
             checked={podiumHidden}
             onChange={(e) => setPodiumHidden(e.target.checked)}
           />
-          Ocultarme del podio público
+          Ocultar del podio
         </label>
         <button
           type="submit"
           disabled={profilePending}
           className={cn(buttonVariants())}
         >
-          {profilePending ? "Guardando…" : "Guardar preferencias"}
+          {profilePending ? "…" : "Guardar"}
         </button>
       </form>
 
@@ -309,16 +287,13 @@ export function CuentaProgresoClient() {
         </Link>
       </div>
 
-      <section id="historial" className="mt-12 scroll-mt-20">
-        <h2 className="font-display text-xl font-semibold tracking-tight">
-          Historial de sesiones
+      <section id="historial" className="mt-10 scroll-mt-20">
+        <h2 className="font-display text-lg font-semibold tracking-tight">
+          Historial
         </h2>
-        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          Flash, examen y refuerzo. Toca una fila para ver intentos.
-        </p>
-        <div className="mt-4">
+        <div className="mt-3">
           {sessions == null ? (
-            <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+            <p className="text-sm text-[var(--foreground-muted)]">…</p>
           ) : (
             <SessionHistory
               sessions={sessions}
