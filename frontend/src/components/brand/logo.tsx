@@ -4,18 +4,18 @@ import { cn } from "@/lib/utils";
 type Props = {
   className?: string;
   size?: number;
-  /** PNG cutout (default) or crisp SVG mark. */
+  /** Raster mark from brand kit, or crisp SVG fallback. */
   variant?: "png" | "svg";
   priority?: boolean;
-  /** Hide text for icon-only placements. */
+  /** Show Study Lab wordmark beside the mark. */
   withWordmark?: boolean;
 };
 
-/** Study Lab logo — navy face, cyan eyes, orange status dot. */
+/** Study Lab logo — navy squircle, cyan eyes, orange arrow accent. */
 export function Logo({
   className,
   size = 32,
-  variant = "svg",
+  variant = "png",
   priority = false,
   withWordmark = false,
 }: Props) {
@@ -31,20 +31,20 @@ export function Logo({
         aria-label="Study Lab"
         className="shrink-0"
       >
-        <rect width="128" height="128" rx="34" fill="#233249" />
+        <rect width="128" height="128" rx="34" fill="#213146" />
         <path
-          d="M28 76A18 18 0 0 0 64 76"
-          stroke="#3DE0FF"
-          strokeWidth="13"
+          d="M28 74A20 20 0 0 0 64 74"
+          stroke="#20D1ED"
+          strokeWidth="14"
           strokeLinecap="round"
         />
         <path
-          d="M64 76A18 18 0 0 0 100 76"
-          stroke="#3DE0FF"
-          strokeWidth="13"
+          d="M64 74A20 20 0 0 0 100 74"
+          stroke="#20D1ED"
+          strokeWidth="14"
           strokeLinecap="round"
         />
-        <circle cx="106" cy="22" r="11" fill="#E85002" />
+        <path d="M92 22 L112 18 L100 36 Z" fill="#EE9226" />
       </svg>
     ) : (
       <Image
@@ -53,7 +53,7 @@ export function Logo({
         width={size}
         height={size}
         priority={priority}
-        className="shrink-0"
+        className="shrink-0 rounded-[22%]"
       />
     );
 
@@ -63,10 +63,7 @@ export function Logo({
 
   return (
     <span
-      className={cn(
-        "inline-flex min-w-0 items-center gap-2.5",
-        className,
-      )}
+      className={cn("inline-flex min-w-0 items-center gap-2.5", className)}
     >
       {mark}
       <span className="font-display truncate text-sm font-semibold tracking-tight">

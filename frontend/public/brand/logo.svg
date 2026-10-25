@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Study Lab">
-  <rect width="128" height="128" rx="34" fill="#233249"/>
-  <!-- Happy closed eyes (∩ ∩) -->
-  <path d="M28 76A18 18 0 0 0 64 76" stroke="#3DE0FF" stroke-width="13" stroke-linecap="round"/>
-  <path d="M64 76A18 18 0 0 0 100 76" stroke="#3DE0FF" stroke-width="13" stroke-linecap="round"/>
-  <!-- Status / smile accent -->
-  <circle cx="106" cy="22" r="11" fill="#E85002"/>
+  <rect width="128" height="128" rx="34" fill="#213146"/>
+  <!-- smiling eyes -->
+  <path d="M28 74A20 20 0 0 0 64 74" stroke="#20D1ED" stroke-width="14" stroke-linecap="round"/>
+  <path d="M64 74A20 20 0 0 0 100 74" stroke="#20D1ED" stroke-width="14" stroke-linecap="round"/>
+  <!-- orange arrow accent (top-right) -->
+  <path d="M92 22 L112 18 L100 36 Z" fill="#EE9226"/>
 </svg>
