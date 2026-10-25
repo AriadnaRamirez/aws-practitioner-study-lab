@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN } from "@aps/shared";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { register, storeAuth } from "@/lib/api";
+import { forceOnboardingOnce } from "@/lib/onboarding";
 
 function strengthHints(password: string) {
   return [
@@ -25,6 +27,7 @@ function strengthHints(password: string) {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +54,9 @@ export default function RegisterPage() {
         timezone,
       });
       storeAuth(res);
+      forceOnboardingOnce();
       setDoneUser(res.user.username);
+      router.push("/estudiar");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo registrar");
     } finally {
@@ -78,13 +83,14 @@ export default function RegisterPage() {
       {doneUser ? (
         <div className="mt-8 space-y-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm">
           <p>
-            Cuenta creada. Bienvenida/o, <strong>{doneUser}</strong>.
+            Cuenta creada. Bienvenida/o, <strong>{doneUser}</strong>. Te
+            llevamos a Estudiar con el tour «Así funciona…».
           </p>
           <Link
             className="text-[var(--accent)] underline-offset-4 hover:underline"
-            href="/login"
+            href="/estudiar"
           >
-            Ir a iniciar sesión
+            Ir a Estudiar
           </Link>
         </div>
       ) : (
