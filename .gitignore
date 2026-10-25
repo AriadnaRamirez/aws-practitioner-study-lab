@@ -8,7 +8,8 @@ coverage
 .env.local
 .env.*.local
 .DS_Store
-apps/api/dist
+backend/dist
+frontend/.next
 packages/shared/dist
 *.tsbuildinfo
 agent-tools

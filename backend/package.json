@@ -1,7 +1,7 @@
 {
-  "name": "@aps/api",
+  "name": "@aps/backend",
   "version": "0.0.1",
-  "description": "AWS Practitioner Study Lab API (NestJS)",
+  "description": "AWS Practitioner Study Lab backend (NestJS)",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

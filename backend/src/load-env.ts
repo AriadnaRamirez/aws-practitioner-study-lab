@@ -4,7 +4,7 @@ import { resolve } from 'path';
 
 const candidates = [
   resolve(process.cwd(), '.env'),
-  resolve(process.cwd(), 'apps/api/.env'),
+  resolve(process.cwd(), 'backend/.env'),
   resolve(__dirname, '../.env'),
 ];
 
