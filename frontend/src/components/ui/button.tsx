@@ -10,7 +10,7 @@ const buttonVariants = cva(
         default:
           "bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)]",
         secondary:
-          "border border-[var(--glass-border)] bg-[var(--glass)] text-[var(--foreground)] backdrop-blur-md hover:bg-[var(--glass-strong)] hover:border-[var(--accent)]/40",
+          "border border-[var(--glass-border)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] hover:border-[var(--accent)]/40",
         ghost:
           "text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
         outline:

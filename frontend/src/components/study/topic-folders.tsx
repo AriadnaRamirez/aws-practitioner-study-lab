@@ -17,11 +17,11 @@ type Props = {
 const FOLDER_FACE: Record<StudyCategory["tone"], string> = {
   orange:
     "border border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]",
-  ink: "border border-[var(--glass-border)] bg-[var(--glass)] text-[var(--foreground)] backdrop-blur-md",
+  ink: "border border-[var(--glass-border)] bg-[var(--surface)] text-[var(--foreground)]",
   slate:
     "border border-[var(--glass-border)] bg-[var(--surface-elevated)] text-[var(--foreground)]",
   cream:
-    "border border-[var(--glass-border)] bg-[var(--glass-strong)] text-[var(--foreground)] backdrop-blur-md",
+    "border border-[var(--glass-border)] bg-[var(--surface-hover)] text-[var(--foreground)]",
 };
 
 const TAB_FACE: Record<StudyCategory["tone"], string> = {

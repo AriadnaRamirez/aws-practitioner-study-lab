@@ -15,7 +15,7 @@ type Props = {
 export function Logo({
   className,
   size = 32,
-  variant = "png",
+  variant = "svg",
   priority = false,
   withWordmark = false,
 }: Props) {

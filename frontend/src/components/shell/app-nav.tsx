@@ -77,7 +77,7 @@ export function AppNav() {
     );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/95">
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--accent-foreground)]"

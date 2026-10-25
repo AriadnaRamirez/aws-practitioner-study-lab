@@ -2,13 +2,13 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export const MASCOT_POSES = {
-  study: "/mascot/study.png",
-  wave: "/mascot/wave.png",
-  laptop: "/mascot/laptop.png",
-  rocket: "/mascot/rocket.png",
-  server: "/mascot/server.png",
-  s3: "/mascot/s3.png",
-  security: "/mascot/security.png",
+  study: "/mascot/study.webp",
+  wave: "/mascot/wave.webp",
+  laptop: "/mascot/laptop.webp",
+  rocket: "/mascot/rocket.webp",
+  server: "/mascot/server.webp",
+  s3: "/mascot/s3.webp",
+  security: "/mascot/security.webp",
 } as const;
 
 export type MascotPose = keyof typeof MASCOT_POSES;
@@ -38,7 +38,14 @@ const SIZE: Record<NonNullable<Props["size"]>, string> = {
   hero: "h-52 w-full max-w-xs sm:h-60",
 };
 
-/** Transparent PNG mascot poses (no background plate). */
+const SIZES_ATTR: Record<NonNullable<Props["size"]>, string> = {
+  sm: "112px",
+  md: "176px",
+  lg: "256px",
+  hero: "(max-width: 640px) 80vw, 320px",
+};
+
+/** Lightweight WebP mascot (transparent). */
 export function Mascot({
   pose = "study",
   className,
@@ -60,8 +67,10 @@ export function Mascot({
         alt={ALT[pose]}
         fill
         priority={priority}
-        sizes="(max-width: 640px) 80vw, 360px"
-        className="object-contain object-center drop-shadow-[0_18px_40px_rgba(232,80,2,0.28)]"
+        loading={priority ? "eager" : "lazy"}
+        quality={75}
+        sizes={SIZES_ATTR[size]}
+        className="object-contain object-center drop-shadow-[0_12px_28px_rgba(232,80,2,0.22)]"
       />
     </div>
   );

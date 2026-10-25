@@ -52,7 +52,7 @@
   --glass: rgba(249, 249, 249, 0.08);
   --glass-strong: rgba(249, 249, 249, 0.12);
   --glass-border: rgba(249, 249, 249, 0.18);
-  --glass-blur: 18px;
+  --glass-blur: 8px;
   --pill-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.65);
   --branding-gradient: linear-gradient(
     90deg,
@@ -98,7 +98,7 @@
   --glass: rgba(249, 249, 249, 0.08);
   --glass-strong: rgba(249, 249, 249, 0.12);
   --glass-border: rgba(249, 249, 249, 0.18);
-  --glass-blur: 18px;
+  --glass-blur: 8px;
   --pill-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.65);
   --branding-gradient: linear-gradient(
     90deg,
@@ -114,7 +114,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-figtree);
   --font-display: var(--font-syne);
-  --font-mono: var(--font-jetbrains);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @keyframes fade-up {
@@ -248,8 +248,6 @@ code,
   border-radius: 9999px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--pill-shadow);
   color: var(--foreground);
   transition:
@@ -279,26 +277,27 @@ code,
   border-color: rgba(232, 80, 2, 0.5);
 }
 
-/* Soft branding atmosphere — uses palette stops, not flat AWS yellow */
+/* Soft branding atmosphere — pre-softened gradients (no live CSS blur) */
 .atmos-orange {
   background:
     radial-gradient(
-      ellipse 70% 55% at 50% 42%,
+      ellipse 80% 60% at 50% 40%,
       var(--hero-mesh-a),
-      transparent 68%
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 50% 40% at 28% 72%,
+      ellipse 55% 45% at 28% 72%,
       var(--hero-mesh-b),
-      transparent 70%
+      transparent 74%
     ),
     radial-gradient(
-      ellipse 42% 36% at 72% 28%,
+      ellipse 48% 40% at 72% 28%,
       var(--hero-mesh-c),
-      transparent 65%
+      transparent 70%
     );
-  filter: blur(28px);
-  opacity: 0.95;
+  opacity: 0.85;
+  will-change: auto;
+  contain: paint;
 }
 
 .brand-bar {

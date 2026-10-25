@@ -85,7 +85,7 @@ export function DashboardClient() {
             {pct}%
           </p>
         </div>
-        <Mascot pose="wave" size="sm" className="shrink-0 rounded-2xl" />
+        <Mascot pose="wave" size="sm" className="shrink-0" />
       </header>
 
       <ExamCountdown className="mt-5" examDate={user.examDate} compact />

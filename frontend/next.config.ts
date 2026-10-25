@@ -6,11 +6,44 @@ const API_PROXY =
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@aps/shared"],
+  compress: true,
+  poweredByHeader: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    deviceSizes: [360, 414, 640, 768, 1080],
+    imageSizes: [64, 96, 128, 256, 384],
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   async rewrites() {
     return [
       {
         source: "/api/v1/:path*",
         destination: `${API_PROXY}/api/v1/:path*`,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/mascot/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/brand/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
       },
     ];
   },
