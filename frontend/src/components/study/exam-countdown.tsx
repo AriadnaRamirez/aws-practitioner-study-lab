@@ -44,25 +44,19 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
     return (
       <aside
         className={cn(
-          "rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4",
+          "border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3",
           className,
         )}
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-          Tu examen
+        <p className="text-sm text-[var(--foreground-muted)]">
+          Sin fecha de examen.{" "}
+          <Link
+            href="/cuenta"
+            className="font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
+          >
+            Agregar
+          </Link>
         </p>
-        <p className="font-display mt-2 text-lg font-semibold text-white">
-          ¿Cuándo es tu Cloud Practitioner?
-        </p>
-        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          Define la fecha y verás cuántos días faltan.
-        </p>
-        <Link
-          href="/cuenta"
-          className="mt-3 inline-flex text-sm font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
-        >
-          Agregar fecha en Cuenta →
-        </Link>
       </aside>
     );
   }
@@ -95,52 +89,50 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
   return (
     <aside
       className={cn(
-        "flex gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4",
+        "flex min-w-0 items-center gap-3 border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-3 sm:gap-4 sm:px-4",
         className,
       )}
       aria-live="polite"
     >
       <div
         className={cn(
-          "flex shrink-0 flex-col overflow-hidden rounded-xl text-center",
-          compact ? "w-14" : "w-16",
+          "flex shrink-0 flex-col overflow-hidden rounded-md text-center",
+          compact ? "w-12" : "w-14",
         )}
-        style={{
-          boxShadow: "0 10px 22px -14px rgba(0, 0, 0, 0.55)",
-        }}
       >
-        <div
-          className="bg-[var(--accent)] px-1 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]"
-        >
+        <div className="bg-[var(--accent)] px-1 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]">
           {(monthShort ?? "—").replace(/\.$/, "").slice(0, 3)}
         </div>
-        <div className="bg-white px-1 py-2">
-          <p className="font-display text-2xl font-bold leading-none text-black">
+        <div className="bg-white px-1 py-1.5">
+          <p className="font-display text-xl font-bold leading-none text-black">
             {dayNum}
-          </p>
-          <p className="mt-0.5 text-[10px] font-medium text-black/50">
-            {cal[0]}
           </p>
         </div>
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-          Countdown examen
-        </p>
-        <p className="font-display mt-1 text-base font-semibold leading-snug text-white sm:text-lg">
+        <p className="font-display text-sm font-semibold leading-snug sm:text-base">
           {headline}
         </p>
-        <p className="mt-1 text-xs text-[var(--foreground-muted)]">
-          {formatLongDate(examDate)}
-          {" · "}
+        {!compact ? (
+          <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+            {formatLongDate(examDate)}
+            {" · "}
+            <Link
+              href="/cuenta"
+              className="font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+            >
+              Cambiar
+            </Link>
+          </p>
+        ) : (
           <Link
             href="/cuenta"
-            className="font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+            className="mt-0.5 inline-block text-xs font-medium text-[var(--accent)] underline-offset-4 hover:underline"
           >
             Cambiar fecha
           </Link>
-        </p>
+        )}
       </div>
     </aside>
   );

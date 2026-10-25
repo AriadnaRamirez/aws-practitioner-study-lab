@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { FlashDeckShowcase } from "@/components/study/flash-deck";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -13,90 +12,61 @@ function ByeBanner() {
   return (
     <p
       role="status"
-      className="mx-6 mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm text-[var(--foreground)] md:mx-10"
+      className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-center text-sm text-[var(--foreground-muted)]"
     >
-      Sesión cerrada. Gracias por estudiar — vuelve cuando quieras.
+      Sesión cerrada.
     </p>
   );
 }
 
+/** Formal, mobile-first marketing page — website, not app chrome. */
 export function LandingHero() {
   return (
-    <section className="relative isolate flex min-h-[100dvh] flex-col overflow-hidden bg-[var(--background)]">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 70% 100%, var(--hero-mesh-b), transparent 55%)",
-          }}
-        />
-      </div>
+    <div className="min-h-dvh bg-[var(--background)] text-[var(--foreground)]">
+      <Suspense fallback={null}>
+        <ByeBanner />
+      </Suspense>
 
-      <header className="flex items-center justify-between px-6 py-5 md:px-10">
-        <span className="font-display text-sm font-semibold tracking-tight text-white md:text-base">
+      <header className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
+        <p className="font-display text-sm font-semibold tracking-tight">
           AWS Practitioner Study Lab
-        </span>
-        <nav className="flex items-center gap-2">
+        </p>
+        <nav className="flex items-center gap-4 text-sm">
           <Link
             href="/login"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            className="text-[var(--foreground-muted)] hover:text-[var(--accent)]"
           >
             Entrar
           </Link>
-          <Link
-            href="/register"
-            className={cn(buttonVariants({ size: "sm" }))}
-          >
+          <Link href="/register" className={cn(buttonVariants({ size: "sm" }))}>
             Crear cuenta
           </Link>
         </nav>
       </header>
 
-      <Suspense fallback={null}>
-        <ByeBanner />
-      </Suspense>
-
-      <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-6 pb-20 pt-6 md:grid-cols-2 md:gap-14 md:px-10">
-        <div>
-          <h1 className="animate-fade-up font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-            <span className="text-white">Tu mazo.</span>
-            <br />
-            <span className="text-accent-aws">Tu examen AWS.</span>
-          </h1>
-
-          <p className="animate-fade-up-delay-1 mt-6 max-w-md text-lg font-medium leading-snug text-white/90 md:text-xl">
-            Flashcards MCQ con refuerzo al fallar — minimalismo tech para
-            practicar cada día.
-          </p>
-
-          <p className="animate-fade-up-delay-2 mt-4 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)] md:text-base">
-            Empieza en un clic. Feedback inmediato. Dominio con rachas.
-          </p>
-
-          <div className="animate-fade-up-delay-3 mt-10 flex flex-wrap items-center gap-3">
-            <Link href="/register" className={cn(buttonVariants({ size: "lg" }))}>
-              Crear cuenta
-            </Link>
-            <Link
-              href="/login"
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/estudiar?start=10"
-              className="text-sm font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
-            >
-              Empezar 10 flashcards →
-            </Link>
-          </div>
+      <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10 sm:px-6 sm:pt-16">
+        <h1 className="font-display max-w-xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
+          Prepárate para el examen{" "}
+          <span className="text-[var(--accent)]">AWS Cloud Practitioner</span>
+        </h1>
+        <p className="mt-4 max-w-lg text-base text-[var(--foreground-muted)] sm:text-lg">
+          Flashcards MCQ, dominio por tema y modo examen.
+        </p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Link
+            href="/register"
+            className={cn(buttonVariants({ size: "lg" }), "w-full justify-center sm:w-auto")}
+          >
+            Crear cuenta
+          </Link>
+          <Link
+            href="/guest"
+            className="text-center text-sm font-semibold text-[var(--accent)] underline-offset-4 hover:underline sm:text-left"
+          >
+            Probar sin cuenta
+          </Link>
         </div>
-
-        <div className="animate-fade-up-delay-2 flex justify-center md:justify-end">
-          <FlashDeckShowcase />
-        </div>
-      </div>
-    </section>
+      </main>
+    </div>
   );
 }

@@ -16,19 +16,17 @@ type NavItem = { href: string; label: string; match?: string[] };
 const STUDENT_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Inicio", match: ["/dashboard"] },
   { href: "/estudiar", label: "Estudiar", match: ["/estudiar"] },
-  { href: "/mas-falladas", label: "Más falladas" },
   { href: "/progreso", label: "Progreso" },
-  { href: "/podio", label: "Podio" },
   { href: "/cuenta", label: "Cuenta", match: ["/cuenta"] },
 ];
 
-/** Guests should not hit empty “solo Entrar” app pages. */
 const GUEST_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio", match: ["/"] },
   { href: "/guest", label: "Probar" },
   { href: "/register", label: "Crear cuenta" },
 ];
 
+/** Site header — text links, website chrome (not app tabs). */
 export function AppNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<PublicUser | null>(null);
@@ -63,9 +61,7 @@ export function AppNav() {
       : GUEST_ITEMS;
 
   function isActive(item: NavItem) {
-    if (item.href === "/") {
-      return pathname === "/";
-    }
+    if (item.href === "/") return pathname === "/";
     const prefixes = item.match ?? [item.href];
     return prefixes.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),
@@ -74,49 +70,38 @@ export function AppNav() {
 
   const linkClass = (active: boolean) =>
     cn(
-      "shrink-0 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+      "shrink-0 py-1 text-sm transition-colors",
       active
-        ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-        : "text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
+        ? "font-semibold text-[var(--accent)]"
+        : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
     );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--nav-bg)] backdrop-blur-md">
+    <header className="border-b border-[var(--border)] bg-[var(--background)]">
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--accent-foreground)]"
       >
         Saltar al contenido
       </a>
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="font-display truncate text-sm font-semibold tracking-tight text-[var(--foreground)] transition-opacity hover:opacity-80"
+            className="font-display truncate text-sm font-semibold tracking-tight"
           >
-            AWS Practitioner Study Lab
+            Study Lab
           </Link>
           {masteryPct != null ? (
-            <div
-              className="hidden items-center gap-2 sm:flex"
-              title="Dominio global"
-            >
-              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--surface-hover)]">
-                <div
-                  className="h-full rounded-full bg-[var(--accent)] transition-[width]"
-                  style={{ width: `${Math.min(100, masteryPct)}%` }}
-                />
-              </div>
-              <span className="font-mono text-xs tabular-nums text-[var(--foreground-muted)]">
-                {masteryPct}%
-              </span>
-            </div>
+            <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">
+              {masteryPct}%
+            </span>
           ) : null}
         </div>
 
         <nav
           aria-label="Principal"
-          className="hidden items-center gap-1 lg:flex"
+          className="hidden items-center gap-5 sm:flex"
         >
           {items.map((item) => (
             <Link
@@ -129,7 +114,7 @@ export function AppNav() {
             </Link>
           ))}
           {user ? (
-            <Link href="/logout" className={cn(linkClass(false), "ml-1")}>
+            <Link href="/logout" className={linkClass(false)}>
               Salir
             </Link>
           ) : (
@@ -141,7 +126,7 @@ export function AppNav() {
 
         <button
           type="button"
-          className="inline-flex items-center rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--foreground)] lg:hidden"
+          className="inline-flex items-center border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--foreground)] sm:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((o) => !o)}
@@ -154,9 +139,9 @@ export function AppNav() {
         <nav
           id="mobile-nav"
           aria-label="Móvil"
-          className="border-t border-[var(--border)] px-4 py-3 lg:hidden"
+          className="border-t border-[var(--border)] px-4 py-3 sm:hidden"
         >
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-3">
             {items.map((item) => (
               <li key={item.href}>
                 <Link
@@ -169,10 +154,7 @@ export function AppNav() {
             ))}
             <li>
               {user ? (
-                <Link
-                  href="/logout"
-                  className={cn(linkClass(false), "block")}
-                >
+                <Link href="/logout" className={cn(linkClass(false), "block")}>
                   Salir
                 </Link>
               ) : (

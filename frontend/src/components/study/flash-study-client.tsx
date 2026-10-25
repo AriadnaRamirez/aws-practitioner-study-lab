@@ -17,7 +17,7 @@ import {
   type StudySize,
   type Topic,
 } from "@aps/shared";
-import { FlashDeck, FlashDeckShowcase } from "@/components/study/flash-deck";
+import { FlashDeck } from "@/components/study/flash-deck";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchMe, getStoredToken } from "@/lib/api";
@@ -410,62 +410,40 @@ export function FlashStudyClient() {
 
   if (phase === "setup") {
     return (
-      <section className="mx-auto max-w-2xl px-6 py-10">
-        <div className="grid items-center gap-10 md:grid-cols-[1fr_minmax(0,14rem)]">
-          <div>
-            <p className="text-sm font-medium text-[var(--accent)]">
-              Mazo · Flash MCQ
-            </p>
-            <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">
-              Empieza a{" "}
-              <span className="text-accent-aws">estudiar</span>
-            </h1>
-            <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-              4 opciones, refuerzo al fallar y dominio con 3 aciertos seguidos.
-              {dailyStreak > 0
-                ? ` Racha diaria: ${dailyStreak} día${dailyStreak === 1 ? "" : "s"}.`
-                : null}
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button
-                size="lg"
-                disabled={pending}
-                onClick={() => void onStart(10, [])}
-                className="min-w-[12rem]"
-              >
-                {pending ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Spinner /> Preparando…
-                  </span>
-                ) : (
-                  "Empezar 10 flashcards"
-                )}
-              </Button>
-              <Button
-                size="lg"
-                variant="secondary"
-                disabled={pending}
-                onClick={() => void onStart(20, [])}
-              >
-                Empezar 20
-              </Button>
-            </div>
-            <p className="mt-3 text-xs text-[var(--foreground-muted)]">
-              Un clic → primera carta. Atajos: 1–4 o A–D · Enter para continuar.
-            </p>
+      <section className="min-w-0">
+        <div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              disabled={pending}
+              onClick={() => void onStart(10, [])}
+              className="w-full sm:w-auto"
+            >
+              {pending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner /> Preparando…
+                </span>
+              ) : (
+                "Empezar 10"
+              )}
+            </Button>
+            <Button
+              size="lg"
+              variant="secondary"
+              disabled={pending}
+              onClick={() => void onStart(20, [])}
+              className="w-full sm:w-auto"
+            >
+              Empezar 20
+            </Button>
           </div>
-          <FlashDeckShowcase className="hidden md:block scale-90 origin-center" />
         </div>
 
-        <div className="mt-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-            Elige un tema
-          </p>
-          <h2 className="font-display mt-1 text-lg font-semibold">
-            Servicios, Linux o redes
+        <div className="mt-10 border-t border-[var(--border)] pt-6">
+          <h2 className="text-sm font-medium text-[var(--foreground-muted)]">
+            Por tema
           </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <ul className="mt-3 divide-y divide-[var(--border)]">
             {STUDY_CATEGORIES.map((cat) => {
               const ids = resolveCategoryTopicIds(
                 cat.id,
@@ -481,33 +459,12 @@ export function FlashStudyClient() {
                       setSelectedTopics(ids);
                       void onStart(10, ids);
                     }}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-                      "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:ring-[var(--accent)]",
-                      "disabled:opacity-50",
-                    )}
-                    style={{
-                      borderRadius:
-                        cat.id === "aws-services"
-                          ? "42% 58% 48% 52% / 48% 42% 58% 52%"
-                          : cat.id === "linux"
-                            ? "55% 45% 42% 58% / 50% 55% 45% 50%"
-                            : cat.id === "networking"
-                              ? "48% 52% 58% 42% / 55% 48% 52% 45%"
-                              : "50% 50% 45% 55% / 42% 58% 48% 52%",
-                    }}
+                    className="flex w-full items-center justify-between gap-3 py-3 text-left disabled:opacity-50"
                   >
-                    <span className="min-w-0 flex-1">
-                      <span className="font-display block text-sm font-semibold">
-                        {cat.title}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-[var(--foreground-muted)]">
-                        {cat.subtitle}
-                      </span>
+                    <span className="font-display text-sm font-semibold">
+                      {cat.title}
                     </span>
-                    <span className="text-[var(--accent)]" aria-hidden>
-                      →
-                    </span>
+                    <span className="text-sm text-[var(--accent)]">Estudiar</span>
                   </button>
                 </li>
               );
@@ -517,11 +474,11 @@ export function FlashStudyClient() {
 
         <button
           type="button"
-          className="mt-8 text-sm font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+          className="mt-6 text-sm font-medium text-[var(--accent)] underline-offset-4 hover:underline"
           onClick={() => setCustomize((v) => !v)}
           aria-expanded={customize}
         >
-          {customize ? "Ocultar personalización" : "Personalizar temas y tamaño"}
+          {customize ? "Ocultar opciones" : "Más opciones"}
         </button>
 
         {customize ? (
