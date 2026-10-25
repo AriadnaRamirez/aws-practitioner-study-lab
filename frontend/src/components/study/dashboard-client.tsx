@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { ProgressOverview, PublicUser } from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
+import { ExamCountdown } from "@/components/study/exam-countdown";
 import { buttonVariants } from "@/components/ui/button";
 import {
   clearAuth,
@@ -84,6 +85,8 @@ export function DashboardClient() {
         Elige un modo. El progreso (dominio, rachas, más falladas) se guarda en
         tu cuenta.
       </p>
+
+      <ExamCountdown className="mt-8" examDate={user.examDate} />
 
       <section className="mt-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">

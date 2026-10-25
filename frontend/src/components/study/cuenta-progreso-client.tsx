@@ -37,6 +37,7 @@ export function CuentaProgresoClient() {
 
   const [timezone, setTimezone] = useState("America/Mexico_City");
   const [podiumHidden, setPodiumHidden] = useState(false);
+  const [examDate, setExamDate] = useState("");
   const [profilePending, setProfilePending] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -59,6 +60,7 @@ export function CuentaProgresoClient() {
       setUser(me);
       setTimezone(me.timezone);
       setPodiumHidden(me.podiumHidden);
+      setExamDate(me.examDate ?? "");
       setStoredUser(me);
       const hist = await fetchStudySessions(50);
       setSessions(hist.sessions);
@@ -80,8 +82,13 @@ export function CuentaProgresoClient() {
     setError(null);
     setProfilePending(true);
     try {
-      const me = await updateProfile({ timezone, podiumHidden });
+      const me = await updateProfile({
+        timezone,
+        podiumHidden,
+        examDate: examDate.trim() ? examDate.trim() : null,
+      });
       setUser(me);
+      setExamDate(me.examDate ?? "");
       setStoredUser(me);
       setNotice("Perfil actualizado.");
     } catch (err) {
@@ -204,6 +211,18 @@ export function CuentaProgresoClient() {
         className="mt-8 space-y-4 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-4"
       >
         <h2 className="font-display text-lg font-semibold">Preferencias</h2>
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          Fecha del examen AWS Cloud Practitioner
+          <Input
+            type="date"
+            value={examDate}
+            onChange={(e) => setExamDate(e.target.value)}
+          />
+          <span className="text-xs font-normal text-[var(--foreground-muted)]">
+            Se muestra en Inicio: «Faltan N días para tu examen…». Déjalo vacío
+            para quitar el contador.
+          </span>
+        </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           Timezone (racha diaria)
           <select

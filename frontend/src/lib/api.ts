@@ -188,6 +188,7 @@ export function fetchMe() {
 export function updateProfile(body: {
   timezone?: string;
   podiumHidden?: boolean;
+  examDate?: string | null;
 }) {
   return apiFetch<PublicUser>('/auth/me', {
     method: 'PATCH',

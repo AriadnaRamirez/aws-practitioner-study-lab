@@ -145,6 +145,10 @@ async function seedDemoStudents() {
   const password = process.env.DEMO_PASSWORD ?? 'StudyPass1!';
   const passwordHash = await bcrypt.hash(password, 12);
   const timezone = 'America/Mexico_City';
+  // ~23 days out so the dashboard countdown looks real for demos.
+  const examDate = new Date();
+  examDate.setUTCDate(examDate.getUTCDate() + 23);
+  examDate.setUTCHours(12, 0, 0, 0);
 
   const demos = [
     {
@@ -165,6 +169,7 @@ async function seedDemoStudents() {
         passwordHash,
         role: Role.STUDENT,
         timezone,
+        examDate,
         bannedAt: null,
       },
       create: {
@@ -173,6 +178,7 @@ async function seedDemoStudents() {
         passwordHash,
         role: Role.STUDENT,
         timezone,
+        examDate,
       },
     });
   }

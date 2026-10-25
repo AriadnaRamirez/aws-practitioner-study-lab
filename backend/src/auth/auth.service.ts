@@ -269,11 +269,37 @@ export class AuthService {
 
   async updateProfile(
     user: User,
-    dto: { timezone?: string; podiumHidden?: boolean },
+    dto: {
+      timezone?: string;
+      podiumHidden?: boolean;
+      examDate?: string | null;
+    },
   ): Promise<PublicUser> {
-    if (dto.timezone === undefined && dto.podiumHidden === undefined) {
+    if (
+      dto.timezone === undefined &&
+      dto.podiumHidden === undefined &&
+      dto.examDate === undefined
+    ) {
       throw new BadRequestException('Nada que actualizar');
     }
+
+    let examDateValue: Date | null | undefined = undefined;
+    if (dto.examDate !== undefined) {
+      if (dto.examDate === null || dto.examDate.trim() === '') {
+        examDateValue = null;
+      } else {
+        const raw = dto.examDate.trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          throw new BadRequestException('examDate debe ser YYYY-MM-DD');
+        }
+        const parsed = new Date(`${raw}T12:00:00.000Z`);
+        if (Number.isNaN(parsed.getTime())) {
+          throw new BadRequestException('examDate inválida');
+        }
+        examDateValue = parsed;
+      }
+    }
+
     const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
@@ -283,6 +309,7 @@ export class AuthService {
         ...(dto.podiumHidden !== undefined
           ? { podiumHidden: dto.podiumHidden }
           : {}),
+        ...(examDateValue !== undefined ? { examDate: examDateValue } : {}),
       },
     });
     return this.toPublicUser(updated);
@@ -325,6 +352,9 @@ export class AuthService {
       role: user.role,
       timezone: user.timezone,
       podiumHidden: user.podiumHidden,
+      examDate: user.examDate
+        ? user.examDate.toISOString().slice(0, 10)
+        : null,
       createdAt: user.createdAt.toISOString(),
     };
   }

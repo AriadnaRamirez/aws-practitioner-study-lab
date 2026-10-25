@@ -45,6 +45,8 @@ model User {
   role         Role      @default(STUDENT)
   timezone     String    @default("UTC")
   podiumHidden Boolean   @default(false)
+  /// Target AWS certification exam day (civil date, no time).
+  examDate     DateTime? @db.Date
   /// Soft-ban: login rejected while set (admin owner tool).
   bannedAt     DateTime?
   createdAt    DateTime  @default(now())

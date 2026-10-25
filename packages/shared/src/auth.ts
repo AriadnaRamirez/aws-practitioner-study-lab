@@ -9,6 +9,8 @@ export interface PublicUser {
   role: UserRole;
   timezone: string;
   podiumHidden: boolean;
+  /** YYYY-MM-DD of target Cloud Practitioner exam, or null. */
+  examDate: string | null;
   createdAt: string;
 }
 
@@ -52,6 +54,8 @@ export interface ResetPasswordRequest {
 export interface UpdateProfileRequest {
   timezone?: string;
   podiumHidden?: boolean;
+  /** YYYY-MM-DD, or null to clear. */
+  examDate?: string | null;
 }
 
 export interface ChangePasswordRequest {

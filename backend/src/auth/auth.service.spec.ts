@@ -37,6 +37,7 @@ describe('AuthService', () => {
     role: Role.STUDENT,
     timezone: 'UTC',
     podiumHidden: false,
+    examDate: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
   };
 
