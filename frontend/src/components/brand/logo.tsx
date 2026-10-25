@@ -44,7 +44,7 @@ export function Logo({
           strokeWidth="14"
           strokeLinecap="round"
         />
-        <path d="M92 22 L112 18 L100 36 Z" fill="#EE9226" />
+        <path d="M90 34 L108 16 L114 22 L102 40 Z" fill="#EE9226" />
       </svg>
     ) : (
       <Image
