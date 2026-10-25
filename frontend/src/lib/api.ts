@@ -12,8 +12,9 @@ import type {
 } from '@aps/shared';
 import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:43124/api/v1';
+// Relative by default so Try Live / port-forward use the same host as the UI
+// (Next rewrites /api/v1 → Nest). Override with NEXT_PUBLIC_API_URL if needed.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 export const AUTH_TOKEN_KEY = 'aps_access_token';
 
