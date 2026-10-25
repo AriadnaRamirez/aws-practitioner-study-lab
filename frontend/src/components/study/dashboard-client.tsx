@@ -26,12 +26,23 @@ export function DashboardClient() {
     try {
       const me = await fetchMe();
       setUser(me);
-      const ov = await fetchProgressOverview();
-      setOverview(ov);
     } catch (err) {
+      // Solo invalidar sesión si /auth/me falla (token malo / ban).
       clearAuth();
       setUser(null);
       setError(err instanceof Error ? err.message : "Sesión inválida");
+      return;
+    }
+    try {
+      const ov = await fetchProgressOverview();
+      setOverview(ov);
+    } catch (err) {
+      // Mantener sesión aunque el overview falle (red / 5xx).
+      setError(
+        err instanceof Error
+          ? `Progreso no disponible: ${err.message}`
+          : "Progreso no disponible",
+      );
     }
   }, []);
 

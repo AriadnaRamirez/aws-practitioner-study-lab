@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,32 +17,38 @@ const DEMO_ACCOUNTS = [
 ] as const;
 
 export default function LoginPage() {
-  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function doLogin(idValue: string, passwordValue: string) {
     setError(null);
     setPending(true);
     try {
-      const res = await login({ identifier, password });
+      const res = await login({
+        identifier: idValue.trim(),
+        password: passwordValue,
+      });
       storeAuth(res);
       const next = res.user.role === "ADMIN" ? "/admin" : "/dashboard";
-      router.replace(next);
-      router.refresh();
+      // Hard navigation: avoids client-router races that look like “no entró”.
+      window.location.assign(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
       setPending(false);
     }
   }
 
-  function fillDemo(identifierValue: string, passwordValue: string) {
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    await doLogin(identifier, password);
+  }
+
+  async function enterAs(identifierValue: string, passwordValue: string) {
     setIdentifier(identifierValue);
     setPassword(passwordValue);
-    setError(null);
+    await doLogin(identifierValue, passwordValue);
   }
 
   return (
@@ -58,7 +63,10 @@ export default function LoginPage() {
         Entrar
       </h1>
       <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-        Usa tu <strong className="font-medium text-[var(--foreground)]">email o username</strong>{" "}
+        Usa tu{" "}
+        <strong className="font-medium text-[var(--foreground)]">
+          email o username
+        </strong>{" "}
         en el mismo campo, junto con la contraseña.
       </p>
 
@@ -105,17 +113,18 @@ export default function LoginPage() {
 
       <aside className="mt-8 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground-muted)]">
-          Cuentas de demo (local)
+          Entrar en un clic (local)
         </p>
         <ul className="mt-3 space-y-2">
           {DEMO_ACCOUNTS.map((acc) => (
             <li key={acc.identifier}>
               <button
                 type="button"
-                onClick={() => fillDemo(acc.identifier, acc.password)}
-                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-left text-sm transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-hover)]"
+                disabled={pending}
+                onClick={() => void enterAs(acc.identifier, acc.password)}
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-left text-sm transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] disabled:opacity-60"
               >
-                <span className="font-medium">{acc.label}</span>
+                <span className="font-medium">Entrar como {acc.label}</span>
                 <span className="mt-0.5 block font-mono text-xs text-[var(--foreground-muted)]">
                   {acc.identifier} / {acc.password}
                 </span>
@@ -125,7 +134,8 @@ export default function LoginPage() {
         </ul>
         <p className="mt-3 text-xs text-[var(--foreground-muted)]">
           También sirve <code className="font-mono">estudiante</code> con la
-          misma clave que demo.
+          misma clave que demo (<code className="font-mono">StudyPass1!</code>
+          ).
         </p>
       </aside>
 

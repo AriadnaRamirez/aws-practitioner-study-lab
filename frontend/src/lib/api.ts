@@ -23,6 +23,9 @@ import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
 export const AUTH_TOKEN_KEY = 'aps_access_token';
+export const AUTH_USER_KEY = 'aps_user';
+/** Cookie mirror so previews / hard navigations keep the session. */
+export const AUTH_COOKIE = 'aps_access_token';
 
 const ADMIN_TOKEN =
   process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? 'dev-admin-token';
@@ -31,30 +34,71 @@ export function getApiUrl() {
   return API_URL;
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie
+    .split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${name}=`));
+  if (!match) return null;
+  return decodeURIComponent(match.slice(name.length + 1)) || null;
+}
+
+function writeAuthCookie(token: string) {
+  // 7d — same ballpark as JWT_EXPIRES_IN default
+  const maxAge = 60 * 60 * 24 * 7;
+  document.cookie = `${AUTH_COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+}
+
+function clearAuthCookie() {
+  document.cookie = `${AUTH_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
 export function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  try {
+    return (
+      window.localStorage.getItem(AUTH_TOKEN_KEY) ?? readCookie(AUTH_COOKIE)
+    );
+  } catch {
+    return readCookie(AUTH_COOKIE);
+  }
 }
 
 export function storeAuth(response: AuthResponse) {
-  window.localStorage.setItem(AUTH_TOKEN_KEY, response.tokens.accessToken);
-  window.localStorage.setItem('aps_user', JSON.stringify(response.user));
+  const token = response.tokens.accessToken;
+  try {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+    window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(response.user));
+  } catch {
+    /* private mode / blocked storage — cookie still helps */
+  }
+  writeAuthCookie(token);
 }
 
 export function setStoredUser(user: PublicUser) {
-  window.localStorage.setItem('aps_user', JSON.stringify(user));
+  try {
+    window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  } catch {
+    /* ignore */
+  }
 }
 
 export function clearAuth() {
-  window.localStorage.removeItem(AUTH_TOKEN_KEY);
-  window.localStorage.removeItem('aps_user');
+  try {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.localStorage.removeItem(AUTH_USER_KEY);
+  } catch {
+    /* ignore */
+  }
+  clearAuthCookie();
 }
 
 export function getStoredUser(): PublicUser | null {
   if (typeof window === 'undefined') return null;
-  const raw = window.localStorage.getItem('aps_user');
-  if (!raw) return null;
   try {
+    const raw = window.localStorage.getItem(AUTH_USER_KEY);
+    if (!raw) return null;
     return JSON.parse(raw) as PublicUser;
   } catch {
     return null;
@@ -95,7 +139,14 @@ async function apiFetch<T>(
     if (token) headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...init, headers });
+  } catch {
+    throw new Error(
+      'No se pudo contactar la API. ¿Está corriendo el backend en :43124?',
+    );
+  }
   if (!res.ok) {
     throw new Error(await parseError(res));
   }
