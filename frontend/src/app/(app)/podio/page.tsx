@@ -65,7 +65,7 @@ export default function PodioPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <header className="animate-[fade-up_0.5s_ease-out]">
-        <p className="text-sm font-medium text-[var(--accent)]">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           Competencia sana
         </p>
         <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)]">
@@ -123,7 +123,7 @@ export default function PodioPage() {
                   className={cn(
                     "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     active
-                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      ? "bg-[var(--surface-hover)] text-[var(--foreground)]"
                       : "text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
                   )}
                 >
@@ -187,7 +187,7 @@ export default function PodioPage() {
                     className={cn(
                       "flex items-baseline justify-between gap-4 py-3 animate-[fade-up_0.45s_ease-out]",
                       isMe &&
-                        "bg-[var(--accent-soft)]/40 -mx-2 rounded-md px-2",
+                        "bg-[var(--surface-hover)]/40 -mx-2 rounded-md px-2",
                     )}
                     style={{
                       animationDelay: `${100 + i * 40}ms`,
@@ -201,7 +201,7 @@ export default function PodioPage() {
                       <span className="truncate font-medium text-[var(--foreground)]">
                         @{entry.username}
                         {isMe ? (
-                          <span className="ml-2 text-xs font-normal text-[var(--accent)]">
+                          <span className="ml-2 text-xs font-normal text-[var(--foreground)]">
                             tú
                           </span>
                         ) : null}

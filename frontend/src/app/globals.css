@@ -31,16 +31,16 @@
   --accent: var(--brand-orange);
   --accent-hover: #f16001;
   --accent-foreground: var(--brand-white);
-  --accent-soft: rgba(232, 80, 2, 0.18);
+  --accent-soft: rgba(232, 80, 2, 0.14);
   --accent-deep: #c10801;
   --accent-warm: var(--brand-orange);
-  --ring: var(--brand-orange);
-  --glow: rgba(232, 80, 2, 0.4);
-  --glow-secondary: rgba(241, 96, 1, 0.2);
-  /* Soft atmosphere — orange kept sparse (~20% brand accents) */
-  --hero-mesh-a: rgba(232, 80, 2, 0.08);
-  --hero-mesh-b: rgba(193, 8, 1, 0.05);
-  --hero-mesh-c: rgba(26, 34, 51, 0.35);
+  /* Neutral focus ring — orange reserved for primary CTAs */
+  --ring: rgba(249, 249, 249, 0.55);
+  --glow: rgba(0, 0, 0, 0.35);
+  --glow-secondary: rgba(0, 0, 0, 0.2);
+  --hero-mesh-a: rgba(255, 255, 255, 0.04);
+  --hero-mesh-b: rgba(26, 34, 51, 0.35);
+  --hero-mesh-c: rgba(26, 34, 51, 0.25);
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
@@ -79,16 +79,16 @@
   --accent: var(--brand-orange);
   --accent-hover: #f16001;
   --accent-foreground: var(--brand-white);
-  --accent-soft: rgba(232, 80, 2, 0.18);
+  --accent-soft: rgba(232, 80, 2, 0.14);
   --accent-deep: #c10801;
   --accent-warm: var(--brand-orange);
-  --ring: var(--brand-orange);
-  --glow: rgba(232, 80, 2, 0.4);
-  --glow-secondary: rgba(241, 96, 1, 0.2);
-  /* Soft atmosphere — orange kept sparse (~20% brand accents) */
-  --hero-mesh-a: rgba(232, 80, 2, 0.08);
-  --hero-mesh-b: rgba(193, 8, 1, 0.05);
-  --hero-mesh-c: rgba(26, 34, 51, 0.35);
+  /* Neutral focus ring — orange reserved for primary CTAs */
+  --ring: rgba(249, 249, 249, 0.55);
+  --glow: rgba(0, 0, 0, 0.35);
+  --glow-secondary: rgba(0, 0, 0, 0.2);
+  --hero-mesh-a: rgba(255, 255, 255, 0.04);
+  --hero-mesh-b: rgba(26, 34, 51, 0.35);
+  --hero-mesh-c: rgba(26, 34, 51, 0.25);
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
@@ -307,7 +307,7 @@ code,
 }
 
 .mark-star {
-  color: var(--accent);
+  color: var(--foreground);
 }
 
 .animate-fade-up {

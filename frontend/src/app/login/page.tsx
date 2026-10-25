@@ -84,7 +84,7 @@ function LoginForm() {
         Entrar
       </h1>
       {hint ? (
-        <p className="mt-2 text-sm text-[var(--accent)]">{hint}</p>
+        <p className="mt-2 text-sm text-[var(--foreground)]">{hint}</p>
       ) : null}
 
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
@@ -135,7 +135,7 @@ function LoginForm() {
               type="button"
               disabled={pending}
               onClick={() => void enterAs(acc.identifier, acc.password)}
-              className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-left text-sm hover:border-[var(--accent)] disabled:opacity-60"
+              className="w-full rounded-md border border-[var(--border)] px-3 py-2 text-left text-sm hover:border-[var(--border-strong)] disabled:opacity-60"
             >
               {acc.label}
               <span className="ml-2 font-mono text-xs text-[var(--foreground-muted)]">
@@ -147,13 +147,13 @@ function LoginForm() {
       </ul>
 
       <p className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-        <Link href="/forgot-password" className="text-[var(--accent)] hover:underline">
+        <Link href="/forgot-password" className="text-[var(--foreground)] hover:underline">
           Contraseña
         </Link>
-        <Link href="/register" className="text-[var(--accent)] hover:underline">
+        <Link href="/register" className="text-[var(--foreground)] hover:underline">
           Registro
         </Link>
-        <Link href="/guest" className="text-[var(--accent)] hover:underline">
+        <Link href="/guest" className="text-[var(--foreground)] hover:underline">
           Probar
         </Link>
       </p>

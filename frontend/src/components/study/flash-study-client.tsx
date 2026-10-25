@@ -443,7 +443,7 @@ export function FlashStudyClient() {
                     <span className="font-display text-sm font-semibold">
                       {cat.title}
                     </span>
-                    <span className="text-sm text-[var(--accent)]">Estudiar</span>
+                    <span className="text-sm text-[var(--foreground)]">Estudiar</span>
                   </button>
                 </li>
               );
@@ -453,7 +453,7 @@ export function FlashStudyClient() {
 
         <button
           type="button"
-          className="mt-6 text-sm font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+          className="mt-6 text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
           onClick={() => setCustomize((v) => !v)}
           aria-expanded={customize}
         >
@@ -473,12 +473,12 @@ export function FlashStudyClient() {
                       className={cn(
                         "flex w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm transition-colors",
                         on
-                          ? "bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]"
+                          ? "bg-[var(--surface-hover)] ring-1 ring-[var(--border-strong)]"
                           : "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
                       )}
                     >
                       <span>{t.name}</span>
-                      <span className="text-xs font-semibold text-[var(--accent)]">
+                      <span className="text-xs font-semibold text-[var(--foreground)]">
                         {on ? "✓" : "+"}
                       </span>
                     </button>
@@ -577,7 +577,7 @@ export function FlashStudyClient() {
   return (
     <section className="min-w-0 py-2">
       <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-        <p className="font-semibold text-[var(--accent)]">Racha {sessionStreak}</p>
+        <p className="font-semibold text-[var(--foreground)]">Racha {sessionStreak}</p>
         <p className="text-[var(--foreground-muted)]">
           {answered}/{uniqueItems || size} · quedan {remaining}
         </p>
@@ -591,7 +591,7 @@ export function FlashStudyClient() {
         aria-valuemax={100}
       >
         <div
-          className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
+          className="h-full rounded-full bg-[var(--foreground)] transition-[width] duration-300"
           style={{
             width: `${progressPct}%`,
             boxShadow: "none",

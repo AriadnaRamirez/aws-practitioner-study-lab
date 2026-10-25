@@ -170,7 +170,7 @@ export function MasFalladasClient() {
                       : showKey && isSelected && !feedback?.correct
                         ? "border-red-500 bg-red-500/10"
                         : isSelected
-                          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                          ? "border-[var(--border-strong)] bg-[var(--surface-hover)]"
                           : "border-[var(--border)] hover:bg-[var(--surface-hover)]",
                   )}
                 >
@@ -236,7 +236,7 @@ export function MasFalladasClient() {
       ) : items.length === 0 ? (
         <p className="mt-8 text-sm text-[var(--foreground-muted)]">
           Sin fallos.{" "}
-          <Link href="/estudiar" className="text-[var(--accent)] hover:underline">
+          <Link href="/estudiar" className="text-[var(--foreground)] hover:underline">
             Estudiar
           </Link>
         </p>

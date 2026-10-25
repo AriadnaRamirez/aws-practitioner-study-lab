@@ -81,7 +81,7 @@ export function DashboardClient() {
           <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight">
             @{user.username}
           </h1>
-          <p className="mt-0.5 font-mono text-sm tabular-nums text-[var(--accent)]">
+          <p className="mt-0.5 font-mono text-sm tabular-nums text-[var(--foreground)]">
             {pct}%
           </p>
         </div>
@@ -120,7 +120,7 @@ export function DashboardClient() {
                       ? "/mas-falladas"
                       : `/estudiar?session=${s.id}`
                 }
-                className="shrink-0 text-sm font-semibold text-[var(--accent)]"
+                className="shrink-0 text-sm font-semibold text-[var(--foreground)]"
               >
                 Continuar
               </Link>

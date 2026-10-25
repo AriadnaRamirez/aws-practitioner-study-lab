@@ -32,7 +32,7 @@ export function SessionHistory({
           <p className="mt-3 text-sm">
             <Link
               href="/mas-falladas"
-              className="font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+              className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
             >
               Ver más falladas
             </Link>

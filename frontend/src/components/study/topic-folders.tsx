@@ -16,7 +16,7 @@ type Props = {
 
 const FOLDER_FACE: Record<StudyCategory["tone"], string> = {
   orange:
-    "border border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]",
+    "border border-[var(--border-strong)] bg-[var(--surface-elevated)] text-[var(--foreground)]",
   ink: "border border-[var(--glass-border)] bg-[var(--surface)] text-[var(--foreground)]",
   slate:
     "border border-[var(--glass-border)] bg-[var(--surface-elevated)] text-[var(--foreground)]",
@@ -25,7 +25,7 @@ const FOLDER_FACE: Record<StudyCategory["tone"], string> = {
 };
 
 const TAB_FACE: Record<StudyCategory["tone"], string> = {
-  orange: "bg-[var(--accent)]",
+  orange: "bg-[var(--surface-elevated)] border border-[var(--border-strong)] border-b-0",
   ink: "bg-[var(--glass)] border border-[var(--glass-border)] border-b-0",
   slate: "bg-[var(--surface-elevated)] border border-[var(--glass-border)] border-b-0",
   cream: "bg-[var(--glass-strong)] border border-[var(--glass-border)] border-b-0",
@@ -73,7 +73,7 @@ export function TopicFolders({ topics, className }: Props) {
                 href={href}
                 className={cn(
                   "flex min-w-0 items-center justify-between gap-3 rounded-2xl rounded-tl-none px-4 py-4 sm:px-5",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
                   FOLDER_FACE[cat.tone],
                 )}
                 aria-label={cat.title}

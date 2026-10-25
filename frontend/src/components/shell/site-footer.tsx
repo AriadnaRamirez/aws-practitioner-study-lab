@@ -17,10 +17,10 @@ export function SiteFooter() {
             <span>Study Lab</span>
           </Link>
           <nav aria-label="Pie" className="flex shrink-0 gap-4">
-            <Link href="/login" className="hover:text-[var(--accent)]">
+            <Link href="/login" className="hover:text-[var(--foreground)]">
               Entrar
             </Link>
-            <Link href="/register" className="hover:text-[var(--accent)]">
+            <Link href="/register" className="hover:text-[var(--foreground)]">
               Registro
             </Link>
           </nav>

@@ -137,7 +137,7 @@ export function ExamRunner() {
         </h1>
         <Link
           href="/login"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--accent-foreground)]"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--accent-foreground)]"
         >
           Entrar
         </Link>
@@ -187,9 +187,9 @@ export function ExamRunner() {
                 className={cn(
                   "h-8 min-w-8 rounded-md px-2 text-xs font-medium transition-colors",
                   i === index
-                    ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    ? "bg-[var(--foreground)] text-[var(--accent-foreground)]"
                     : ans !== null
-                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      ? "bg-[var(--surface-hover)] text-[var(--foreground)]"
                       : "bg-[var(--surface-hover)] text-[var(--foreground-muted)]",
                   marked && "ring-2 ring-amber-500/70",
                 )}
@@ -219,7 +219,7 @@ export function ExamRunner() {
                     className={cn(
                       "flex w-full items-start gap-3 rounded-md border px-4 py-3 text-left text-sm transition-colors",
                       active
-                        ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--foreground)]"
+                        ? "border-[var(--border-strong)] bg-[var(--surface-hover)] text-[var(--foreground)]"
                         : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]",
                     )}
                   >
@@ -301,14 +301,14 @@ export function ExamRunner() {
                 className={cn(
                   "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
                   size === n
-                    ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                    ? "border-[var(--border-strong)] bg-[var(--surface-hover)]"
                     : "border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
                 )}
               >
                 <input
                   type="radio"
                   name="exam-size"
-                  className="accent-[var(--accent)]"
+                  className="accent-[var(--foreground)]"
                   checked={size === n}
                   onChange={() => setSize(n)}
                 />

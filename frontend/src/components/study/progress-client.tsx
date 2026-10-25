@@ -70,7 +70,7 @@ export function ProgressClient() {
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]">
                 <div
-                  className="h-full rounded-full bg-[var(--accent)]"
+                  className="h-full rounded-full bg-[var(--foreground)]"
                   style={{ width: `${Math.min(100, t.masteryPct)}%` }}
                 />
               </div>

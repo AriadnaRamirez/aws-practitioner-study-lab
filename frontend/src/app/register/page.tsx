@@ -85,7 +85,7 @@ export default function RegisterPage() {
             llevamos a Estudiar con el tour «Así funciona…».
           </p>
           <Link
-            className="text-[var(--accent)] underline-offset-4 hover:underline"
+            className="text-[var(--foreground)] underline-offset-4 hover:underline"
             href="/estudiar"
           >
             Ir a Estudiar
@@ -177,7 +177,7 @@ export default function RegisterPage() {
         ¿Ya tienes cuenta?{" "}
         <Link
           href="/login"
-          className="text-[var(--accent)] underline-offset-4 hover:underline"
+          className="text-[var(--foreground)] underline-offset-4 hover:underline"
         >
           Entrar
         </Link>

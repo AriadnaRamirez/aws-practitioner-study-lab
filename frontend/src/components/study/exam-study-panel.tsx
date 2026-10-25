@@ -106,7 +106,7 @@ export function ExamStudyPanel() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
+      <p className="text-sm font-medium uppercase tracking-[0.14em] text-[var(--foreground)]">
         Modo Estudio
       </p>
       <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
@@ -143,7 +143,7 @@ export function ExamStudyPanel() {
                 className={cn(
                   "min-w-16 rounded-md px-4 py-3 text-sm font-semibold transition-colors",
                   size === n
-                    ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    ? "bg-[var(--foreground)] text-[var(--accent-foreground)]"
                     : "bg-[var(--surface-elevated)] text-[var(--foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
                 )}
               >
@@ -181,7 +181,7 @@ export function ExamStudyPanel() {
             <span>
               Cola: {remaining} · Respondidas: {answered}
             </span>
-            <span className="font-semibold text-[var(--accent)]">
+            <span className="font-semibold text-[var(--foreground)]">
               Racha {streak}
             </span>
           </div>
@@ -197,7 +197,7 @@ export function ExamStudyPanel() {
                   className={cn(
                     "w-full rounded-md px-4 py-3 text-left text-sm transition-colors ring-1",
                     selected === idx
-                      ? "bg-[var(--accent-soft)] ring-[var(--accent)]"
+                      ? "bg-[var(--surface-hover)] ring-[var(--border-strong)]"
                       : "bg-[var(--surface-elevated)] ring-[var(--border)] hover:bg-[var(--surface-hover)]",
                   )}
                 >
@@ -248,7 +248,7 @@ export function ExamStudyPanel() {
           </p>
           <p className="mt-4 text-sm text-[var(--foreground-muted)]">
             Racha de sesión:{" "}
-            <span className="font-semibold text-[var(--accent)]">
+            <span className="font-semibold text-[var(--foreground)]">
               {feedback.sessionStreak}
             </span>
             {" · "}

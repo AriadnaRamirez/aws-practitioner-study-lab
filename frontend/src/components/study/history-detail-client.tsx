@@ -77,7 +77,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <Link
         href="/cuenta#historial"
-        className="text-sm font-medium text-[var(--accent)] underline-offset-4 hover:underline"
+        className="text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
       >
         ← Historial
       </Link>

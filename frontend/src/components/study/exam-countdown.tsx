@@ -48,7 +48,7 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
           className,
         )}
       >
-        <Link href="/cuenta" className="hover:text-[var(--accent)]">
+        <Link href="/cuenta" className="hover:text-[var(--foreground)]">
           Agregar fecha
         </Link>
       </aside>
@@ -91,7 +91,7 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
           compact ? "w-12" : "w-14",
         )}
       >
-        <div className="bg-[var(--accent)] px-1 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-foreground)]">
+        <div className="bg-[var(--surface-hover)] px-1 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">
           {(monthShort ?? "—").replace(/\.$/, "").slice(0, 3)}
         </div>
         <div className="bg-[var(--surface-elevated)] px-1 py-1.5">
@@ -109,14 +109,14 @@ export function ExamCountdown({ examDate, className, compact }: Props) {
           <p className="mt-1 text-xs text-[var(--foreground-muted)]">
             {formatLongDate(examDate)}
             {" · "}
-            <Link href="/cuenta" className="text-[var(--accent)] hover:underline">
+            <Link href="/cuenta" className="text-[var(--foreground)] hover:underline">
               Cambiar
             </Link>
           </p>
         ) : (
           <Link
             href="/cuenta"
-            className="mt-0.5 inline-block text-xs text-[var(--accent)] hover:underline"
+            className="mt-0.5 inline-block text-xs text-[var(--foreground)] hover:underline"
           >
             Fecha
           </Link>

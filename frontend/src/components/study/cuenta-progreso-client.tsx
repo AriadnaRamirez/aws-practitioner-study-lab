@@ -159,13 +159,13 @@ export function CuentaProgresoClient() {
         className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"
         aria-label="Tu estudio"
       >
-        <Link href="/progreso" className="hover:text-[var(--accent)]">
+        <Link href="/progreso" className="hover:text-[var(--foreground)]">
           Progreso
         </Link>
-        <Link href="#historial" className="hover:text-[var(--accent)]">
+        <Link href="#historial" className="hover:text-[var(--foreground)]">
           Historial
         </Link>
-        <Link href="/mas-falladas" className="hover:text-[var(--accent)]">
+        <Link href="/mas-falladas" className="hover:text-[var(--foreground)]">
           Más falladas
         </Link>
         <OpenTourButton label="Guía" className="justify-start" />

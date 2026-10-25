@@ -29,7 +29,7 @@ export default function EstudiarPage() {
         </h1>
         <Link
           href="/estudiar/examen"
-          className="text-sm font-semibold text-[var(--accent)] underline-offset-4 hover:underline"
+          className="text-sm font-semibold text-[var(--foreground)] underline-offset-4 hover:underline"
         >
           Examen
         </Link>

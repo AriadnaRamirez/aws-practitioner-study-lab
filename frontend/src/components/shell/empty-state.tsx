@@ -27,7 +27,7 @@ export function EmptyState({
     <div className="relative mx-auto flex min-h-[calc(100dvh-4.5rem)] max-w-2xl flex-col justify-center overflow-hidden px-4 py-16 sm:px-6">
       <div
         aria-hidden
-        className="atmos-orange pointer-events-none absolute inset-0 -z-10 opacity-60"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_40%,rgba(255,255,255,0.05),transparent_70%)]"
       />
 
       <Mascot pose={pose} size="lg" float className="mb-8" />

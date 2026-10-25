@@ -23,7 +23,7 @@ export function ExamSummary({ summary, onAgain }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-10 sm:px-6">
       <header className="space-y-3 animate-[fade-up_0.5s_ease-out]">
-        <p className="text-sm font-medium text-[var(--accent)]">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           Resultado · Modo Examen
         </p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">

@@ -70,11 +70,11 @@ export function OnboardingTour({
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--accent)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--foreground)]"
         />
 
         <div className="relative px-6 pb-6 pt-7 sm:px-8">
-          <p className="font-display text-xs font-semibold tracking-[0.14em] text-[var(--accent)] uppercase">
+          <p className="font-display text-xs font-semibold tracking-[0.14em] text-[var(--foreground)] uppercase">
             {ONBOARDING_TITLE}
           </p>
           <p className="mt-3 text-xs font-medium text-[var(--foreground-muted)]">
@@ -105,7 +105,7 @@ export function OnboardingTour({
                   style={{
                     background:
                       i <= stepIndex
-                        ? "var(--accent)"
+                        ? "var(--foreground)"
                         : "var(--border)",
                   }}
                 />
