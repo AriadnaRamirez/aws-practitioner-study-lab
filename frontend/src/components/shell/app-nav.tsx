@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PublicUser } from "@aps/shared";
 import { Logo } from "@/components/brand/logo";
 import {
@@ -27,15 +27,18 @@ const GUEST_ITEMS: NavItem[] = [
   { href: "/register", label: "Crear cuenta" },
 ];
 
+const MENU_ID = "app-mobile-nav";
+
 export function AppNav() {
   const pathname = usePathname();
-  const menuId = useId();
+  const headerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [user, setUser] = useState<PublicUser | null>(null);
   const [masteryPct, setMasteryPct] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [panelTop, setPanelTop] = useState(56);
 
   useEffect(() => {
     const stored = getStoredUser();
@@ -55,13 +58,30 @@ export function AppNav() {
     setMenuOpen(false);
   }, [pathname]);
 
+  useLayoutEffect(() => {
+    function measure() {
+      const h = headerRef.current?.getBoundingClientRect().height;
+      if (h && h > 0) setPanelTop(Math.round(h));
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [menuOpen]);
+
   useEffect(() => {
     if (!menuOpen) return;
+
+    // Delay outside-dismiss so the opening tap/click doesn't immediately close.
+    let active = false;
+    const arm = window.setTimeout(() => {
+      active = true;
+    }, 50);
 
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setMenuOpen(false);
     }
-    function onPointer(e: MouseEvent | TouchEvent) {
+    function onPointer(e: Event) {
+      if (!active) return;
       const target = e.target as Node;
       if (
         panelRef.current?.contains(target) ||
@@ -73,15 +93,14 @@ export function AppNav() {
     }
 
     document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onPointer);
-    document.addEventListener("touchstart", onPointer);
+    document.addEventListener("pointerdown", onPointer);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
+      window.clearTimeout(arm);
       document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onPointer);
-      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("pointerdown", onPointer);
       document.body.style.overflow = prev;
     };
   }, [menuOpen]);
@@ -111,14 +130,17 @@ export function AppNav() {
     );
 
   return (
-    <header className="relative sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/95">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/95 backdrop-blur-sm"
+    >
       <a
         href="#contenido"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-[var(--foreground)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--accent-foreground)]"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-[var(--foreground)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--background)]"
       >
         Saltar al contenido
       </a>
-      <div className="relative mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2.5">
           <Link
             href={user ? "/dashboard" : "/"}
@@ -164,7 +186,8 @@ export function AppNav() {
           type="button"
           className="inline-flex h-9 items-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--foreground)] sm:hidden"
           aria-expanded={menuOpen}
-          aria-controls={menuId}
+          aria-controls={MENU_ID}
+          aria-haspopup="true"
           onClick={() => setMenuOpen((o) => !o)}
         >
           {menuOpen ? "Cerrar" : "Menú"}
@@ -173,26 +196,29 @@ export function AppNav() {
 
       {menuOpen ? (
         <>
+          {/* Fixed layers avoid being clipped by overflow-x-hidden ancestors */}
           <button
             type="button"
             aria-label="Cerrar menú"
-            className="fixed inset-0 z-40 bg-black/50 sm:hidden"
+            className="fixed inset-0 z-[60] bg-black/55 sm:hidden"
+            style={{ top: panelTop }}
             onClick={() => setMenuOpen(false)}
           />
           <nav
             ref={panelRef}
-            id={menuId}
+            id={MENU_ID}
             aria-label="Móvil"
-            className="absolute inset-x-0 top-full z-50 border-b border-[var(--border)] bg-[var(--background)] px-4 py-4 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.7)] sm:hidden"
+            className="fixed inset-x-0 z-[70] border-b border-[var(--border)] bg-[var(--background)] px-4 py-3 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.75)] sm:hidden"
+            style={{ top: panelTop }}
           >
-            <ul className="mx-auto flex w-full max-w-3xl flex-col gap-1">
+            <ul className="mx-auto flex w-full max-w-3xl flex-col">
               {items.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     className={cn(
                       linkClass(isActive(item)),
-                      "block rounded-xl px-3 py-3",
+                      "block rounded-xl px-3 py-3.5 text-base",
                       isActive(item) && "bg-[var(--surface-elevated)]",
                     )}
                     onClick={() => setMenuOpen(false)}
@@ -201,11 +227,14 @@ export function AppNav() {
                   </Link>
                 </li>
               ))}
-              <li>
+              <li className="mt-1 border-t border-[var(--border)] pt-1">
                 {user ? (
                   <Link
                     href="/logout"
-                    className={cn(linkClass(false), "block rounded-xl px-3 py-3")}
+                    className={cn(
+                      linkClass(false),
+                      "block rounded-xl px-3 py-3.5 text-base",
+                    )}
                     onClick={() => setMenuOpen(false)}
                   >
                     Salir
@@ -213,7 +242,10 @@ export function AppNav() {
                 ) : (
                   <Link
                     href="/login"
-                    className={cn(linkClass(false), "block rounded-xl px-3 py-3")}
+                    className={cn(
+                      linkClass(false),
+                      "block rounded-xl px-3 py-3.5 text-base",
+                    )}
                     onClick={() => setMenuOpen(false)}
                   >
                     Entrar
