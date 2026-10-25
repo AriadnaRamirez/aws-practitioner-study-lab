@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { OpenTourButton } from "@/components/onboarding/open-tour-button";
 import { ExamStudyPanel } from "@/components/study/exam-study-panel";
 
 export const metadata: Metadata = {
@@ -28,12 +29,15 @@ export default function EstudiarPage() {
               Estudiar
             </h1>
           </div>
-          <Link
-            href="/estudiar/examen"
-            className="inline-flex h-10 items-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--accent-foreground)] transition-opacity hover:opacity-90"
-          >
-            Modo Examen cronometrado
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <OpenTourButton />
+            <Link
+              href="/estudiar/examen"
+              className="inline-flex h-10 items-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--accent-foreground)] transition-opacity hover:opacity-90"
+            >
+              Modo Examen cronometrado
+            </Link>
+          </div>
         </div>
         <p className="max-w-prose text-sm text-[var(--foreground-muted)]">
           Abajo: Modo Estudio para examen (feedback + refuerzo). Para simular el

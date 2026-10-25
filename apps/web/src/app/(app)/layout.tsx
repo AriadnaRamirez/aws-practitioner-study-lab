@@ -1,3 +1,4 @@
+import { OnboardingHost } from "@/components/onboarding/onboarding-host";
 import { AppNav } from "@/components/shell/app-nav";
 
 export default function AppShellLayout({
@@ -9,6 +10,7 @@ export default function AppShellLayout({
     <div className="flex min-h-dvh flex-col bg-[var(--background)]">
       <AppNav />
       <main className="flex-1">{children}</main>
+      <OnboardingHost />
     </div>
   );
 }
