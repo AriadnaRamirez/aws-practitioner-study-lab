@@ -1,11 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+function ByeBanner() {
+  const params = useSearchParams();
+  if (params.get("bye") !== "1") return null;
+  return (
+    <p
+      role="status"
+      className="mx-6 mt-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--foreground)] md:mx-10"
+    >
+      Sesión cerrada. Gracias por estudiar — vuelve cuando quieras.
+    </p>
+  );
+}
 
 export function LandingHero() {
   return (
     <section className="relative isolate flex min-h-[100dvh] flex-col overflow-hidden">
-      {/* Atmosphere: full-bleed mesh + soft glows (not a card collage) */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
@@ -29,7 +45,6 @@ export function LandingHero() {
           className="absolute bottom-10 right-0 h-80 w-80 rounded-full blur-3xl"
           style={{ background: "var(--glow-secondary)" }}
         />
-        {/* Horizon band as visual anchor — study / cloud atmosphere */}
         <div
           className="absolute inset-x-0 bottom-0 h-[42%] opacity-90"
           style={{
@@ -71,6 +86,10 @@ export function LandingHero() {
           </Link>
         </nav>
       </header>
+
+      <Suspense fallback={null}>
+        <ByeBanner />
+      </Suspense>
 
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 pb-24 pt-8 md:px-10">
         <h1 className="animate-fade-up font-display text-4xl font-bold leading-[1.05] tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl lg:text-7xl">

@@ -29,12 +29,20 @@ export default function AdminLayout({
               {APP_NAME}
             </Link>
           </div>
-          <Link
-            href="/"
-            className="text-sm text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-          >
-            ← Volver al inicio
-          </Link>
+          <div className="flex items-center gap-4 text-sm">
+            <Link
+              href="/dashboard"
+              className="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
+            >
+              ← Lab
+            </Link>
+            <Link
+              href="/logout"
+              className="font-medium text-zinc-800 underline-offset-4 hover:underline dark:text-zinc-200"
+            >
+              Salir
+            </Link>
+          </div>
         </div>
         <nav
           className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-2 pb-2"

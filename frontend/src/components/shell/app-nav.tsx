@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { PublicUser } from "@aps/shared";
 import {
-  clearAuth,
   fetchProgressOverview,
   getStoredToken,
   getStoredUser,
@@ -25,7 +24,6 @@ const BASE_ITEMS: NavItem[] = [
 
 export function AppNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<PublicUser | null>(null);
   const [masteryPct, setMasteryPct] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -56,14 +54,6 @@ export function AppNav() {
     return prefixes.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),
     );
-  }
-
-  function logout() {
-    clearAuth();
-    setUser(null);
-    setMasteryPct(null);
-    router.push("/");
-    router.refresh();
   }
 
   const linkClass = (active: boolean) =>
@@ -123,13 +113,9 @@ export function AppNav() {
             </Link>
           ))}
           {user ? (
-            <button
-              type="button"
-              onClick={logout}
-              className={cn(linkClass(false), "ml-1")}
-            >
+            <Link href="/logout" className={cn(linkClass(false), "ml-1")}>
               Salir
-            </button>
+            </Link>
           ) : (
             <Link href="/login" className={linkClass(false)}>
               Entrar
@@ -167,13 +153,12 @@ export function AppNav() {
             ))}
             <li>
               {user ? (
-                <button
-                  type="button"
-                  onClick={logout}
-                  className={cn(linkClass(false), "w-full text-left")}
+                <Link
+                  href="/logout"
+                  className={cn(linkClass(false), "block")}
                 >
                   Salir
-                </button>
+                </Link>
               ) : (
                 <Link href="/login" className={cn(linkClass(false), "block")}>
                   Entrar

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { PublicUser, StudyHistoryEntry } from "@aps/shared";
 import { OpenTourButton } from "@/components/onboarding/open-tour-button";
@@ -10,7 +9,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   changePassword,
-  clearAuth,
   fetchMe,
   fetchStudySessions,
   getStoredToken,
@@ -31,7 +29,6 @@ const TIMEZONES = [
 ];
 
 export function CuentaProgresoClient() {
-  const router = useRouter();
   const [user, setUser] = useState<PublicUser | null>(null);
   const [sessions, setSessions] = useState<StudyHistoryEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -116,12 +113,6 @@ export function CuentaProgresoClient() {
     } finally {
       setPassPending(false);
     }
-  }
-
-  function logout() {
-    clearAuth();
-    router.push("/");
-    router.refresh();
   }
 
   if (authed === false) {
@@ -291,13 +282,12 @@ export function CuentaProgresoClient() {
       </form>
 
       <div className="mt-6">
-        <button
-          type="button"
-          onClick={logout}
+        <Link
+          href="/logout"
           className={cn(buttonVariants({ variant: "outline" }))}
         >
           Cerrar sesión
-        </button>
+        </Link>
       </div>
 
       <section id="historial" className="mt-12 scroll-mt-20">
