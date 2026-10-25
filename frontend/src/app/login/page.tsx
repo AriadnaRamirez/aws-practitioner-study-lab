@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Mascot } from "@/components/brand/mascot";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,8 @@ function LoginForm() {
       >
         Study Lab
       </Link>
-      <h1 className="font-display mt-8 text-3xl font-semibold tracking-tight">
+      <Mascot pose="wave" size="md" float className="mt-8" />
+      <h1 className="font-display mt-6 text-3xl font-semibold tracking-tight">
         Entrar
       </h1>
       {hint ? (

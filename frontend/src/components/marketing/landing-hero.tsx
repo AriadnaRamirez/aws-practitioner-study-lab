@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Mascot } from "@/components/brand/mascot";
 import { cn } from "@/lib/utils";
 
 function ByeBanner() {
@@ -36,14 +37,13 @@ function MarkStar({ className }: { className?: string }) {
 export function LandingHero() {
   return (
     <div className="relative flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--foreground)]">
-      {/* Atmospheric orange field — full-bleed visual plane */}
       <div
         aria-hidden
         className="atmos-orange animate-soft-drift pointer-events-none absolute inset-0 -z-0"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(5,5,5,0.55)_100%)]"
+        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.65)_100%)]"
       />
 
       <Suspense fallback={null}>
@@ -63,9 +63,10 @@ export function LandingHero() {
         </p>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col px-5 pb-10 pt-8 sm:px-6">
-        {/* Focal glass pill */}
-        <div className="flex flex-1 flex-col items-center justify-center">
+      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col px-5 pb-10 pt-4 sm:px-6">
+        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+          <Mascot pose="study" size="hero" float priority className="shadow-[0_24px_60px_-20px_rgba(232,80,2,0.45)]" />
+
           <Link
             href="/register"
             className={cn(
@@ -95,7 +96,7 @@ export function LandingHero() {
             </span>
           </Link>
 
-          <div className="mt-4 flex w-full max-w-sm items-center justify-center gap-5 text-sm text-[var(--foreground-muted)]">
+          <div className="flex w-full max-w-sm items-center justify-center gap-5 text-sm text-[var(--foreground-muted)]">
             <Link href="/login" className="hover:text-[var(--foreground)]">
               Entrar
             </Link>
@@ -108,8 +109,7 @@ export function LandingHero() {
           </div>
         </div>
 
-        {/* Brand-forward footer headline */}
-        <div className="animate-fade-up mt-auto pt-10">
+        <div className="animate-fade-up mt-auto pt-8">
           <div className="brand-bar mb-5 h-1 w-16 rounded-full" aria-hidden />
           <h1 className="font-display text-[clamp(2.75rem,14vw,4.5rem)] font-bold leading-[0.95] tracking-tight text-[var(--brand-white)]">
             Study Lab

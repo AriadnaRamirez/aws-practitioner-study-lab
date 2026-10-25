@@ -138,6 +138,16 @@
   }
 }
 
+@keyframes mascot-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 @keyframes pill-in {
   from {
     opacity: 0;
@@ -311,6 +321,10 @@ code,
   animation: soft-drift 16s ease-in-out infinite;
 }
 
+.animate-mascot-float {
+  animation: mascot-float 4.5s ease-in-out infinite;
+}
+
 .animate-deck-in {
   animation: deck-in 0.4s ease-out both;
 }
@@ -362,6 +376,7 @@ code,
   .animate-fade-up,
   .animate-pill-in,
   .animate-soft-drift,
+  .animate-mascot-float,
   .animate-spin,
   .animate-pulse,
   .animate-deck-in,

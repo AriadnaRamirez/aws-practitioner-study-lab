@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN } from "@aps/shared";
+import { Mascot } from "@/components/brand/mascot";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -70,15 +71,12 @@ export default function RegisterPage() {
         href="/"
         className="font-display text-sm font-semibold text-[var(--foreground)]"
       >
-        AWS Practitioner Study Lab
+        Study Lab
       </Link>
-      <h1 className="font-display mt-8 text-3xl font-bold tracking-tight">
+      <Mascot pose="server" size="md" float className="mt-8" />
+      <h1 className="font-display mt-6 text-3xl font-bold tracking-tight">
         Crear cuenta
       </h1>
-      <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-        Email, username único y contraseña robusta. El username aparece en el
-        podio.
-      </p>
 
       {doneUser ? (
         <div className="mt-8 space-y-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm">

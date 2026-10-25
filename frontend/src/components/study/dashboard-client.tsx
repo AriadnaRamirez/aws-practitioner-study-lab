@@ -8,6 +8,7 @@ import type {
   TopicProgressRow,
 } from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
+import { Mascot } from "@/components/brand/mascot";
 import { ExamCountdown } from "@/components/study/exam-countdown";
 import { TopicFolders } from "@/components/study/topic-folders";
 import { buttonVariants } from "@/components/ui/button";
@@ -75,13 +76,16 @@ export function DashboardClient() {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-10">
-      <header className="flex min-w-0 items-baseline justify-between gap-3">
-        <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight">
-          @{user.username}
-        </h1>
-        <p className="shrink-0 font-mono text-sm tabular-nums text-[var(--accent)]">
-          {pct}%
-        </p>
+      <header className="flex min-w-0 items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight">
+            @{user.username}
+          </h1>
+          <p className="mt-0.5 font-mono text-sm tabular-nums text-[var(--accent)]">
+            {pct}%
+          </p>
+        </div>
+        <Mascot pose="wave" size="sm" className="shrink-0 rounded-2xl" />
       </header>
 
       <ExamCountdown className="mt-5" examDate={user.examDate} compact />

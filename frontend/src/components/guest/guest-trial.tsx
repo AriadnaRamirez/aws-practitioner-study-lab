@@ -8,6 +8,7 @@ import {
   type GuestProbe,
   type KnowledgeItem,
 } from "@aps/shared";
+import { Mascot } from "@/components/brand/mascot";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -167,7 +168,8 @@ export function GuestTrial() {
         Study Lab
       </Link>
 
-      <h1 className="font-display mt-8 text-2xl font-semibold tracking-tight">
+      <Mascot pose="rocket" size="lg" float className="mt-8" />
+      <h1 className="font-display mt-6 text-2xl font-semibold tracking-tight">
         Prueba
       </h1>
       {probe ? (

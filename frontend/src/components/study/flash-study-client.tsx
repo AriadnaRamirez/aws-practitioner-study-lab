@@ -17,6 +17,7 @@ import {
   type StudySize,
   type Topic,
 } from "@aps/shared";
+import { Mascot } from "@/components/brand/mascot";
 import { FlashDeck } from "@/components/study/flash-deck";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -528,6 +529,7 @@ export function FlashStudyClient() {
   if (phase === "summary" && summary) {
     return (
       <section className="py-8 animate-[fade-up_0.35s_ease-out]">
+        <Mascot pose="wave" size="md" float className="mb-6" />
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-[var(--foreground-muted)]">Precisión</dt>
