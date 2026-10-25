@@ -98,10 +98,6 @@ export function LandingHero() {
         </div>
 
         <div className="animate-fade-up mt-auto pt-8">
-          <div
-            className="mb-5 h-0.5 w-12 rounded-full bg-[var(--accent)]"
-            aria-hidden
-          />
           <h1 className="font-display text-[clamp(2.75rem,14vw,4.5rem)] font-bold leading-[0.95] tracking-tight text-[var(--brand-white)]">
             Study Lab
           </h1>
