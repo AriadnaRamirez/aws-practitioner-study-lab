@@ -1,6 +1,5 @@
 /**
- * Friendly study “shelves” — group bank topics into learner-facing categories.
- * Used by the blob category menu and deep-links (?category=…).
+ * Study categories → folder cards on the dashboard (?category= deep-links).
  */
 
 export type StudyCategoryId =
@@ -17,7 +16,7 @@ export type StudyCategory = {
   subtitle: string;
   /** Match Topic.id values from the seed bank */
   topicIds: string[];
-  /** Visual accent for the blob */
+  /** Folder face color */
   tone: "orange" | "ink" | "slate" | "cream";
   glyph: "cloud" | "linux" | "network" | "book";
 };
