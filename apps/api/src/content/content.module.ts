@@ -3,7 +3,6 @@ import { AdminKnowledgeController } from './admin-knowledge.controller';
 import { AdminQuestionsController } from './admin-questions.controller';
 import { AdminTopicsController } from './admin-topics.controller';
 import { ContentService } from './content.service';
-import { ContentStore } from './content.store';
 import { KnowledgeController } from './knowledge.controller';
 import { QuestionsController } from './questions.controller';
 import { TopicsController } from './topics.controller';
@@ -17,7 +16,7 @@ import { TopicsController } from './topics.controller';
     AdminKnowledgeController,
     AdminQuestionsController,
   ],
-  providers: [ContentStore, ContentService],
+  providers: [ContentService],
   exports: [ContentService],
 })
 export class ContentModule {}
