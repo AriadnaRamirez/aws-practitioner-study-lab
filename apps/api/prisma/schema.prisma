@@ -53,6 +53,7 @@ model PasswordResetToken {
   @@index([userId])
 }
 
+<<<<<<< HEAD
 /// Taxonomy node under an exam track (maestro §5 / §10).
 model Topic {
   id        String    @id @default(cuid())
@@ -116,4 +117,14 @@ model ExamQuestion {
   @@index([topicId])
   @@index([trackId])
   @@index([status])
+=======
+/// Marketing guest probe (APS-13). No progress/podium — conversion analytics only.
+model GuestProbe {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  sessionsCount   Int      @default(0)
+  convertedUserId String?  @unique
+
+  @@index([createdAt])
+>>>>>>> origin/cursor/aps-13-guest-analytics-54b6
 }

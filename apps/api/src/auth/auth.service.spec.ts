@@ -54,6 +54,7 @@ describe('AuthService', () => {
     $transaction: jest.Mock;
   };
   let jwt: { sign: jest.Mock };
+  let guest: { markConverted: jest.Mock };
   let service: AuthService;
 
   beforeEach(async () => {
@@ -72,7 +73,12 @@ describe('AuthService', () => {
       $transaction: jest.fn(async (ops: unknown) => ops),
     };
     jwt = { sign: jest.fn().mockReturnValue('jwt-token') };
-    service = new AuthService(prisma as never, jwt as unknown as JwtService);
+    guest = { markConverted: jest.fn().mockResolvedValue(undefined) };
+    service = new AuthService(
+      prisma as never,
+      jwt as unknown as JwtService,
+      guest as never,
+    );
   });
 
   it('registers a student and returns tokens', async () => {
@@ -96,8 +102,24 @@ describe('AuthService', () => {
         }),
       }),
     );
+    expect(guest.markConverted).not.toHaveBeenCalled();
     expect(result.tokens.accessToken).toBe('jwt-token');
     expect(result.user.email).toBe('ana@example.com');
+  });
+
+  it('links guestProbeId on register for conversion analytics', async () => {
+    prisma.user.findFirst.mockResolvedValue(null);
+    prisma.user.create.mockResolvedValue(user);
+
+    await service.register({
+      email: 'ana@example.com',
+      username: 'ana',
+      password: 'Segura123',
+      confirmPassword: 'Segura123',
+      guestProbeId: 'guest_abc',
+    });
+
+    expect(guest.markConverted).toHaveBeenCalledWith('guest_abc', user.id);
   });
 
   it('rejects register when passwords do not match', async () => {

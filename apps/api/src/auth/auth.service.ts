@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
 import { createHash, randomBytes } from 'crypto';
 import type { AuthResponse, PublicUser } from '@aps/shared';
+import { GuestService } from '../guest/guest.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -33,6 +34,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly guest: GuestService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -78,6 +80,11 @@ export class AuthService {
         timezone: dto.timezone?.trim() || 'UTC',
       },
     });
+
+    const guestProbeId = dto.guestProbeId?.trim();
+    if (guestProbeId) {
+      await this.guest.markConverted(guestProbeId, user.id);
+    }
 
     return this.buildAuthResponse(user);
   }
