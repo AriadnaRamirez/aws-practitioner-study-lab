@@ -229,23 +229,33 @@ export function ExamStudyPanel() {
         <section className="mt-10 animate-[fade-up_0.35s_ease-out]">
           <p
             className={cn(
-              "font-display text-2xl font-bold",
+              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
               feedback.correct
-                ? "text-emerald-700 dark:text-emerald-400"
-                : "text-amber-800 dark:text-amber-300",
+                ? "bg-[var(--success)] text-[var(--success-fg)]"
+                : "bg-[var(--danger)] text-[var(--danger-fg)]",
             )}
           >
             {feedback.correct ? "¡Correcto!" : "Incorrecto — vuelve pronto"}
           </p>
-          <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-            Respuesta correcta:{" "}
-            <span className="font-medium text-[var(--foreground)]">
-              {prompt.choices[feedback.correctIndex]}
-            </span>
-          </p>
-          <p className="mt-4 rounded-md bg-[var(--surface-elevated)] p-4 text-sm leading-relaxed ring-1 ring-[var(--border)]">
-            {feedback.explanation}
-          </p>
+          {!feedback.correct ? (
+            <p className="mt-4 text-sm text-[var(--foreground-muted)]">
+              Respuesta correcta:{" "}
+              <span className="font-medium text-[var(--foreground)]">
+                {prompt.choices[feedback.correctIndex]}
+              </span>
+            </p>
+          ) : null}
+          <div className="mt-4 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+              Por qué {feedback.correct ? "es correcta" : "es incorrecta"}
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
+              {feedback.explanation?.trim() ||
+                (feedback.correct
+                  ? "Esta opción coincide con el concepto pedido."
+                  : `La correcta es «${prompt.choices[feedback.correctIndex]}».`)}
+            </p>
+          </div>
           <p className="mt-4 text-sm text-[var(--foreground-muted)]">
             Racha de sesión:{" "}
             <span className="font-semibold text-[var(--foreground)]">

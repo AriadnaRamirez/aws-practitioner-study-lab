@@ -44,8 +44,11 @@
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
-  --success: #2fbf71;
-  --danger: #ff6b4a;
+  /* Solid correct green — never a washed emerald overlay */
+  --success: #1f9d55;
+  --success-fg: #04140a;
+  --danger: #e85d3a;
+  --danger-fg: #1a0603;
   /* Deck faces stay ink/surface — orange only on primary CTAs */
   --deck-face: var(--surface-elevated);
   --deck-mid: var(--surface);
@@ -92,8 +95,11 @@
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
-  --success: #2fbf71;
-  --danger: #ff6b4a;
+  /* Solid correct green — never a washed emerald overlay */
+  --success: #1f9d55;
+  --success-fg: #04140a;
+  --danger: #e85d3a;
+  --danger-fg: #1a0603;
   /* Deck faces stay ink/surface — orange only on primary CTAs */
   --deck-face: var(--surface-elevated);
   --deck-mid: var(--surface);
@@ -371,25 +377,25 @@ code,
 }
 
 .keycap-correct {
-  background: #2fbf71;
-  color: #06140c;
+  background: var(--success);
+  color: var(--success-fg);
   border-color: transparent;
 }
 
 .keycap-wrong {
-  background: #ff6b4a;
-  color: #1a0603;
+  background: var(--danger);
+  color: var(--danger-fg);
   border-color: transparent;
 }
 
 @keyframes celebrate-pop {
   0% {
     opacity: 0;
-    transform: scale(0.6);
+    transform: scale(0.72);
   }
   55% {
     opacity: 1;
-    transform: scale(1.08);
+    transform: scale(1.1);
   }
   100% {
     opacity: 1;
@@ -397,8 +403,26 @@ code,
   }
 }
 
+@keyframes celebrate-dot {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(1);
+  }
+}
+
 .animate-celebrate {
-  animation: celebrate-pop 0.55s ease-out both;
+  animation: celebrate-pop 0.6s ease-out both;
+}
+
+.celebrate-dot {
+  animation: celebrate-dot 0.75s ease-out both;
 }
 
 .keycap:active {
@@ -414,7 +438,8 @@ code,
   .animate-pulse,
   .animate-deck-in,
   .animate-shimmer,
-  .animate-celebrate {
+  .animate-celebrate,
+  .celebrate-dot {
     animation: none;
   }
 }

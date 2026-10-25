@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { AwsMark } from "@/components/brand/aws-mark";
 import { cn } from "@/lib/utils";
 
 type FlashDeckProps = {
@@ -23,7 +24,7 @@ type FlashDeckProps = {
 };
 
 /**
- * Mazo de cards apiladas con flip a la cara de resultado.
+ * Mazo de cards apiladas con flip 3D a la cara de resultado.
  */
 export function FlashDeck({
   eyebrow = "FLASH",
@@ -42,7 +43,7 @@ export function FlashDeck({
         "relative mx-auto w-full max-w-md min-w-0 animate-deck-in",
         className,
       )}
-      style={{ minHeight: "17.5rem", perspective: "1200px" }}
+      style={{ minHeight: "17.5rem", perspective: "1400px" }}
     >
       {depth >= 2 ? (
         <div
@@ -51,8 +52,9 @@ export function FlashDeck({
           style={{
             background: "var(--deck-back)",
             transform: "translate(6px, 8px)",
-            opacity: 0.7,
+            opacity: flipped ? 0.25 : 0.7,
             zIndex: 0,
+            transition: "opacity 0.4s ease",
           }}
         />
       ) : null}
@@ -63,20 +65,20 @@ export function FlashDeck({
           style={{
             background: "var(--deck-mid)",
             transform: "translate(3px, 4px)",
-            opacity: 0.95,
+            opacity: flipped ? 0.35 : 0.95,
             zIndex: 1,
+            transition: "opacity 0.4s ease",
           }}
         />
       ) : null}
 
       <div
         className={cn(
-          "relative z-[2] grid w-full transition-transform duration-500 ease-[cubic-bezier(0.4,0.2,0.2,1)]",
+          "relative z-[2] grid w-full transition-transform duration-700 ease-[cubic-bezier(0.4,0.15,0.2,1)]",
           flipped && "[transform:rotateY(180deg)]",
         )}
         style={{ transformStyle: "preserve-3d" }}
       >
-        {/* Front */}
         <article
           className="col-start-1 row-start-1 overflow-hidden rounded-2xl ring-1 ring-black/20"
           style={{
@@ -96,16 +98,7 @@ export function FlashDeck({
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
                 {eyebrow}
               </p>
-              {/* Official AWS smile mark */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/partners/aws-smile.webp"
-                alt=""
-                width={53}
-                height={28}
-                className="h-5 w-auto opacity-90"
-                decoding="async"
-              />
+              <AwsMark height={22} />
             </div>
             <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--foreground)] sm:text-2xl">
               {loading ? (
@@ -130,7 +123,6 @@ export function FlashDeck({
           </div>
         </article>
 
-        {/* Back — same grid cell so height follows the taller face */}
         <article
           aria-hidden={!flipped}
           className="col-start-1 row-start-1 flex min-h-full flex-col overflow-hidden rounded-2xl ring-1 ring-black/20"
@@ -142,7 +134,7 @@ export function FlashDeck({
             background: "var(--deck-face)",
           }}
         >
-          <div className="flex flex-1 flex-col px-5 py-5">{back}</div>
+          <div className="relative flex flex-1 flex-col px-5 py-5">{back}</div>
         </article>
       </div>
     </div>
@@ -183,9 +175,7 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
         }}
       >
         <div className="flex flex-1 flex-col p-4">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-            AWS Lab
-          </span>
+          <AwsMark height={20} />
           <span className="font-display mt-auto text-lg font-bold text-[var(--foreground)]">
             Flash MCQ
           </span>

@@ -17,7 +17,9 @@ import {
   type StudySize,
   type Topic,
 } from "@aps/shared";
+import { AwsMark } from "@/components/brand/aws-mark";
 import { Mascot } from "@/components/brand/mascot";
+import { CelebrateBurst } from "@/components/study/celebrate-burst";
 import { FlashDeck } from "@/components/study/flash-deck";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -612,56 +614,83 @@ export function FlashStudyClient() {
             flipped={phase === "feedback" && Boolean(feedback)}
             back={
               feedback ? (
-                <div className="flex h-full flex-col" role="status">
+                <div className="relative flex h-full flex-col" role="status">
+                  {feedback.correct ? <CelebrateBurst /> : null}
                   <div className="flex items-start justify-between gap-3">
-                    <p
+                    <span
                       className={cn(
-                        "font-display animate-celebrate text-2xl font-bold tracking-tight",
+                        "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
                         feedback.correct
-                          ? "text-[var(--success)]"
-                          : "text-[var(--danger)]",
+                          ? "bg-[var(--success)] text-[var(--success-fg)]"
+                          : "bg-[var(--danger)] text-[var(--danger-fg)]",
                       )}
                     >
+                      {feedback.correct ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                          <path
+                            d="M5 12.5l4.5 4.5L19 7"
+                            stroke="currentColor"
+                            strokeWidth="2.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                          <path
+                            d="M7 7l10 10M17 7L7 17"
+                            stroke="currentColor"
+                            strokeWidth="2.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      )}
                       {feedback.correct ? "¡Correcto!" : "Incorrecto"}
-                    </p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/partners/aws-smile.webp"
-                      alt="AWS"
-                      width={64}
-                      height={34}
-                      className="h-6 w-auto"
-                      decoding="async"
-                    />
+                    </span>
+                    <AwsMark height={26} />
                   </div>
-                  {feedback.correct ? (
-                    <p className="animate-celebrate mt-1 text-sm text-[var(--success)]">
-                      {feedback.itemMastered
-                        ? "Concepto dominado · gran trabajo"
-                        : "Sigue así · buena lectura del concepto"}
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-                      Respuesta correcta:{" "}
-                      <span className="font-semibold text-[var(--foreground)]">
+
+                  <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
+                    {feedback.correct
+                      ? feedback.itemMastered
+                        ? "Concepto dominado"
+                        : "Muy bien"
+                      : "Casi — mira la respuesta correcta"}
+                  </p>
+
+                  {!feedback.correct ? (
+                    <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
+                      <span className="text-[var(--foreground-muted)]">Correcta: </span>
+                      <span className="font-semibold">
                         {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
                         {prompt.choices[feedback.correctIndex]}
                       </span>
                     </p>
+                  ) : (
+                    <p className="mt-2 text-sm leading-snug text-[var(--foreground-muted)]">
+                      Elegiste:{" "}
+                      <span className="font-medium text-[var(--foreground)]">
+                        {selectedChoice != null
+                          ? `${String.fromCharCode(65 + selectedChoice)}. ${prompt.choices[selectedChoice]}`
+                          : "—"}
+                      </span>
+                    </p>
                   )}
-                  <div className="mt-4 rounded-xl bg-[var(--surface)] px-3.5 py-3">
+
+                  <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-                      Por qué
+                      Por qué {feedback.correct ? "es correcta" : "es incorrecta"}
                     </p>
                     <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
                       {feedback.explanation?.trim()
                         ? feedback.explanation
                         : feedback.correct
-                          ? "Esa opción describe bien el servicio o concepto de esta carta."
-                          : "La opción correcta es la que mejor encaja con la definición o el nombre pedido en el enunciado."}
+                          ? "Esta opción coincide con la definición o el nombre que pedía la carta."
+                          : `La respuesta correcta es «${prompt.choices[feedback.correctIndex]}» porque describe el concepto del enunciado; la que elegiste no encaja con esa definición.`}
                     </p>
                   </div>
-                  <Button className="mt-auto w-full" onClick={goNext}>
+
+                  <Button className="mt-5 w-full" onClick={goNext}>
                     {summaryRef.current ? "Ver resumen" : "Siguiente carta"}
                   </Button>
                 </div>
