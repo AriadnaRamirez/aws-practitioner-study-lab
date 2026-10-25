@@ -1,32 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { fetchMe, login, storeAuth } from "@/lib/api";
+import { login, storeAuth } from "@/lib/api";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [meSummary, setMeSummary] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setMeSummary(null);
     setPending(true);
     try {
       const res = await login({ identifier, password });
       storeAuth(res);
-      const me = await fetchMe();
-      setMeSummary(`${me.username} · ${me.email} · ${me.role}`);
+      const next = res.user.role === "ADMIN" ? "/admin" : "/estudiar";
+      router.replace(next);
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
-    } finally {
       setPending(false);
     }
   }
@@ -75,12 +75,6 @@ export default function LoginPage() {
         {error ? (
           <p className="text-sm text-red-600 dark:text-red-400" role="alert">
             {error}
-          </p>
-        ) : null}
-
-        {meSummary ? (
-          <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
-            Sesión OK: {meSummary}
           </p>
         ) : null}
 
