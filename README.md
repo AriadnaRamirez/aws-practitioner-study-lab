@@ -71,14 +71,22 @@ npm run dev:web
 
 El front sigue la preferencia del sistema vía **next-themes** (`system`): tokens en `apps/web/src/app/globals.css`. Tipografías **Syne** + **Figtree**; paleta teal / cool mist — no branding CCST.
 
+### Contenido stub (APS-6)
+
+| Qué | Dónde |
+| --- | --- |
+| Tipos | `packages/shared` (`Topic`, `KnowledgeItem`, `ExamQuestion`) |
+| API | `GET /api/v1/topics`, `/knowledge-items`, `/exam-questions` |
+| Admin CRUD | `/api/v1/admin/...` + header `x-admin-token` (`ADMIN_TOKEN`) |
+| UI admin | `/admin` (Resumen, Usuarios stub, Temas, Flash, Banco, Import stub) |
+
+Las mutaciones admin de contenido aún usan `x-admin-token`; siguiente paso: sustituir `AdminGuard` por JWT + role `ADMIN`.
+
 ## Alcance actual (Wave 1 integrada)
 
-- **APS-3:** monorepo, healthcheck, Swagger  
-- **APS-4:** auth email/username + JWT + Prisma `User`  
-- **APS-5:** shell UI, tema system, landing de marca  
-- **APS-6:** content stubs in-memory + admin shell (tras merge)
+- **APS-3–6:** monorepo, auth JWT, shell/tema, content stubs + admin  
 
-**Fuera de alcance aún:** flashcards reales, modos de examen, podio, guest analytics, Prisma content, Google OAuth.
+**Fuera de alcance aún:** flashcards de sesión, modos de examen, podio, guest analytics, Prisma content (APS-7), Google OAuth.
 
 ## Scripts raíz
 

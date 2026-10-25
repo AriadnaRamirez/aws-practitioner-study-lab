@@ -27,10 +27,32 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle(APP_NAME)
     .setDescription(
-      'API pública versionada. Auth: JWT access Bearer (sin refresh en MVP).',
+      [
+        'API pública versionada `/api/v1`.',
+        'Auth: JWT access Bearer (APS-4).',
+        'Content stubs in-memory (APS-6): topics, knowledge, exam questions.',
+        'Admin content mutations still use header `x-admin-token` until JWT AdminGuard merge.',
+      ].join(' '),
     )
     .setVersion('0.1.0')
     .addBearerAuth()
+    .addTag('health', 'Liveness')
+    .addTag('auth', 'Register / login / me')
+    .addTag('topics', 'Public topic list')
+    .addTag('knowledge', 'Public published KnowledgeItems (flash)')
+    .addTag('exam-questions', 'Public published ExamQuestions')
+    .addTag('admin-topics', 'Admin CRUD topics (x-admin-token)')
+    .addTag('admin-knowledge', 'Admin CRUD knowledge items')
+    .addTag('admin-exam-questions', 'Admin CRUD exam questions')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-admin-token',
+        description: 'Placeholder admin secret for content CRUD (APS-6)',
+      },
+      'admin-token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);
@@ -38,7 +60,9 @@ async function bootstrap() {
   const port = Number(process.env.PORT ?? 43124);
   await app.listen(port);
   // eslint-disable-next-line no-console
-  console.log(`${APP_NAME} API listening on http://127.0.0.1:${port}/${API_PREFIX}`);
+  console.log(
+    `${APP_NAME} API listening on http://127.0.0.1:${port}/${API_PREFIX}`,
+  );
   // eslint-disable-next-line no-console
   console.log(`Swagger UI: http://127.0.0.1:${port}/docs`);
 }
