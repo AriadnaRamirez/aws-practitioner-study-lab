@@ -64,23 +64,13 @@ export function DashboardClient() {
   }, [load]);
 
   if (!user) {
+    // RequireAuth on the page redirects guests — avoid a dead “solo Entrar” view.
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
-        <h1 className="font-display text-3xl font-bold tracking-tight">
-          Inicio
-        </h1>
-        <p className="mt-3 text-[var(--foreground-muted)]">
-          Entrá para ver tu dominio, racha y continuar sesiones.
-        </p>
-        {error ? (
-          <p className="mt-2 text-sm text-red-600">{error}</p>
-        ) : null}
-        <Link
-          href="/login"
-          className={cn(buttonVariants({ size: "lg" }), "mt-8 inline-flex")}
-        >
-          Entrar
-        </Link>
+      <div
+        className="mx-auto flex max-w-md flex-col items-center gap-2 px-4 py-20 text-sm text-[var(--foreground-muted)]"
+        aria-busy="true"
+      >
+        {error ? <p className="text-red-600">{error}</p> : <p>Cargando tu lab…</p>}
       </div>
     );
   }

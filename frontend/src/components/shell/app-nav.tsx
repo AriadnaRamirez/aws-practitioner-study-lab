@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { href: string; label: string; match?: string[] };
 
-const BASE_ITEMS: NavItem[] = [
+const STUDENT_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Inicio", match: ["/dashboard"] },
   { href: "/estudiar", label: "Estudiar", match: ["/estudiar"] },
   { href: "/mas-falladas", label: "Más falladas" },
@@ -22,16 +22,26 @@ const BASE_ITEMS: NavItem[] = [
   { href: "/cuenta", label: "Cuenta", match: ["/cuenta"] },
 ];
 
+/** Guests should not hit empty “solo Entrar” app pages. */
+const GUEST_ITEMS: NavItem[] = [
+  { href: "/", label: "Inicio", match: ["/"] },
+  { href: "/guest", label: "Probar" },
+  { href: "/register", label: "Crear cuenta" },
+];
+
 export function AppNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<PublicUser | null>(null);
   const [masteryPct, setMasteryPct] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const stored = getStoredUser();
-    setUser(stored);
-    if (!getStoredToken()) {
+    const token = getStoredToken();
+    setUser(token ? stored : null);
+    setReady(true);
+    if (!token) {
       setMasteryPct(null);
       return;
     }
@@ -44,12 +54,18 @@ export function AppNav() {
     setMenuOpen(false);
   }, [pathname]);
 
-  const items: NavItem[] =
-    user?.role === "ADMIN"
-      ? [...BASE_ITEMS, { href: "/admin", label: "Admin", match: ["/admin"] }]
-      : BASE_ITEMS;
+  const items: NavItem[] = !ready
+    ? GUEST_ITEMS
+    : user
+      ? user.role === "ADMIN"
+        ? [...STUDENT_ITEMS, { href: "/admin", label: "Admin", match: ["/admin"] }]
+        : STUDENT_ITEMS
+      : GUEST_ITEMS;
 
   function isActive(item: NavItem) {
+    if (item.href === "/") {
+      return pathname === "/";
+    }
     const prefixes = item.match ?? [item.href];
     return prefixes.some(
       (p) => pathname === p || pathname.startsWith(`${p}/`),

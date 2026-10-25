@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { DashboardClient } from "@/components/study/dashboard-client";
+import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {
   title: "Inicio",
 };
 
 export default function DashboardPage() {
-  return <DashboardClient />;
+  return (
+    <RequireAuth fallback="home">
+      <DashboardClient />
+    </RequireAuth>
+  );
 }

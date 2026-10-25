@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,11 +18,28 @@ const DEMO_ACCOUNTS = [
   },
 ] as const;
 
-export default function LoginPage() {
+function safeNextPath(raw: string | null, role: string): string {
+  if (role === "ADMIN") return "/admin";
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/login")) {
+    return "/dashboard";
+  }
+  return raw;
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const nextParam = searchParams.get("next");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  const hint = useMemo(() => {
+    if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+      return `Después de entrar vuelves a ${nextParam}.`;
+    }
+    return null;
+  }, [nextParam]);
 
   async function doLogin(idValue: string, passwordValue: string) {
     setError(null);
@@ -31,7 +50,7 @@ export default function LoginPage() {
         password: passwordValue,
       });
       storeAuth(res);
-      const next = res.user.role === "ADMIN" ? "/admin" : "/dashboard";
+      const next = safeNextPath(nextParam, res.user.role);
       // Hard navigation: avoids client-router races that look like “no entró”.
       window.location.assign(next);
     } catch (err) {
@@ -69,6 +88,9 @@ export default function LoginPage() {
         </strong>{" "}
         en el mismo campo, junto con la contraseña.
       </p>
+      {hint ? (
+        <p className="mt-2 text-sm text-[var(--accent)]">{hint}</p>
+      ) : null}
 
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
@@ -162,5 +184,19 @@ export default function LoginPage() {
         </Link>
       </p>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto flex min-h-dvh max-w-md items-center justify-center px-6">
+          <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
