@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { PublicUser } from "@aps/shared";
 import { Logo } from "@/components/brand/logo";
 import {
@@ -29,6 +29,9 @@ const GUEST_ITEMS: NavItem[] = [
 
 export function AppNav() {
   const pathname = usePathname();
+  const menuId = useId();
+  const panelRef = useRef<HTMLElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [user, setUser] = useState<PublicUser | null>(null);
   const [masteryPct, setMasteryPct] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -52,6 +55,37 @@ export function AppNav() {
     setMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    function onPointer(e: MouseEvent | TouchEvent) {
+      const target = e.target as Node;
+      if (
+        panelRef.current?.contains(target) ||
+        buttonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setMenuOpen(false);
+    }
+
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
   const items: NavItem[] = !ready
     ? GUEST_ITEMS
     : user
@@ -72,19 +106,19 @@ export function AppNav() {
     cn(
       "shrink-0 py-1 text-sm transition-colors",
       active
-        ? "font-semibold text-[var(--accent)]"
+        ? "font-semibold text-[var(--foreground)]"
         : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
     );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/95">
+    <header className="relative sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/95">
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--accent-foreground)]"
       >
         Saltar al contenido
       </a>
-      <div className="mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="relative mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2.5">
           <Link
             href={user ? "/dashboard" : "/"}
@@ -126,10 +160,11 @@ export function AppNav() {
         </nav>
 
         <button
+          ref={buttonRef}
           type="button"
-          className="glass-pill h-9 px-4 text-xs sm:hidden"
+          className="inline-flex h-9 items-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--foreground)] sm:hidden"
           aria-expanded={menuOpen}
-          aria-controls="mobile-nav"
+          aria-controls={menuId}
           onClick={() => setMenuOpen((o) => !o)}
         >
           {menuOpen ? "Cerrar" : "Menú"}
@@ -137,35 +172,57 @@ export function AppNav() {
       </div>
 
       {menuOpen ? (
-        <nav
-          id="mobile-nav"
-          aria-label="Móvil"
-          className="border-t border-[var(--border)] px-4 py-3 sm:hidden"
-        >
-          <ul className="flex flex-col gap-3">
-            {items.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(linkClass(isActive(item)), "block")}
-                >
-                  {item.label}
-                </Link>
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            className="fixed inset-0 z-40 bg-black/50 sm:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav
+            ref={panelRef}
+            id={menuId}
+            aria-label="Móvil"
+            className="absolute inset-x-0 top-full z-50 border-b border-[var(--border)] bg-[var(--background)] px-4 py-4 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.7)] sm:hidden"
+          >
+            <ul className="mx-auto flex w-full max-w-3xl flex-col gap-1">
+              {items.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      linkClass(isActive(item)),
+                      "block rounded-xl px-3 py-3",
+                      isActive(item) && "bg-[var(--surface-elevated)]",
+                    )}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                {user ? (
+                  <Link
+                    href="/logout"
+                    className={cn(linkClass(false), "block rounded-xl px-3 py-3")}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Salir
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    className={cn(linkClass(false), "block rounded-xl px-3 py-3")}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Entrar
+                  </Link>
+                )}
               </li>
-            ))}
-            <li>
-              {user ? (
-                <Link href="/logout" className={cn(linkClass(false), "block")}>
-                  Salir
-                </Link>
-              ) : (
-                <Link href="/login" className={cn(linkClass(false), "block")}>
-                  Entrar
-                </Link>
-              )}
-            </li>
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        </>
       ) : null}
     </header>
   );

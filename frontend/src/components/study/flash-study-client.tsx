@@ -629,8 +629,8 @@ export function FlashStudyClient() {
                       onClick={() => void onAnswer(i)}
                       className={cn(
                         "keycap w-full justify-start px-3.5 py-3 text-left text-sm leading-snug normal-case disabled:cursor-wait",
-                        isCorrect && "keycap-accent",
-                        isWrongPick && "!bg-red-500 !text-white !shadow-[0_4px_0_#9b1c1c]",
+                        isCorrect && "keycap-correct",
+                        isWrongPick && "keycap-wrong",
                         !showKey && isSelected && "keycap-accent",
                       )}
                     >
@@ -659,21 +659,26 @@ export function FlashStudyClient() {
       {phase === "feedback" && feedback ? (
         <div
           className={cn(
-            "mt-6 rounded-xl px-4 py-3 text-sm ring-1 animate-[fade-up_0.25s_ease-out]",
+            "mt-6 rounded-2xl border px-4 py-4 text-sm animate-[fade-up_0.25s_ease-out]",
             feedback.correct
-              ? "bg-emerald-500/15 ring-emerald-500/40"
-              : "bg-red-500/15 ring-red-500/40",
+              ? "border-[rgba(94,200,255,0.35)] bg-[rgba(94,200,255,0.1)]"
+              : "border-[rgba(255,107,74,0.35)] bg-[rgba(255,107,74,0.1)]",
           )}
+          role="status"
         >
-          <p className="font-semibold">
-            {feedback.correct ? "Correcto" : "Incorrecto"}
+          <p className="font-display text-base font-semibold tracking-tight">
+            {feedback.correct ? "¡Correcto!" : "Incorrecto"}
             {feedback.itemMastered ? " · Dominado" : null}
           </p>
-          <p className="mt-2 text-[var(--foreground-muted)]">
-            {feedback.explanation}
+          <p className="mt-2 leading-relaxed text-[var(--foreground)]">
+            {feedback.explanation?.trim()
+              ? feedback.explanation
+              : feedback.correct
+                ? "Buena elección: esa es la respuesta esperada para este concepto."
+                : "Revisa la opción marcada en azul: ahí está la respuesta correcta."}
           </p>
-          <Button className="mt-3" onClick={goNext}>
-            {summaryRef.current ? "Resumen" : "Siguiente"}
+          <Button className="mt-4" onClick={goNext}>
+            {summaryRef.current ? "Ver resumen" : "Siguiente"}
           </Button>
         </div>
       ) : null}

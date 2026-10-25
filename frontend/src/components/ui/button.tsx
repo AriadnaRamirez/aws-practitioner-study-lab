@@ -10,12 +10,12 @@ const buttonVariants = cva(
         default:
           "bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)]",
         secondary:
-          "border border-[var(--glass-border)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] hover:border-[var(--accent)]/40",
+          "border border-[var(--glass-border)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]",
         ghost:
           "text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
         outline:
-          "border border-[var(--border-strong)] bg-transparent text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]",
-        link: "rounded-none text-[var(--accent)] underline-offset-4 hover:underline active:scale-100",
+          "border border-[var(--border-strong)] bg-transparent text-[var(--foreground)] hover:border-[var(--foreground-muted)] hover:text-[var(--foreground)]",
+        link: "rounded-none text-[var(--foreground)] underline-offset-4 hover:underline active:scale-100",
       },
       size: {
         default: "h-11 px-5 py-2",

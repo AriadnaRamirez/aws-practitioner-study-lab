@@ -26,7 +26,7 @@ export function LandingHero() {
     <div className="relative flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--foreground)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_35%,rgba(232,80,2,0.14),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_35%,rgba(232,80,2,0.07),transparent_70%)]"
       />
 
       <Suspense fallback={null}>

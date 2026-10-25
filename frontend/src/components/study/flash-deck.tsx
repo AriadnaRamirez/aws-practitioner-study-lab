@@ -19,7 +19,7 @@ type FlashDeckProps = {
 };
 
 /**
- * Mazo de 3 cards apiladas — caras planas AWS (naranja / squid ink).
+ * Mazo de 3 cards apiladas — caras ink; el naranja queda en CTAs.
  * Front card = pregunta; las de atrás dan sensación de deck.
  */
 export function FlashDeck({
@@ -83,12 +83,12 @@ export function FlashDeck({
           }}
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-foreground)]/80">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--foreground-muted)]">
               {eyebrow}
             </p>
             <span
               aria-hidden
-              className="inline-flex size-7 items-center justify-center rounded-full border border-black/25 text-[var(--accent-foreground)]"
+              className="inline-flex size-7 items-center justify-center rounded-full border border-[var(--border)] text-[var(--foreground-muted)]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
@@ -99,9 +99,9 @@ export function FlashDeck({
               </svg>
             </span>
           </div>
-          <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--accent-foreground)] sm:text-2xl">
+          <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--foreground)] sm:text-2xl">
             {loading ? (
-              <span className="inline-block h-7 w-4/5 rounded bg-black/20" />
+              <span className="inline-block h-7 w-4/5 rounded bg-[var(--surface-hover)]" />
             ) : (
               title
             )}

@@ -37,20 +37,22 @@
   --ring: var(--brand-orange);
   --glow: rgba(232, 80, 2, 0.4);
   --glow-secondary: rgba(241, 96, 1, 0.2);
-  --hero-mesh-a: rgba(232, 80, 2, 0.18);
-  --hero-mesh-b: rgba(193, 8, 1, 0.12);
-  --hero-mesh-c: rgba(26, 34, 51, 0.4);
+  /* Soft atmosphere — orange kept sparse (~20% brand accents) */
+  --hero-mesh-a: rgba(232, 80, 2, 0.08);
+  --hero-mesh-b: rgba(193, 8, 1, 0.05);
+  --hero-mesh-c: rgba(26, 34, 51, 0.35);
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
-  --success: #3dd68c;
+  --success: #5ec8ff;
   --danger: #ff6b4a;
-  --deck-face: var(--brand-orange);
-  --deck-mid: var(--brand-dark-gray);
-  --deck-back: #1a1a1a;
-  --deck-grad-1: var(--brand-orange);
-  --deck-grad-2: var(--brand-dark-gray);
-  --deck-grad-3: #1a1a1a;
+  /* Deck faces stay ink/surface — orange only on primary CTAs */
+  --deck-face: var(--surface-elevated);
+  --deck-mid: var(--surface);
+  --deck-back: #0d121c;
+  --deck-grad-1: var(--surface-elevated);
+  --deck-grad-2: var(--surface);
+  --deck-grad-3: #0d121c;
   --glass: rgba(249, 249, 249, 0.08);
   --glass-strong: rgba(249, 249, 249, 0.12);
   --glass-border: rgba(249, 249, 249, 0.18);
@@ -83,20 +85,22 @@
   --ring: var(--brand-orange);
   --glow: rgba(232, 80, 2, 0.4);
   --glow-secondary: rgba(241, 96, 1, 0.2);
-  --hero-mesh-a: rgba(232, 80, 2, 0.18);
-  --hero-mesh-b: rgba(193, 8, 1, 0.12);
-  --hero-mesh-c: rgba(26, 34, 51, 0.4);
+  /* Soft atmosphere — orange kept sparse (~20% brand accents) */
+  --hero-mesh-a: rgba(232, 80, 2, 0.08);
+  --hero-mesh-b: rgba(193, 8, 1, 0.05);
+  --hero-mesh-c: rgba(26, 34, 51, 0.35);
   --nav-bg: rgba(10, 15, 26, 0.92);
   --card-face: var(--brand-white);
   --card-face-fg: var(--brand-black);
-  --success: #3dd68c;
+  --success: #5ec8ff;
   --danger: #ff6b4a;
-  --deck-face: var(--brand-orange);
-  --deck-mid: var(--brand-dark-gray);
-  --deck-back: #1a1a1a;
-  --deck-grad-1: var(--brand-orange);
-  --deck-grad-2: var(--brand-dark-gray);
-  --deck-grad-3: #1a1a1a;
+  /* Deck faces stay ink/surface — orange only on primary CTAs */
+  --deck-face: var(--surface-elevated);
+  --deck-mid: var(--surface);
+  --deck-back: #0d121c;
+  --deck-grad-1: var(--surface-elevated);
+  --deck-grad-2: var(--surface);
+  --deck-grad-3: #0d121c;
   --glass: rgba(249, 249, 249, 0.08);
   --glass-strong: rgba(249, 249, 249, 0.12);
   --glass-border: rgba(249, 249, 249, 0.18);
@@ -260,7 +264,7 @@ code,
 
 .glass-pill:hover {
   background: var(--glass-strong);
-  border-color: rgba(232, 80, 2, 0.5);
+  border-color: rgba(249, 249, 249, 0.28);
 }
 
 .glass-pill:active {
@@ -276,7 +280,7 @@ code,
 
 .glass-pill-solid:hover {
   background: #3d3d3d;
-  border-color: rgba(232, 80, 2, 0.5);
+  border-color: rgba(249, 249, 249, 0.22);
 }
 
 /* Soft branding atmosphere — pre-softened gradients (no live CSS blur) */
@@ -352,9 +356,9 @@ code,
 }
 
 .keycap-accent {
-  background: var(--accent);
-  color: var(--accent-foreground);
-  border-color: transparent;
+  background: var(--surface-hover);
+  color: var(--foreground);
+  border-color: var(--border-strong);
 }
 
 .keycap:hover {
@@ -362,7 +366,20 @@ code,
 }
 
 .keycap-accent:hover {
-  background: var(--accent-hover);
+  background: var(--surface-hover);
+  border-color: rgba(249, 249, 249, 0.28);
+}
+
+.keycap-correct {
+  background: rgba(94, 200, 255, 0.16);
+  color: var(--foreground);
+  border-color: rgba(94, 200, 255, 0.45);
+}
+
+.keycap-wrong {
+  background: rgba(255, 107, 74, 0.16);
+  color: var(--foreground);
+  border-color: rgba(255, 107, 74, 0.45);
 }
 
 .keycap:active {
