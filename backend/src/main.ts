@@ -34,7 +34,7 @@ async function bootstrap() {
         'Study FLASH_STUDY (APS-8 Nest): miss-repeat + dominio 3 + rachas.',
         'Study EXAM_STUDY / EXAM_TIMED (APS-9/10): feedback o cronometrado mock 65/90.',
         'Guest marketing + usage analytics (APS-13).',
-        'Admin content mutations still use header `x-admin-token` until JWT AdminGuard merge.',
+        'Admin accepts Bearer JWT (role ADMIN) or legacy header `x-admin-token`.',
       ].join(' '),
     )
     .setVersion('0.1.0')

@@ -5,12 +5,20 @@ import {
   type KnowledgeItem,
   type Topic,
 } from '@aps/shared';
+import {
+  AIF_FACTS,
+  EXTRA_CLF_FACTS,
+  buildAifTopics,
+  buildExtraKnowledge,
+  factsToQuestions,
+} from './content.seed-extra';
 
 const now = '2026-10-24T12:00:00.000Z';
 
 /** Demo seed data (APS-6/7) — EC2 / S3 samples; consumed by prisma/seed.ts. */
 export function buildSeedTopics(): Topic[] {
   return [
+    ...buildAifTopics(),
     {
       id: 'topic-compute',
       trackId: DEFAULT_TRACK_ID,
@@ -76,6 +84,7 @@ export function buildSeedTopics(): Topic[] {
 
 export function buildSeedKnowledge(): KnowledgeItem[] {
   return [
+    ...buildExtraKnowledge(),
     {
       id: 'ki-ec2',
       topicId: 'topic-compute',
@@ -741,7 +750,7 @@ function rotateChoices(
 }
 
 export function buildSeedQuestions(): ExamQuestion[] {
-  return PRACTICE_FACTS.map((fact, i) => {
+  const base = PRACTICE_FACTS.map((fact, i) => {
     const { choices, correctIndex } = rotateChoices(
       fact.correct,
       fact.wrong,
@@ -761,4 +770,9 @@ export function buildSeedQuestions(): ExamQuestion[] {
       updatedAt: now,
     };
   });
+  return [
+    ...base,
+    ...factsToQuestions(EXTRA_CLF_FACTS, 'clf'),
+    ...factsToQuestions(AIF_FACTS, 'aif'),
+  ];
 }

@@ -145,9 +145,35 @@ export class AuthService {
       'http://127.0.0.1:43123';
     const resetUrl = `${webBase.replace(/\/$/, '')}/forgot-password?token=${rawToken}`;
 
-    // Dev-friendly: no email provider in MVP — log the one-time link
-    // eslint-disable-next-line no-console
-    console.log(`[auth:forgot-password] reset link for ${email}: ${resetUrl}`);
+    const smtpUrl = process.env.SMTP_URL?.trim();
+    const mailFrom =
+      process.env.MAIL_FROM?.trim() || 'noreply@aps-lab.local';
+    if (smtpUrl) {
+      try {
+        // Optional dependency — dynamic import keeps local/dev working without SMTP.
+        const nodemailer = await import('nodemailer');
+        const transporter = nodemailer.createTransport(smtpUrl);
+        await transporter.sendMail({
+          from: mailFrom,
+          to: email,
+          subject: 'Restablecer contraseña — AWS Practitioner Study Lab',
+          text: `Usa este enlace (un solo uso) para restablecer tu contraseña:\n\n${resetUrl}\n`,
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[auth:forgot-password] SMTP failed; logging link', err);
+        // eslint-disable-next-line no-console
+        console.log(
+          `[auth:forgot-password] reset link for ${email}: ${resetUrl}`,
+        );
+      }
+    } else {
+      // Dev-friendly fallback when SMTP_URL is unset
+      // eslint-disable-next-line no-console
+      console.log(
+        `[auth:forgot-password] reset link for ${email}: ${resetUrl}`,
+      );
+    }
 
     return { message };
   }

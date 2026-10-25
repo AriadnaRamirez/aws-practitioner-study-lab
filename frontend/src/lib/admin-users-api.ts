@@ -34,6 +34,10 @@ async function parseError(res: Response): Promise<string> {
 async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set("x-admin-token", getAdminToken());
+  if (typeof window !== "undefined") {
+    const jwt = window.localStorage.getItem("aps_access_token");
+    if (jwt) headers.set("Authorization", `Bearer ${jwt}`);
+  }
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }

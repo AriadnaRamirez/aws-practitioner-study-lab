@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  AI_TRACK_ID,
   type ContentStatus,
   type ExamChoices,
   type ExamQuestion,
@@ -20,6 +21,7 @@ import type {
   TopicType as PrismaTopicType,
 } from '@prisma/client';
 import { Prisma } from '@prisma/client';
+import { FeatureFlagsService } from '../feature-flags/feature-flags.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
   CreateExamQuestionDto,
@@ -104,18 +106,33 @@ function mapQuestion(row: PrismaExamQuestion): ExamQuestion {
 
 @Injectable()
 export class ContentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly flags: FeatureFlagsService,
+  ) {}
 
-  async listTopics(): Promise<Topic[]> {
+  /** When exam_track_ai is OFF, hide AIF track from public/study surfaces. */
+  private async publicTrackFilter(): Promise<{ trackId?: { not: string } }> {
+    const aifOn = await this.flags.isExamTrackAiEnabled();
+    return aifOn ? {} : { trackId: { not: AI_TRACK_ID } };
+  }
+
+  async listTopics(opts?: { allTracks?: boolean }): Promise<Topic[]> {
+    const trackWhere = opts?.allTracks ? {} : await this.publicTrackFilter();
     const rows = await this.prisma.topic.findMany({
+      where: trackWhere,
       orderBy: { sortOrder: 'asc' },
     });
     return rows.map(mapTopic);
   }
 
-  async getTopic(id: string): Promise<Topic> {
+  async getTopic(id: string, opts?: { allTracks?: boolean }): Promise<Topic> {
     const topic = await this.prisma.topic.findUnique({ where: { id } });
     if (!topic) throw new NotFoundException(`Topic ${id} not found`);
+    if (!opts?.allTracks && topic.trackId === AI_TRACK_ID) {
+      const aifOn = await this.flags.isExamTrackAiEnabled();
+      if (!aifOn) throw new NotFoundException(`Topic ${id} not found`);
+    }
     return mapTopic(topic);
   }
 
@@ -136,9 +153,9 @@ export class ContentService {
   }
 
   async updateTopic(id: string, dto: UpdateTopicDto): Promise<Topic> {
-    await this.getTopic(id);
+    await this.getTopic(id, { allTracks: true });
     if (dto.parentId) {
-      await this.getTopic(dto.parentId);
+      await this.getTopic(dto.parentId, { allTracks: true });
     }
     const row = await this.prisma.topic.update({
       where: { id },
@@ -156,16 +173,19 @@ export class ContentService {
   }
 
   async deleteTopic(id: string): Promise<void> {
-    await this.getTopic(id);
+    await this.getTopic(id, { allTracks: true });
     await this.prisma.topic.delete({ where: { id } });
   }
 
   async listKnowledge(opts?: {
     publishedOnly?: boolean;
     topicId?: string;
+    allTracks?: boolean;
   }): Promise<KnowledgeItem[]> {
+    const trackWhere = opts?.allTracks ? {} : await this.publicTrackFilter();
     const rows = await this.prisma.knowledgeItem.findMany({
       where: {
+        ...trackWhere,
         ...(opts?.publishedOnly ? { status: 'published' } : {}),
         ...(opts?.topicId ? { topicId: opts.topicId } : {}),
       },
@@ -176,18 +196,24 @@ export class ContentService {
 
   async getKnowledge(
     id: string,
-    opts?: { publishedOnly?: boolean },
+    opts?: { publishedOnly?: boolean; allTracks?: boolean },
   ): Promise<KnowledgeItem> {
     const item = await this.prisma.knowledgeItem.findUnique({ where: { id } });
     if (!item) throw new NotFoundException(`KnowledgeItem ${id} not found`);
     if (opts?.publishedOnly && item.status !== 'published') {
       throw new NotFoundException(`KnowledgeItem ${id} not found`);
     }
+    if (!opts?.allTracks && item.trackId === AI_TRACK_ID) {
+      const aifOn = await this.flags.isExamTrackAiEnabled();
+      if (!aifOn) {
+        throw new NotFoundException(`KnowledgeItem ${id} not found`);
+      }
+    }
     return mapKnowledge(item);
   }
 
   async createKnowledge(dto: CreateKnowledgeItemDto): Promise<KnowledgeItem> {
-    await this.getTopic(dto.topicId);
+    await this.getTopic(dto.topicId, { allTracks: true });
     if (!dto.distractors || dto.distractors.length < 3) {
       throw new BadRequestException('distractors must have at least 3 entries');
     }
@@ -211,8 +237,8 @@ export class ContentService {
     id: string,
     dto: UpdateKnowledgeItemDto,
   ): Promise<KnowledgeItem> {
-    await this.getKnowledge(id);
-    if (dto.topicId) await this.getTopic(dto.topicId);
+    await this.getKnowledge(id, { allTracks: true });
+    if (dto.topicId) await this.getTopic(dto.topicId, { allTracks: true });
     if (dto.distractors && dto.distractors.length < 3) {
       throw new BadRequestException('distractors must have at least 3 entries');
     }
@@ -244,16 +270,19 @@ export class ContentService {
   }
 
   async deleteKnowledge(id: string): Promise<void> {
-    await this.getKnowledge(id);
+    await this.getKnowledge(id, { allTracks: true });
     await this.prisma.knowledgeItem.delete({ where: { id } });
   }
 
   async listQuestions(opts?: {
     publishedOnly?: boolean;
     topicId?: string;
+    allTracks?: boolean;
   }): Promise<ExamQuestion[]> {
+    const trackWhere = opts?.allTracks ? {} : await this.publicTrackFilter();
     const rows = await this.prisma.examQuestion.findMany({
       where: {
+        ...trackWhere,
         ...(opts?.publishedOnly ? { status: 'published' } : {}),
         ...(opts?.topicId ? { topicId: opts.topicId } : {}),
       },
@@ -264,18 +293,24 @@ export class ContentService {
 
   async getQuestion(
     id: string,
-    opts?: { publishedOnly?: boolean },
+    opts?: { publishedOnly?: boolean; allTracks?: boolean },
   ): Promise<ExamQuestion> {
     const item = await this.prisma.examQuestion.findUnique({ where: { id } });
     if (!item) throw new NotFoundException(`ExamQuestion ${id} not found`);
     if (opts?.publishedOnly && item.status !== 'published') {
       throw new NotFoundException(`ExamQuestion ${id} not found`);
     }
+    if (!opts?.allTracks && item.trackId === AI_TRACK_ID) {
+      const aifOn = await this.flags.isExamTrackAiEnabled();
+      if (!aifOn) {
+        throw new NotFoundException(`ExamQuestion ${id} not found`);
+      }
+    }
     return mapQuestion(item);
   }
 
   async createQuestion(dto: CreateExamQuestionDto): Promise<ExamQuestion> {
-    await this.getTopic(dto.topicId);
+    await this.getTopic(dto.topicId, { allTracks: true });
     assertFourChoices(dto.choices);
     if (dto.correctIndex < 0 || dto.correctIndex > 3) {
       throw new BadRequestException('correctIndex must be 0..3');
@@ -299,8 +334,8 @@ export class ContentService {
     id: string,
     dto: UpdateExamQuestionDto,
   ): Promise<ExamQuestion> {
-    await this.getQuestion(id);
-    if (dto.topicId) await this.getTopic(dto.topicId);
+    await this.getQuestion(id, { allTracks: true });
+    if (dto.topicId) await this.getTopic(dto.topicId, { allTracks: true });
     if (dto.choices) assertFourChoices(dto.choices);
     if (
       dto.correctIndex !== undefined &&
@@ -333,7 +368,7 @@ export class ContentService {
   }
 
   async deleteQuestion(id: string): Promise<void> {
-    await this.getQuestion(id);
+    await this.getQuestion(id, { allTracks: true });
     await this.prisma.examQuestion.delete({ where: { id } });
   }
 
