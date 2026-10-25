@@ -23,6 +23,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { fetchMe, getStoredToken } from "@/lib/api";
 import { getTopics } from "@/lib/content-api";
 import {
+  STUDY_CATEGORIES,
+  categoryById,
+  resolveCategoryTopicIds,
+} from "@/lib/study-categories";
+import {
   answerStudy,
   getStudySession,
   startFlashSession,
@@ -181,10 +186,14 @@ export function FlashStudyClient() {
         }
         setPhase("setup");
         const topicParam = searchParams.get("topic");
-        const topicIds =
-          topicParam && topicsRes.data.some((t) => t.id === topicParam)
-            ? [topicParam]
-            : [];
+        const categoryParam = searchParams.get("category");
+        const knownIds = topicsRes.data.map((t) => t.id);
+        let topicIds: string[] = [];
+        if (topicParam && knownIds.includes(topicParam)) {
+          topicIds = [topicParam];
+        } else if (categoryParam && categoryById(categoryParam)) {
+          topicIds = resolveCategoryTopicIds(categoryParam, knownIds);
+        }
         if (topicIds.length) {
           setSelectedTopics(topicIds);
         }
@@ -447,6 +456,63 @@ export function FlashStudyClient() {
             </p>
           </div>
           <FlashDeckShowcase className="hidden md:block scale-90 origin-center" />
+        </div>
+
+        <div className="mt-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+            Elige un tema
+          </p>
+          <h2 className="font-display mt-1 text-lg font-semibold">
+            Servicios, Linux o redes
+          </h2>
+          <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {STUDY_CATEGORIES.map((cat) => {
+              const ids = resolveCategoryTopicIds(
+                cat.id,
+                topics.map((t) => t.id),
+              );
+              if (!ids.length) return null;
+              return (
+                <li key={cat.id}>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      setSelectedTopics(ids);
+                      void onStart(10, ids);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
+                      "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:ring-[var(--accent)]",
+                      "disabled:opacity-50",
+                    )}
+                    style={{
+                      borderRadius:
+                        cat.id === "aws-services"
+                          ? "42% 58% 48% 52% / 48% 42% 58% 52%"
+                          : cat.id === "linux"
+                            ? "55% 45% 42% 58% / 50% 55% 45% 50%"
+                            : cat.id === "networking"
+                              ? "48% 52% 58% 42% / 55% 48% 52% 45%"
+                              : "50% 50% 45% 55% / 42% 58% 48% 52%",
+                    }}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="font-display block text-sm font-semibold">
+                        {cat.title}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-[var(--foreground-muted)]">
+                        {cat.subtitle}
+                      </span>
+                    </span>
+                    <span className="text-[var(--accent)]" aria-hidden>
+                      →
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
         <button

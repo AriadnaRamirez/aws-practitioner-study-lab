@@ -9,6 +9,7 @@ import type {
 } from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
 import { ExamCountdown } from "@/components/study/exam-countdown";
+import { TopicCategoryMenu } from "@/components/study/topic-category-menu";
 import { TopicFolders } from "@/components/study/topic-folders";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -99,7 +100,9 @@ export function DashboardClient() {
 
       <ExamCountdown className="mt-8" examDate={user.examDate} />
 
-      <TopicFolders topics={topics} />
+      <TopicCategoryMenu topics={topics} />
+
+      <TopicFolders topics={topics} className="mt-12" />
 
       <section className="mt-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">

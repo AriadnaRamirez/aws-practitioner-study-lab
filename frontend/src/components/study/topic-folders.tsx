@@ -270,14 +270,13 @@ export function TopicFolders({ topics, className, trackId = "CLF" }: Props) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-            Carpetas por tema
+            Temas sueltos
           </p>
           <h2 className="font-display mt-1 text-xl font-semibold">
-            Elige una carpeta y estudia ese bloque
+            O abre una carpeta concreta
           </h2>
           <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-            Linux, redes, cómputo, almacenamiento y más — cada carpeta abre 10
-            flashcards de ese tema.
+            Misma idea, un tema a la vez — Cómputo, Redes, Linux…
           </p>
         </div>
         <p className="rounded-full border border-[var(--accent)]/50 px-3 py-1 text-xs font-semibold text-[var(--accent)]">
