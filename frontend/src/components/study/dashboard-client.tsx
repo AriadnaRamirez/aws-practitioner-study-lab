@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import type { ProgressOverview, PublicUser } from "@aps/shared";
+import type {
+  ProgressOverview,
+  PublicUser,
+  TopicProgressRow,
+} from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
 import { ExamCountdown } from "@/components/study/exam-countdown";
+import { TopicFolders } from "@/components/study/topic-folders";
 import { buttonVariants } from "@/components/ui/button";
 import {
   clearAuth,
   fetchMe,
   fetchProgressOverview,
+  fetchTopicProgress,
   getStoredToken,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -17,6 +23,7 @@ import { cn } from "@/lib/utils";
 export function DashboardClient() {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [overview, setOverview] = useState<ProgressOverview | null>(null);
+  const [topics, setTopics] = useState<TopicProgressRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -35,8 +42,12 @@ export function DashboardClient() {
       return;
     }
     try {
-      const ov = await fetchProgressOverview();
+      const [ov, byTopic] = await Promise.all([
+        fetchProgressOverview(),
+        fetchTopicProgress(),
+      ]);
       setOverview(ov);
+      setTopics(byTopic.topics);
     } catch (err) {
       // Mantener sesión aunque el overview falle (red / 5xx).
       setError(
@@ -87,6 +98,8 @@ export function DashboardClient() {
       </p>
 
       <ExamCountdown className="mt-8" examDate={user.examDate} />
+
+      <TopicFolders topics={topics} />
 
       <section className="mt-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">

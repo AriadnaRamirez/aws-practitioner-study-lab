@@ -180,10 +180,18 @@ export function FlashStudyClient() {
           return;
         }
         setPhase("setup");
+        const topicParam = searchParams.get("topic");
+        const topicIds =
+          topicParam && topicsRes.data.some((t) => t.id === topicParam)
+            ? [topicParam]
+            : [];
+        if (topicIds.length) {
+          setSelectedTopics(topicIds);
+        }
         if (quickStart === "10" || quickStart === "20" || quickStart === "30" || quickStart === "50") {
           const n = Number(quickStart) as StudySize;
           setSize(n);
-          void onStart(n, []);
+          void onStart(n, topicIds);
         }
       } catch {
         if (!cancelled) setPhase("auth");

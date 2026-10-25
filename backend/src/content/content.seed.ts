@@ -70,6 +70,16 @@ export function buildSeedTopics(): Topic[] {
       updatedAt: now,
     },
     {
+      id: 'topic-linux',
+      trackId: DEFAULT_TRACK_ID,
+      type: 'CONCEPT',
+      name: 'Linux',
+      parentId: null,
+      sortOrder: 55,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
       id: 'topic-billing',
       trackId: DEFAULT_TRACK_ID,
       type: 'CONCEPT',
@@ -85,6 +95,102 @@ export function buildSeedTopics(): Topic[] {
 export function buildSeedKnowledge(): KnowledgeItem[] {
   return [
     ...buildExtraKnowledge(),
+    {
+      id: 'ki-amazon-linux',
+      topicId: 'topic-linux',
+      trackId: DEFAULT_TRACK_ID,
+      name: 'Amazon Linux',
+      definition:
+        'Distribución Linux mantenida por AWS, optimizada para ejecutarse en EC2 con integración a herramientas y repositorios de AWS.',
+      distractors: [
+        'Sistema operativo propietario solo para mainframes on‑prem',
+        'Servicio de contenedores gestionados sin SO',
+        'Base de datos relacional compatible con PostgreSQL',
+      ],
+      explanation:
+        'Amazon Linux es un SO para instancias EC2. No es RDS ni un servicio de contenedores por sí solo.',
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
+      status: 'published',
+      externalKey: 'clf.amazon-linux',
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'ki-ami',
+      topicId: 'topic-linux',
+      trackId: DEFAULT_TRACK_ID,
+      name: 'AMI',
+      definition:
+        'Amazon Machine Image: plantilla que incluye SO (p. ej. Linux), apps y configuración para lanzar instancias EC2.',
+      distractors: [
+        'Política IAM que concede acceso root a S3',
+        'Tipo de volumen de respaldo automático de RDS',
+        'Regla de facturación por segundo en Lambda',
+      ],
+      explanation:
+        'Una AMI define la imagen de arranque de EC2 (SO + software). No es una política IAM ni un volumen RDS.',
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
+      status: 'published',
+      externalKey: 'clf.ami',
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'ki-ssh-ec2',
+      topicId: 'topic-linux',
+      trackId: DEFAULT_TRACK_ID,
+      name: 'SSH a EC2',
+      definition:
+        'Acceso administrativo típico a instancias Linux en EC2 mediante clave privada (.pem) y el usuario del AMI (p. ej. ec2-user).',
+      distractors: [
+        'Único método permitido: consola RDP de Windows Server',
+        'Solo se puede entrar con usuario root sin clave',
+        'Se autentica siempre con token de CloudFront',
+      ],
+      explanation:
+        'En Linux EC2 lo habitual es SSH con key pair. RDP aplica a Windows; CloudFront no autentica SSH.',
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
+      status: 'published',
+      externalKey: 'clf.ssh-ec2',
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'ki-user-data',
+      topicId: 'topic-linux',
+      trackId: DEFAULT_TRACK_ID,
+      name: 'User data',
+      definition:
+        'Script o cloud-init que EC2 ejecuta al primer arranque para configurar la instancia (paquetes, servicios, archivos).',
+      distractors: [
+        'Política de bucket que lista objetos públicos',
+        'Métrica de CloudWatch del uso de CPU',
+        'Certificado TLS gestionado por ACM',
+      ],
+      explanation:
+        'User data automatiza el bootstrap de la instancia. No es una política S3 ni una métrica.',
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
+      status: 'published',
+      externalKey: 'clf.user-data',
+      createdAt: now,
+      updatedAt: now,
+    },
     {
       id: 'ki-ec2',
       topicId: 'topic-compute',
