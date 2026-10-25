@@ -141,9 +141,27 @@ async function seedContent() {
   );
 }
 
+async function seedFeatureFlags() {
+  const examTrackAi = await prisma.featureFlag.upsert({
+    where: { key: 'exam_track_ai' },
+    update: {},
+    create: {
+      key: 'exam_track_ai',
+      enabled: false,
+      updatedBy: 'seed',
+    },
+  });
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `FeatureFlag seed OK: ${examTrackAi.key}=${examTrackAi.enabled}`,
+  );
+}
+
 async function main() {
   await seedAdmin();
   await seedContent();
+  await seedFeatureFlags();
 }
 
 main()

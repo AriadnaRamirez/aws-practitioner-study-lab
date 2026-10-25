@@ -67,15 +67,26 @@ npm run build -w @aps/shared
 
 ### Estudio (Nest `StudyModule`)
 
-- `FLASH_STUDY` (APS-8), `EXAM_STUDY` (APS-9), `EXAM_TIMED` (APS-10)
-- UI: `/estudiar`, `/estudiar/examen`
+- `FLASH_STUDY` (APS-8), `EXAM_STUDY` (APS-9), `EXAM_TIMED` (APS-10), `WEAK_REVIEW` (APS-11)
+- UI: `/estudiar`, `/estudiar/examen`, `/mas-falladas`, `/cuenta` (historial)
+
+### Wave 2 (APS-11 / 12 / 14 / 16)
+
+| Ticket | Qué | Dónde |
+| --- | --- | --- |
+| APS-11 | Más falladas + historial + `WEAK_REVIEW` | `/mas-falladas`, `/cuenta`, `GET /progress/weak-items` |
+| APS-12 | Podio (ítems dominados, all/week) | `/podio`, `GET /podium` |
+| APS-14 | Import / export CSV·JSON (dry-run) | `/admin/import`, `/api/v1/admin/import|export` |
+| APS-16 | Feature flag `exam_track_ai` | `/admin/flags`, `/api/v1/feature-flags` |
+| APS-18 | Integración Wave 2 | este README / rama `mvp-local` |
 
 ## Alcance actual
 
 - Frontend Next + backend Nest separados
 - Auth JWT, shell/tema, content Prisma, flash + modos examen, guest analytics
+- Podio, más falladas, import/export, feature flags (Wave 2)
 
-**Fuera de alcance aún:** podio completo en UI, Google OAuth, AdminGuard JWT.
+**Fuera de alcance aún:** Google OAuth, AdminGuard JWT (sigue `x-admin-token`).
 
 ## Scripts raíz
 

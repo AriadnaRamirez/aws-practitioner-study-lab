@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { ContentModule } from './content/content.module';
+import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { GuestModule } from './guest/guest.module';
 import { HealthModule } from './health/health.module';
+import { PodiumModule } from './podium/podium.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StudyModule } from './study/study.module';
 
@@ -16,6 +18,8 @@ import { StudyModule } from './study/study.module';
     StudyModule,
     GuestModule,
     AdminModule,
+    PodiumModule,
+    FeatureFlagsModule,
   ],
 })
 export class AppModule {}

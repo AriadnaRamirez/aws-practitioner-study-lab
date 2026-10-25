@@ -19,7 +19,7 @@ export interface BankItem {
   topicId?: string;
 }
 
-/** In-memory study sessions (Prisma persistence lands with APS-8). */
+/** In-memory study sessions (EXAM_STUDY / WEAK_REVIEW play queue). */
 export interface StudySessionRecord {
   id: string;
   userId: string;
@@ -28,6 +28,8 @@ export interface StudySessionRecord {
   uniqueItems: number;
   queue: QueueEntry[];
   bank: Map<string, BankItem>;
+  /** Optional: maps itemId → KNOWLEDGE | EXAM_QUESTION (WEAK_REVIEW). */
+  itemTypes?: Map<string, 'KNOWLEDGE' | 'EXAM_QUESTION'>;
   sessionStreak: number;
   maxSessionStreak: number;
   answered: number;

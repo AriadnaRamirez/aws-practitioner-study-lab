@@ -18,13 +18,25 @@ import {
   type ExamTimedSummary,
   type KnowledgeItem,
   type SessionSize,
+  type StudyHistoryDetail,
+  type StudyHistoryEntry,
+  type StudyHistoryResponse,
+  type StudyItemType as SharedStudyItemType,
   type StudyMode,
   type StudyPrompt,
+  type StudyQueueItem,
   type StudySessionSummary,
   type StudySessionView,
   type StudySize,
+  type WeakItem,
+  type WeakItemsResponse,
 } from '@aps/shared';
-import { StudyItemType, StudyMode as PrismaStudyMode, type User } from '@prisma/client';
+import {
+  StudyItemType,
+  StudyMode as PrismaStudyMode,
+  type StudySession,
+  type User,
+} from '@prisma/client';
 import { ContentService } from '../content/content.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { pickVariant, renderFlashVariant } from './flash-render';
@@ -41,6 +53,8 @@ import {
   type TimedSessionRecord,
   StudyStore,
 } from './study.store';
+
+const STEM_PREVIEW = 96;
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -186,6 +200,10 @@ export class StudyService {
         timezone: opts.timezone,
       });
     }
+    if (opts.mode === 'WEAK_REVIEW') {
+      const started = await this.startWeakReview(opts.user, opts.size);
+      return this.getAnySession(opts.user, started.id);
+    }
     if (opts.mode !== 'EXAM_STUDY') {
       throw new BadRequestException(
         `Mode ${opts.mode} not available yet`,
@@ -290,12 +308,12 @@ export class StudyService {
     return this.getFlashSummary(user, sessionId);
   }
 
-  private answerExamStudy(
+  private async answerExamStudy(
     sessionId: string,
     userId: string,
     queueItemId: string,
     choiceIndex: number,
-  ): AnswerStudyResponse {
+  ): Promise<AnswerStudyResponse> {
     const session = this.requireExamSession(sessionId, userId);
     if (session.status !== 'active') {
       throw new BadRequestException('Session already completed');
@@ -320,6 +338,17 @@ export class StudyService {
     }
 
     const correct = choiceIndex === item.correctIndex;
+    const itemType =
+      (session.itemTypes?.get(current.itemId) as StudyItemType | undefined) ??
+      StudyItemType.EXAM_QUESTION;
+
+    const progress = await this.updateItemProgress(
+      userId,
+      current.itemId,
+      correct,
+      itemType,
+    );
+
     session.answered += 1;
     session.queue = session.queue.slice(1);
 
@@ -345,6 +374,23 @@ export class StudyService {
     if (finished) {
       session.status = 'completed';
       session.endedAt = nowIso();
+      await this.prisma.studySession
+        .update({
+          where: { id: session.id },
+          data: {
+            endedAt: new Date(),
+            correctCount: session.correctAnswers,
+            answeredCount: session.answered,
+            missRepeatCount: session.missRepeats,
+            maxSessionStreak: session.maxSessionStreak,
+            score:
+              session.answered > 0
+                ? (session.correctAnswers / session.answered) * 100
+                : 0,
+            summaryJson: JSON.stringify(summaryOf(session)),
+          },
+        })
+        .catch(() => undefined);
     }
 
     this.store.sessions.set(session.id, session);
@@ -353,6 +399,8 @@ export class StudyService {
       correct,
       correctIndex: item.correctIndex,
       explanation: item.explanation,
+      itemMastered: Boolean(progress.masteredAt),
+      itemConsecutiveCorrect: progress.consecutiveCorrect,
       sessionStreak: session.sessionStreak,
       remaining: session.queue.length,
       finished,
@@ -617,12 +665,13 @@ export class StudyService {
     userId: string,
     itemId: string,
     correct: boolean,
+    itemType: StudyItemType = StudyItemType.KNOWLEDGE,
   ) {
     const existing = await this.prisma.itemProgress.findUnique({
       where: {
         userId_itemType_itemId: {
           userId,
-          itemType: StudyItemType.KNOWLEDGE,
+          itemType,
           itemId,
         },
       },
@@ -635,7 +684,7 @@ export class StudyService {
       return this.prisma.itemProgress.create({
         data: {
           userId,
-          itemType: StudyItemType.KNOWLEDGE,
+          itemType,
           itemId,
           consecutiveCorrect,
           failCount: correct ? 0 : 1,
@@ -1048,4 +1097,289 @@ export class StudyService {
       mistakes,
     };
   }
+
+  /* —— APS-11: weak items / history / WEAK_REVIEW —— */
+
+  async listWeakItems(
+    userId: string,
+    limit = 50,
+  ): Promise<WeakItemsResponse> {
+    const rows = await this.prisma.itemProgress.findMany({
+      where: { userId, failCount: { gt: 0 } },
+      orderBy: [{ failCount: 'desc' }, { updatedAt: 'desc' }],
+      take: limit,
+    });
+
+    const items = await Promise.all(rows.map((row) => this.toWeakItem(row)));
+    return { items, total: items.length };
+  }
+
+  async listSessions(
+    userId: string,
+    limit = 50,
+  ): Promise<StudyHistoryResponse> {
+    const rows = await this.prisma.studySession.findMany({
+      where: { userId },
+      orderBy: { startedAt: 'desc' },
+      take: limit,
+    });
+
+    const sessions = rows.map((row) => this.toHistoryEntry(row));
+    return { sessions, total: sessions.length };
+  }
+
+  async getHistorySession(
+    userId: string,
+    sessionId: string,
+  ): Promise<StudyHistoryDetail> {
+    const row = await this.prisma.studySession.findFirst({
+      where: { id: sessionId, userId },
+    });
+    if (!row) {
+      throw new NotFoundException('Sesión no encontrada');
+    }
+    return this.toHistoryDetail(row);
+  }
+
+  /**
+   * CTA “Estudiar solo estas”: cola = más falladas, miss-repeat on.
+   * Playable via StudyStore + persisted StudySession for historial.
+   */
+  async startWeakReview(
+    user: User,
+    limit?: number,
+  ): Promise<StudyHistoryDetail> {
+    const cap = Math.min(limit ?? 50, 50);
+    const weak = await this.listWeakItems(user.id, cap);
+
+    if (weak.items.length === 0) {
+      throw new BadRequestException(
+        'No tienes ítems fallados todavía. Estudia un poco y vuelve aquí.',
+      );
+    }
+
+    const queueMeta: StudyQueueItem[] = weak.items.map((w) => ({
+      itemType: w.itemType,
+      itemId: w.itemId,
+    }));
+
+    const bank: StudySessionRecord['bank'] = new Map();
+    const itemTypesMap = new Map<string, 'KNOWLEDGE' | 'EXAM_QUESTION'>();
+    const playQueue: QueueEntry[] = [];
+    const knowledgePool = await this.content.listKnowledge({
+      publishedOnly: true,
+    });
+
+    for (const w of weak.items) {
+      if (w.itemType === 'KNOWLEDGE') {
+        try {
+          const k = await this.content.getKnowledge(w.itemId, {
+            publishedOnly: true,
+          });
+          const variant = pickVariant(k);
+          const rendered = renderFlashVariant(k, variant, knowledgePool);
+          bank.set(k.id, {
+            stem: rendered.stem,
+            choices: rendered.choices,
+            correctIndex: rendered.correctIndex,
+            explanation: rendered.explanation,
+            topicId: k.topicId,
+          });
+          itemTypesMap.set(k.id, 'KNOWLEDGE');
+          playQueue.push({ queueItemId: newId('qi'), itemId: k.id });
+        } catch {
+          /* skip unpublished / missing */
+        }
+      } else {
+        try {
+          const q = await this.content.getQuestion(w.itemId, {
+            publishedOnly: true,
+          });
+          bank.set(q.id, {
+            stem: q.stem,
+            choices: q.choices,
+            correctIndex: q.correctIndex,
+            explanation: q.explanation,
+            topicId: q.topicId,
+          });
+          itemTypesMap.set(q.id, 'EXAM_QUESTION');
+          playQueue.push({ queueItemId: newId('qi'), itemId: q.id });
+        } catch {
+          /* skip */
+        }
+      }
+    }
+
+    if (playQueue.length === 0) {
+      throw new BadRequestException(
+        'Los ítems fallados ya no están publicados. Estudia de nuevo para regenerar la cola.',
+      );
+    }
+
+    const row = await this.prisma.studySession.create({
+      data: {
+        userId: user.id,
+        mode: PrismaStudyMode.WEAK_REVIEW,
+        size: playQueue.length,
+        timezone: user.timezone || 'UTC',
+        scopeJson: JSON.stringify(queueMeta),
+        stateJson: JSON.stringify({
+          queue: playQueue,
+          itemTypes: Object.fromEntries(itemTypesMap),
+        }),
+        uniqueItems: playQueue.length,
+      },
+    });
+
+    const session: StudySessionRecord = {
+      id: row.id,
+      userId: user.id,
+      mode: 'WEAK_REVIEW',
+      size: playQueue.length,
+      uniqueItems: playQueue.length,
+      queue: playQueue,
+      bank,
+      itemTypes: itemTypesMap,
+      sessionStreak: 0,
+      maxSessionStreak: 0,
+      answered: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      missRepeats: 0,
+      status: 'active',
+      createdAt: row.startedAt.toISOString(),
+    };
+    this.store.sessions.set(session.id, session);
+
+    return this.toHistoryDetail(row, queueMeta);
+  }
+
+  private async toWeakItem(row: {
+    itemType: string;
+    itemId: string;
+    failCount: number;
+    passCount: number;
+    consecutiveCorrect: number;
+    masteredAt: Date | null;
+  }): Promise<WeakItem> {
+    const itemType = row.itemType as SharedStudyItemType;
+    const enriched = await this.enrichItem(itemType, row.itemId);
+    return {
+      itemType,
+      itemId: row.itemId,
+      failCount: row.failCount,
+      passCount: row.passCount,
+      consecutiveCorrect: row.consecutiveCorrect,
+      masteredAt: row.masteredAt?.toISOString() ?? null,
+      title: enriched.title,
+      subtitle: enriched.subtitle,
+      topicId: enriched.topicId,
+    };
+  }
+
+  private async enrichItem(
+    itemType: SharedStudyItemType,
+    itemId: string,
+  ): Promise<{ title: string; subtitle: string | null; topicId: string | null }> {
+    try {
+      if (itemType === 'KNOWLEDGE') {
+        const k = await this.content.getKnowledge(itemId);
+        return {
+          title: k.name,
+          subtitle: k.definition,
+          topicId: k.topicId,
+        };
+      }
+      const q = await this.content.getQuestion(itemId);
+      const stem =
+        q.stem.length > STEM_PREVIEW
+          ? `${q.stem.slice(0, STEM_PREVIEW).trim()}…`
+          : q.stem;
+      return { title: stem, subtitle: null, topicId: q.topicId };
+    } catch {
+      return {
+        title: itemId,
+        subtitle: null,
+        topicId: null,
+      };
+    }
+  }
+
+  private toHistoryEntry(row: StudySession): StudyHistoryEntry {
+    const durationMs =
+      row.endedAt != null
+        ? Math.max(0, row.endedAt.getTime() - row.startedAt.getTime())
+        : null;
+    return {
+      id: row.id,
+      mode: row.mode as StudyMode,
+      size: row.size,
+      timezone: row.timezone,
+      startedAt: row.startedAt.toISOString(),
+      endedAt: row.endedAt?.toISOString() ?? null,
+      scoreCorrect: row.correctCount > 0 || row.endedAt ? row.correctCount : null,
+      scoreTotal:
+        row.answeredCount > 0 || row.endedAt ? row.answeredCount : null,
+      maxStreak: row.maxSessionStreak > 0 || row.endedAt ? row.maxSessionStreak : null,
+      durationMs,
+    };
+  }
+
+  private toHistoryDetail(
+    row: StudySession,
+    queueOverride?: StudyQueueItem[],
+  ): StudyHistoryDetail {
+    return {
+      ...this.toHistoryEntry(row),
+      queue: queueOverride ?? parseQueueFromScope(row.scopeJson, row.stateJson),
+      timeLimitSec: row.timeLimitSec,
+    };
+  }
+}
+
+function parseQueueFromScope(
+  scopeJson: string,
+  stateJson: string,
+): StudyQueueItem[] {
+  try {
+    const scope = JSON.parse(scopeJson) as unknown;
+    if (Array.isArray(scope) && scope.length && typeof scope[0] === 'object') {
+      const out: StudyQueueItem[] = [];
+      for (const entry of scope) {
+        if (
+          entry &&
+          typeof entry === 'object' &&
+          'itemType' in entry &&
+          'itemId' in entry &&
+          typeof (entry as StudyQueueItem).itemId === 'string'
+        ) {
+          out.push({
+            itemType: (entry as StudyQueueItem).itemType,
+            itemId: (entry as StudyQueueItem).itemId,
+          });
+        }
+      }
+      if (out.length) return out;
+    }
+  } catch {
+    /* fall through */
+  }
+  try {
+    const state = JSON.parse(stateJson) as {
+      queue?: Array<{ itemId?: string }>;
+      itemTypes?: Record<string, string>;
+    };
+    if (Array.isArray(state.queue)) {
+      return state.queue
+        .filter((q) => q.itemId)
+        .map((q) => ({
+          itemType: (state.itemTypes?.[q.itemId!] ??
+            'EXAM_QUESTION') as SharedStudyItemType,
+          itemId: q.itemId!,
+        }));
+    }
+  } catch {
+    /* ignore */
+  }
+  return [];
 }

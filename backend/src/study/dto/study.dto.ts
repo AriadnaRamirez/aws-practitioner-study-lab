@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   ArrayUnique,
   IsArray,
@@ -18,6 +19,30 @@ import {
 } from '@aps/shared';
 
 const ALL_SIZES = [...EXAM_TIMED_SIZES] as number[];
+
+export class ListLimitQueryDto {
+  @ApiPropertyOptional({ default: 50, minimum: 1, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 50;
+}
+
+export class StartWeakReviewDto {
+  @ApiPropertyOptional({
+    description: 'Máximo de ítems en la cola (default: todos, tope 50)',
+    minimum: 1,
+    maximum: 50,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
+}
 
 export class StartStudySessionDto {
   @ApiProperty({ enum: STUDY_MODES })

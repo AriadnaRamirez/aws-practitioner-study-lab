@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { OpenTourButton } from "@/components/onboarding/open-tour-button";
-import { EmptyState } from "@/components/shell/empty-state";
+import { MasFalladasClient } from "@/components/study/mas-falladas-client";
 
 export const metadata: Metadata = {
   title: "Más falladas",
@@ -8,13 +8,11 @@ export const metadata: Metadata = {
 
 export default function MasFalladasPage() {
   return (
-    <EmptyState
-      title="Sin fallos todavía"
-      description="Aquí aparecerá tu cola de preguntas más falladas (flash y examen), ordenada por errores. El atajo «Estudiar solo estas» abrirá un refuerzo con miss-repeat."
-      hint="Empieza a practicar cuando las sesiones estén disponibles; esta lista se llena con tu historial real."
-      primaryHref="/estudiar"
-      primaryLabel="Ir a Estudiar"
-      secondary={<OpenTourButton />}
-    />
+    <div>
+      <div className="mx-auto flex max-w-2xl justify-end px-4 pt-6 sm:px-6">
+        <OpenTourButton />
+      </div>
+      <MasFalladasClient />
+    </div>
   );
 }

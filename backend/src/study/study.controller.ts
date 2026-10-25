@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -18,8 +19,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
   AnswerExamTimedDto,
   AnswerStudyDto,
+  ListLimitQueryDto,
   MarkReviewDto,
   StartStudySessionDto,
+  StartWeakReviewDto,
 } from './dto/study.dto';
 import { StudyService } from './study.service';
 
@@ -30,10 +33,20 @@ import { StudyService } from './study.service';
 export class StudyController {
   constructor(private readonly study: StudyService) {}
 
+  @Get('sessions')
+  @ApiOperation({ summary: 'Historial de sesiones del usuario' })
+  @ApiOkResponse({ description: 'Lista de sesiones (más recientes primero)' })
+  listSessions(
+    @Req() req: { user: User },
+    @Query() query: ListLimitQueryDto,
+  ) {
+    return this.study.listSessions(req.user.id, query.limit ?? 50);
+  }
+
   @Post('sessions')
   @ApiOperation({
     summary:
-      'Start FLASH_STUDY, EXAM_STUDY (miss-repeat) or EXAM_TIMED (cronometrado)',
+      'Start FLASH_STUDY, EXAM_STUDY, WEAK_REVIEW or EXAM_TIMED (cronometrado)',
   })
   @ApiOkResponse({ description: 'Session view (flash, study or timed)' })
   start(@Req() req: { user: User }, @Body() dto: StartStudySessionDto) {
@@ -46,9 +59,23 @@ export class StudyController {
     });
   }
 
+  @Post('sessions/weak-review')
+  @ApiOperation({
+    summary: 'Iniciar sesión WEAK_REVIEW con las más falladas',
+  })
+  @ApiOkResponse({ description: 'Sesión creada con cola de refuerzo' })
+  startWeakReview(
+    @Req() req: { user: User },
+    @Body() dto: StartWeakReviewDto,
+  ) {
+    return this.study
+      .startWeakReview(req.user, dto.limit)
+      .then((session) => ({ session }));
+  }
+
   @Get('sessions/:id')
   @ApiOperation({
-    summary: 'Get session (FLASH / EXAM_STUDY / EXAM_TIMED)',
+    summary: 'Get session (FLASH / EXAM_STUDY / WEAK_REVIEW / EXAM_TIMED)',
   })
   get(@Req() req: { user: User }, @Param('id') id: string) {
     return this.study.getAnySession(req.user, id);
@@ -56,7 +83,7 @@ export class StudyController {
 
   @Post('sessions/:id/answer')
   @ApiOperation({
-    summary: 'Answer current FLASH_STUDY or EXAM_STUDY prompt',
+    summary: 'Answer current FLASH_STUDY, EXAM_STUDY or WEAK_REVIEW prompt',
   })
   answer(
     @Req() req: { user: User },

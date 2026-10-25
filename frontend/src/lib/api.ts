@@ -5,10 +5,16 @@ import type {
   ForgotPasswordRequest,
   GuestProbe,
   LoginRequest,
+  PodiumResponse,
+  PodiumWindow,
   PublicUser,
   RegisterRequest,
   ResetPasswordRequest,
+  StartWeakReviewRequest,
+  StartWeakReviewResponse,
+  StudyHistoryResponse,
   UsageSummary,
+  WeakItemsResponse,
 } from '@aps/shared';
 import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
 
@@ -38,6 +44,17 @@ export function storeAuth(response: AuthResponse) {
 export function clearAuth() {
   window.localStorage.removeItem(AUTH_TOKEN_KEY);
   window.localStorage.removeItem('aps_user');
+}
+
+export function getStoredUser(): PublicUser | null {
+  if (typeof window === 'undefined') return null;
+  const raw = window.localStorage.getItem('aps_user');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as PublicUser;
+  } catch {
+    return null;
+  }
 }
 
 async function parseError(res: Response): Promise<string> {
@@ -156,4 +173,28 @@ export function fetchAdminUsers() {
 
 export function fetchAdminGuests() {
   return adminFetch<AdminGuestRow[]>('/admin/guests');
+}
+
+export function fetchPodium(window: PodiumWindow = 'all') {
+  return apiFetch<PodiumResponse>(`/podium?window=${window}`, { auth: true });
+}
+
+export function fetchWeakItems(limit = 50) {
+  return apiFetch<WeakItemsResponse>(`/progress/weak-items?limit=${limit}`, {
+    auth: true,
+  });
+}
+
+export function fetchStudySessions(limit = 50) {
+  return apiFetch<StudyHistoryResponse>(`/study/sessions?limit=${limit}`, {
+    auth: true,
+  });
+}
+
+export function startWeakReview(body: StartWeakReviewRequest = {}) {
+  return apiFetch<StartWeakReviewResponse>('/study/sessions/weak-review', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify(body),
+  });
 }

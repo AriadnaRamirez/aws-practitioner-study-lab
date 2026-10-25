@@ -336,4 +336,22 @@ export class ContentService {
     await this.getQuestion(id);
     await this.prisma.examQuestion.delete({ where: { id } });
   }
+
+  async findKnowledgeByExternalKey(
+    externalKey: string,
+  ): Promise<KnowledgeItem | null> {
+    const row = await this.prisma.knowledgeItem.findUnique({
+      where: { externalKey },
+    });
+    return row ? mapKnowledge(row) : null;
+  }
+
+  async findQuestionByExternalKey(
+    externalKey: string,
+  ): Promise<ExamQuestion | null> {
+    const row = await this.prisma.examQuestion.findUnique({
+      where: { externalKey },
+    });
+    return row ? mapQuestion(row) : null;
+  }
 }

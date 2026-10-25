@@ -73,3 +73,84 @@ export interface ExamQuestion {
   createdAt: string;
   updatedAt: string;
 }
+
+/** APS-14 import / export contracts */
+
+export type ImportEntityKind = "topic" | "knowledge" | "question";
+
+export type ImportFormat = "json" | "csv";
+
+export type ImportJobStatus = "dry_run" | "completed" | "failed";
+
+export type ImportRowAction = "create" | "update" | "skip" | "error";
+
+export interface ImportRowResult {
+  kind: ImportEntityKind;
+  externalKey?: string | null;
+  id?: string | null;
+  action: ImportRowAction;
+  message?: string;
+}
+
+export interface ImportJobSummary {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+}
+
+export interface ImportJob {
+  id: string;
+  filename?: string | null;
+  format: ImportFormat;
+  dryRun: boolean;
+  status: ImportJobStatus;
+  summary: ImportJobSummary;
+  results: ImportRowResult[];
+  createdAt: string;
+}
+
+export interface ContentExportBundle {
+  exportedAt: string;
+  topics: Topic[];
+  knowledgeItems: KnowledgeItem[];
+  examQuestions: ExamQuestion[];
+}
+
+export interface ImportTopicInput {
+  kind?: "topic";
+  id?: string;
+  trackId: string;
+  type: TopicType;
+  name: string;
+  parentId?: string | null;
+  sortOrder?: number;
+  externalKey?: string | null;
+}
+
+export interface ImportKnowledgeInput {
+  kind?: "knowledge";
+  id?: string;
+  topicId: string;
+  trackId: string;
+  name: string;
+  definition: string;
+  distractors: string[];
+  explanation: string;
+  allowedVariants: FlashVariant[];
+  status: ContentStatus;
+  externalKey?: string | null;
+}
+
+export interface ImportQuestionInput {
+  kind?: "question";
+  id?: string;
+  topicId: string;
+  trackId: string;
+  stem: string;
+  choices: ExamChoices;
+  correctIndex: 0 | 1 | 2 | 3;
+  explanation: string;
+  status: ContentStatus;
+  externalKey?: string | null;
+}

@@ -222,3 +222,13 @@ model DailyStreak {
   lastStudyDate String?
   updatedAt     DateTime @updatedAt
 }
+
+/// Runtime toggles (APS-16). Content/exam tracks stay gated when off.
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  enabled   Boolean  @default(false)
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

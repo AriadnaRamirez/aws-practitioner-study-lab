@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin/flash", label: "Flash" },
   { href: "/admin/banco", label: "Banco" },
   { href: "/admin/import", label: "Import" },
+  { href: "/admin/flags", label: "Flags" },
 ] as const;
 
 export default function AdminLayout({

@@ -25,6 +25,17 @@ export {
   type KnowledgeItem,
   type ExamChoices,
   type ExamQuestion,
+  type ImportEntityKind,
+  type ImportFormat,
+  type ImportJobStatus,
+  type ImportRowAction,
+  type ImportRowResult,
+  type ImportJobSummary,
+  type ImportJob,
+  type ContentExportBundle,
+  type ImportTopicInput,
+  type ImportKnowledgeInput,
+  type ImportQuestionInput,
 } from './content';
 export {
   STUDY_MODES,
@@ -35,6 +46,7 @@ export {
   MISS_REPEAT_OFFSET,
   MASTERY_STREAK,
   STUDY_ITEM_TYPES,
+  STUDY_MODE_LABELS,
   type StudyMode,
   type StudySize,
   type SessionSize,
@@ -62,3 +74,27 @@ export {
   type AdminUserRow,
   type AdminGuestRow,
 } from './guest';
+export {
+  PODIUM_WINDOWS,
+  type PodiumWindow,
+  type PodiumMetric,
+  type PodiumEntry,
+  type PodiumMe,
+  type PodiumResponse,
+} from './podium';
+export {
+  FEATURE_FLAG_EXAM_TRACK_AI,
+  KNOWN_FEATURE_FLAGS,
+  type KnownFeatureFlagKey,
+  type FeatureFlagDto,
+} from './flags';
+export {
+  type StudyQueueItem,
+  type WeakItem,
+  type WeakItemsResponse,
+  type StudyHistoryEntry,
+  type StudyHistoryResponse,
+  type StudyHistoryDetail,
+  type StartWeakReviewRequest,
+  type StartWeakReviewResponse,
+} from './progress';
