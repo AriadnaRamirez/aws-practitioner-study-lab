@@ -185,12 +185,36 @@ const KNOWLEDGE_CACHE_TTL_MS = 20_000;
 @Injectable()
 export class StudyService {
   private knowledgeCache: { at: number; items: KnowledgeItem[] } | null = null;
+  /** Serialize answer mutations per session (prevents queueItemId races). */
+  private readonly sessionAnswerTail = new Map<string, Promise<unknown>>();
 
   constructor(
     private readonly store: StudyStore,
     private readonly content: ContentService,
     private readonly prisma: PrismaService,
   ) {}
+
+  private async withSessionAnswerLock<T>(
+    sessionId: string,
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const prev = this.sessionAnswerTail.get(sessionId) ?? Promise.resolve();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const chained: Promise<unknown> = prev.catch(() => undefined).then(() => gate);
+    this.sessionAnswerTail.set(sessionId, chained);
+    await prev.catch(() => undefined);
+    try {
+      return await fn();
+    } finally {
+      release();
+      if (this.sessionAnswerTail.get(sessionId) === chained) {
+        this.sessionAnswerTail.delete(sessionId);
+      }
+    }
+  }
 
   private async publishedKnowledge(): Promise<KnowledgeItem[]> {
     const now = Date.now();
@@ -349,21 +373,23 @@ export class StudyService {
     sessionId: string,
     dto: { queueItemId: string; choiceIndex: number; latencyMs?: number },
   ): Promise<AnswerStudyResponse> {
-    if (
-      !this.store.sessions.has(sessionId) &&
-      !this.store.timedSessions.has(sessionId)
-    ) {
-      await this.getAnySession(user, sessionId);
-    }
-    if (this.store.sessions.has(sessionId)) {
-      return this.answerExamStudy(
-        sessionId,
-        user.id,
-        dto.queueItemId,
-        dto.choiceIndex,
-      );
-    }
-    return this.answerFlash(user, sessionId, dto);
+    return this.withSessionAnswerLock(sessionId, async () => {
+      if (
+        !this.store.sessions.has(sessionId) &&
+        !this.store.timedSessions.has(sessionId)
+      ) {
+        await this.getAnySession(user, sessionId);
+      }
+      if (this.store.sessions.has(sessionId)) {
+        return this.answerExamStudy(
+          sessionId,
+          user.id,
+          dto.queueItemId,
+          dto.choiceIndex,
+        );
+      }
+      return this.answerFlash(user, sessionId, dto);
+    });
   }
 
   async getAnySummary(
