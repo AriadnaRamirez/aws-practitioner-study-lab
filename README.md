@@ -44,11 +44,18 @@ npm run dev:web
 
 Variables: ver `.env.example`.
 
-## Alcance actual (APS-3)
+## Tema UI (APS-5)
 
-Scaffold únicamente: workspaces, healthcheck, Swagger, landing mínima.
+El front (`apps/web`) sigue la preferencia del sistema (`prefers-color-scheme`) vía **next-themes** en modo `system`: tokens CSS claro/oscuro en `apps/web/src/app/globals.css` (clase `.dark` en `<html>`).
 
-**Fuera de alcance aún:** auth, flashcards, modos de examen, podio, admin, PostgreSQL en runtime.
+Identidad: tipografías **Syne** (display) + **Figtree** (cuerpo); paleta teal / cool mist — no branding CCST.
+
+## Alcance actual
+
+- **APS-3:** monorepo, healthcheck, Swagger  
+- **APS-5:** shell UI, tema system, landing de marca, nav placeholders  
+
+**Fuera de alcance aún:** auth real, flashcards, modos de examen, podio, admin data, PostgreSQL en runtime.
 
 ## Scripts raíz
 
