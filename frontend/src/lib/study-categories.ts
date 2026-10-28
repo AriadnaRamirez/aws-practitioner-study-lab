@@ -21,11 +21,15 @@ export type StudyCategory = {
   glyph: "cloud" | "linux" | "network" | "book";
 };
 
+/**
+ * Mazos de flashcards (grupos de conceptos).
+ * No son modos de examen: son carpetas de KnowledgeItems (nombre ↔ definición).
+ */
 export const STUDY_CATEGORIES: StudyCategory[] = [
   {
     id: "aws-services",
     title: "Servicios de AWS",
-    subtitle: "Cómputo, almacenamiento, IAM y más",
+    subtitle: "EC2, S3, IAM, pricing…",
     topicIds: [
       "topic-compute",
       "topic-storage",
@@ -37,16 +41,16 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
   },
   {
     id: "linux",
-    title: "Comandos de Linux",
-    subtitle: "AMI, SSH y user data en EC2",
+    title: "Linux y CLI",
+    subtitle: "AMI, SSH, user data",
     topicIds: ["topic-linux"],
     tone: "ink",
     glyph: "linux",
   },
   {
     id: "networking",
-    title: "Conceptos de redes",
-    subtitle: "VPC, subnets, edge y DNS",
+    title: "Redes",
+    subtitle: "VPC, subnets, DNS, edge",
     topicIds: ["topic-networking"],
     tone: "slate",
     glyph: "network",
@@ -54,7 +58,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
   {
     id: "cloud-concepts",
     title: "Fundamentos cloud",
-    subtitle: "Modelo, pilares y responsabilidad compartida",
+    subtitle: "Modelo y responsabilidad compartida",
     topicIds: ["topic-cloud-fundamentals"],
     tone: "cream",
     glyph: "book",

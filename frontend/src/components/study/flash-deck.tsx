@@ -27,7 +27,7 @@ type FlashDeckProps = {
  * Mazo de cards apiladas con flip 3D a la cara de resultado.
  */
 export function FlashDeck({
-  eyebrow = "FLASH",
+  eyebrow = "Flashcard",
   title,
   footer,
   depth = 2,
@@ -80,7 +80,10 @@ export function FlashDeck({
         style={{ transformStyle: "preserve-3d" }}
       >
         <article
-          className="col-start-1 row-start-1 overflow-hidden rounded-2xl ring-1 ring-black/20"
+          className={cn(
+            "col-start-1 row-start-1 overflow-hidden rounded-2xl ring-1 ring-black/20",
+            flipped && "pointer-events-none",
+          )}
           style={{
             boxShadow: "0 18px 36px -18px rgba(0, 0, 0, 0.55)",
             backfaceVisibility: "hidden",
@@ -125,7 +128,10 @@ export function FlashDeck({
 
         <article
           aria-hidden={!flipped}
-          className="col-start-1 row-start-1 flex min-h-full flex-col overflow-hidden rounded-2xl ring-1 ring-black/20"
+          className={cn(
+            "col-start-1 row-start-1 flex min-h-full flex-col overflow-hidden rounded-2xl ring-1 ring-black/20",
+            flipped ? "pointer-events-auto" : "pointer-events-none",
+          )}
           style={{
             boxShadow: "0 18px 36px -18px rgba(0, 0, 0, 0.55)",
             backfaceVisibility: "hidden",
@@ -177,7 +183,7 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
         <div className="flex flex-1 flex-col p-4">
           <AwsMark height={20} />
           <span className="font-display mt-auto text-lg font-bold text-[var(--foreground)]">
-            Flash · opción múltiple
+            Flashcards · 4 opciones
           </span>
         </div>
         <div className="bg-white px-4 py-3">

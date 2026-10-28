@@ -48,9 +48,9 @@ type Phase =
   | "summary";
 
 const VARIANT_LABEL: Record<string, string> = {
-  NAME_TO_DEFINITION: "Nombre → definición",
-  DEFINITION_TO_NAME: "Definición → nombre",
-  NAME_FOCUS: "Enfoque en el nombre",
+  NAME_TO_DEFINITION: "Flashcard · nombre → definición",
+  DEFINITION_TO_NAME: "Flashcard · definición → nombre",
+  NAME_FOCUS: "Flashcard · reconoce el nombre",
 };
 
 /** No auto-advance — user reads the explanation on the flipped card. */
@@ -219,7 +219,9 @@ export function FlashStudyClient() {
   }, []);
 
   const goNext = useCallback(() => {
-    if (answeringRef.current) return;
+    // Clear the answer lock first — it must not block "Siguiente".
+    // (answeringRef stays true after a successful answer to stop double-submit.)
+    answeringRef.current = false;
     if (autoTimer.current) {
       clearTimeout(autoTimer.current);
       autoTimer.current = null;
@@ -234,7 +236,6 @@ export function FlashStudyClient() {
     setSelectedChoice(null);
     setError(null);
     startedAt.current = Date.now();
-    answeringRef.current = false;
     if (next) {
       setPrompt(next);
       currentQueueIdRef.current = next.queueItemId;
@@ -375,7 +376,7 @@ export function FlashStudyClient() {
       <section className="py-8" aria-busy="true">
         <Spinner label="Cargando" />
         <div className="mt-8">
-          <FlashDeck loading eyebrow="FLASH" title="…" />
+          <FlashDeck loading eyebrow="Flashcard" title="…" />
         </div>
       </section>
     );
@@ -403,7 +404,11 @@ export function FlashStudyClient() {
     return (
       <section className="min-w-0">
         <div>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+            Flashcards de conceptos: memoriza nombre ↔ definición (4 opciones).
+            Si fallas, la carta vuelve más adelante.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
               disabled={pending}
@@ -415,7 +420,7 @@ export function FlashStudyClient() {
                   <Spinner /> …
                 </span>
               ) : (
-                "Empezar 10"
+                "10 flashcards mixtas"
               )}
             </Button>
             <Button
@@ -425,15 +430,18 @@ export function FlashStudyClient() {
               onClick={() => void onStart(20, [])}
               className="w-full sm:w-auto"
             >
-              Empezar 20
+              20 mixtas
             </Button>
           </div>
         </div>
 
         <div className="mt-10 border-t border-[var(--border)] pt-6">
           <h2 className="text-sm font-medium text-[var(--foreground-muted)]">
-            Por tema
+            Por mazo
           </h2>
+          <p className="mt-1 text-xs text-[var(--foreground-muted)]/70">
+            Elige un grupo de conceptos (Linux, redes, servicios AWS…).
+          </p>
           <ul className="mt-3 divide-y divide-[var(--border)]">
             {STUDY_CATEGORIES.map((cat) => {
               const ids = resolveCategoryTopicIds(
@@ -788,7 +796,7 @@ export function FlashStudyClient() {
         </div>
       ) : pending ? (
         <div className="mt-8">
-          <FlashDeck loading eyebrow="FLASH" title="…" footer="Cargando" />
+          <FlashDeck loading eyebrow="Flashcard" title="…" footer="Cargando" />
         </div>
       ) : null}
 
