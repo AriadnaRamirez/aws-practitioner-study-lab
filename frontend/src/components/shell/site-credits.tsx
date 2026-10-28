@@ -14,25 +14,25 @@ export function SiteCredits({ className, compact = false }: Props) {
     >
       <div
         className={cn(
-          "mx-auto flex w-full min-w-0 max-w-md flex-col items-center px-4 text-center sm:px-6 lg:max-w-lg",
+          "mx-auto flex w-full min-w-0 max-w-lg flex-col items-center px-4 text-center sm:px-6",
           compact ? "py-7" : "py-9",
         )}
       >
-        <p className="text-[10px] leading-relaxed text-[var(--foreground-muted)]/40">
+        <p className="text-xs leading-relaxed text-[var(--foreground-muted)]/50">
           Material no oficial. No afiliado a AWS ni a Generation México.
         </p>
 
         <div
           className={cn(
-            "flex items-center justify-center gap-3",
-            compact ? "mt-3.5" : "mt-4",
+            "flex items-center justify-center gap-4",
+            compact ? "mt-4" : "mt-5",
           )}
         >
           <a
             href="https://mexico.generation.org/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-3.5 w-[5.25rem] items-center justify-center opacity-[0.26] transition-opacity duration-300 hover:opacity-45"
+            className="inline-flex h-5 w-[6.5rem] items-center justify-center opacity-[0.38] transition-opacity duration-300 hover:opacity-60"
             title="Generation México"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -47,14 +47,14 @@ export function SiteCredits({ className, compact = false }: Props) {
 
           <span
             aria-hidden
-            className="h-2.5 w-px shrink-0 bg-[var(--foreground)]/12"
+            className="h-3.5 w-px shrink-0 bg-[var(--foreground)]/15"
           />
 
           <a
             href="https://aws.amazon.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-3.5 w-9 items-center justify-center opacity-[0.26] transition-opacity duration-300 hover:opacity-45"
+            className="inline-flex h-5 w-11 items-center justify-center opacity-[0.38] transition-opacity duration-300 hover:opacity-60"
             title="Amazon Web Services"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -68,7 +68,7 @@ export function SiteCredits({ className, compact = false }: Props) {
           </a>
         </div>
 
-        <p className="mt-3 text-[10px] tracking-[0.06em] text-[var(--foreground-muted)]/28">
+        <p className="mt-3.5 text-xs tracking-[0.04em] text-[var(--foreground-muted)]/40">
           Ariadna Ramírez
         </p>
       </div>
