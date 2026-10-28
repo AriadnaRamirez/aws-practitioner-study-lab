@@ -153,7 +153,7 @@ export function AppNav() {
       >
         Saltar al contenido
       </a>
-      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:max-w-6xl lg:px-8">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-3 px-6 py-3 sm:px-6 lg:max-w-6xl lg:px-8">
         <div className="flex min-w-0 items-center gap-2.5 lg:gap-3">
           <Link
             href={user ? "/dashboard" : "/"}
@@ -229,7 +229,7 @@ export function AppNav() {
             ref={panelRef}
             id={MENU_ID}
             aria-label="Móvil"
-            className="fixed inset-x-0 z-[70] border-b border-[var(--border)] bg-[var(--background)] px-4 py-3 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.75)] lg:hidden"
+            className="fixed inset-x-0 z-[70] border-b border-[var(--border)] bg-[var(--background)] px-6 py-3 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.75)] lg:hidden"
             style={{ top: panelTop }}
           >
             <ul className="mx-auto flex w-full max-w-5xl flex-col lg:max-w-6xl">

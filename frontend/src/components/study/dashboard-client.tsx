@@ -135,7 +135,7 @@ export function DashboardClient() {
   const examLine = examGreetingLine(user.examDate, user.timezone);
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-10 lg:max-w-5xl lg:px-8 lg:py-12">
+    <div className="mx-auto w-full min-w-0 max-w-xl px-6 py-8 sm:px-6 sm:py-10 lg:max-w-5xl lg:px-8 lg:py-12">
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)] lg:items-end lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
         <header className="flex min-w-0 items-center gap-4 sm:gap-5 lg:gap-6">
           <Mascot pose="wave" size="md" className="shrink-0" />

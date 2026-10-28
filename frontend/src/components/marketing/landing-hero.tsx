@@ -5,8 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
-import { SiteCredits } from "@/components/shell/site-credits";
 import { cn } from "@/lib/utils";
+
+const AUTHOR_LINKEDIN = "https://www.linkedin.com/in/ariadnaramirez";
 
 function ByeBanner() {
   const params = useSearchParams();
@@ -14,124 +15,105 @@ function ByeBanner() {
   return (
     <p
       role="status"
-      className="relative z-10 px-4 py-2 text-center text-sm text-[var(--foreground-muted)]"
+      className="px-4 py-2 text-center text-sm text-[#646464]"
     >
       Sesión cerrada
     </p>
   );
 }
 
+/** Landing light/minimal según boceto v1. */
 export function LandingHero() {
   return (
-    <div className="relative flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_30%,rgba(255,255,255,0.04),transparent_70%)]"
-      />
-
+    <div className="flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[#F6F6F4] text-[#1A1A1A]">
       <Suspense fallback={null}>
         <ByeBanner />
       </Suspense>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 sm:px-6 lg:max-w-5xl lg:px-8 lg:pt-8">
-        <Link href="/" aria-label="Study Lab" className="inline-flex">
-          <Logo size={36} priority />
+      <header className="mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-7 pt-6 sm:px-8 lg:max-w-3xl lg:px-10 lg:pt-7">
+        <Link
+          href="/"
+          className="inline-flex min-w-0 items-center gap-2.5"
+          aria-label="AWS Study Lab"
+        >
+          <Logo size={32} priority />
+          <span className="font-display truncate text-sm font-semibold tracking-tight">
+            AWS Study Lab
+          </span>
         </Link>
-        <p className="text-[11px] font-medium tracking-wide text-[var(--foreground-muted)]">
-          Study Lab
-        </p>
+        <Link
+          href="/login"
+          prefetch={false}
+          className={cn(
+            "inline-flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold",
+            "bg-[#E4E4E0] text-[#1A1A1A] transition-colors hover:bg-[#D8D8D2]",
+          )}
+        >
+          Entrar
+        </Link>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col px-5 pb-10 pt-4 sm:px-6 lg:max-w-lg lg:px-8 xl:max-w-xl">
-        <div className="relative flex flex-1 flex-col items-center justify-center gap-6 lg:gap-8">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-[18%] h-56 w-56 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(232,80,2,0.28),transparent_68%)] blur-2xl sm:h-64 sm:w-64 lg:h-72 lg:w-72"
-          />
-          <Mascot pose="study" size="hero" priority />
+      <main className="mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col items-center px-7 pb-10 pt-10 text-center sm:max-w-lg sm:px-8 sm:pt-14">
+        <h1 className="font-display text-[clamp(2rem,8vw,2.75rem)] font-bold leading-tight tracking-tight">
+          AWS Study Lab
+        </h1>
 
+        <div className="mt-8 flex w-full max-w-sm items-center justify-center rounded-2xl bg-[#EBEBE8] px-4 py-6 sm:mt-10 sm:py-8">
+          <Mascot pose="study" size="hero" priority className="mx-auto" />
+        </div>
+
+        <Link
+          href="/login"
+          prefetch={false}
+          className={cn(
+            "mt-8 inline-flex h-12 w-full max-w-xs items-center justify-center rounded-full text-base font-semibold sm:mt-10",
+            "bg-[#E85002] text-white transition-colors hover:bg-[#F16001]",
+          )}
+        >
+          Entrar
+        </Link>
+
+        <p className="mt-4 text-sm text-[#646464]">
           <Link
             href="/register"
-            prefetch
-            className={cn(
-              "glass-pill animate-pill-in w-full max-w-sm px-6 py-4 text-left lg:max-w-md",
-            )}
+            prefetch={false}
+            className="font-medium text-[#1A1A1A] underline-offset-4 hover:underline"
           >
-            <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[11px] font-medium text-[var(--foreground-muted)]">
-                Study Lab
-              </span>
-              <span className="font-display mt-0.5 text-lg font-semibold tracking-tight">
-                Empezar
-              </span>
-            </span>
-            <span
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--brand-white)]"
-              aria-hidden
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
+            Crear cuenta
           </Link>
+          <span className="mx-2 opacity-40" aria-hidden>
+            ·
+          </span>
+          <Link
+            href="/guest"
+            prefetch={false}
+            className="font-medium text-[#1A1A1A] underline-offset-4 hover:underline"
+          >
+            Probar
+          </Link>
+        </p>
 
-          <div className="flex w-full max-w-sm items-center justify-center gap-5 text-sm text-[var(--foreground-muted)]">
-            <Link
-              href="/login"
-              prefetch={false}
-              className="hover:text-[var(--foreground)]"
-            >
-              Entrar
-            </Link>
-            <span aria-hidden className="opacity-30">
-              ·
-            </span>
-            <Link
-              href="/guest"
-              prefetch={false}
-              className="hover:text-[var(--foreground)]"
-            >
-              Probar
-            </Link>
-          </div>
-        </div>
-
-        <div className="animate-fade-up mt-auto pt-8">
-          <h1 className="font-display text-[clamp(2.75rem,14vw,4.5rem)] font-bold leading-[0.95] tracking-tight text-[var(--brand-white)]">
-            Study Lab
-          </h1>
-          <p className="mt-3 max-w-[16rem] text-sm leading-snug text-[var(--brand-light-gray)]">
-            Prepárate para{" "}
-            <span className="font-medium text-[var(--brand-white)]">
-              AWS Cloud Practitioner
-            </span>
-          </p>
-          <p className="mt-2 text-xs text-[var(--brand-light-gray)]">
-            Autora ·{" "}
-            <a
-              href="https://www.linkedin.com/in/ariadnaramirez"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline-offset-2 hover:underline"
-            >
-              Ariadna Ramírez
-            </a>
-          </p>
-        </div>
+        <p className="mt-8 max-w-[18rem] text-sm leading-snug text-[#646464] sm:mt-10">
+          Prepárate para la certificación AWS Cloud Practitioner
+        </p>
       </main>
 
-      <div className="relative z-10">
-        <div
-          aria-hidden
-          className="mx-auto h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-[var(--border)] to-transparent"
-        />
-        <SiteCredits className="bg-[var(--background)]/40" />
-      </div>
+      <footer className="mt-auto bg-[#E8E8E4] px-7 py-6 text-center sm:px-8">
+        <p className="text-xs leading-relaxed text-[#646464]">
+          Material de estudio no oficial de AWS.
+        </p>
+        <p className="mt-1.5 text-xs text-[#646464]">
+          Autora ·{" "}
+          <a
+            href={AUTHOR_LINKEDIN}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#333] underline-offset-2 hover:underline"
+          >
+            Ariadna Ramírez
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
