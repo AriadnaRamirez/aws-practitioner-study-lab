@@ -68,8 +68,16 @@ export function SiteCredits({ className, compact = false }: Props) {
           </a>
         </div>
 
-        <p className="mt-3.5 text-xs tracking-[0.04em] text-[var(--foreground-muted)]/40">
-          Ariadna Ramírez
+        <p className="mt-3.5 text-xs text-[var(--foreground-muted)]/45">
+          Autora ·{" "}
+          <a
+            href="https://www.linkedin.com/in/ariadnaramirez"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:underline"
+          >
+            Ariadna Ramírez
+          </a>
         </p>
       </div>
     </aside>

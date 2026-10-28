@@ -112,7 +112,15 @@ export function LandingHero() {
             </span>
           </p>
           <p className="mt-2 text-xs text-[var(--brand-light-gray)]">
-            Por Ariadna Ramírez
+            Autora ·{" "}
+            <a
+              href="https://www.linkedin.com/in/ariadnaramirez"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline-offset-2 hover:underline"
+            >
+              Ariadna Ramírez
+            </a>
           </p>
         </div>
       </main>
