@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AnswerStudyResponse,
   StudyHistoryDetail,
   StudyPrompt,
+  StudySessionSummary,
   StudySessionView,
   WeakItem,
 } from "@aps/shared";
+import { AwsMark } from "@/components/brand/aws-mark";
+import { CelebrateBurst } from "@/components/study/celebrate-burst";
+import { FlashDeck } from "@/components/study/flash-deck";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   fetchWeakItems,
   getStoredToken,
@@ -18,8 +23,15 @@ import {
 import { answerStudy, getStudySession } from "@/lib/study-api";
 import { cn } from "@/lib/utils";
 
-type Phase = "list" | "play" | "done";
+type Phase = "list" | "play" | "feedback" | "done";
 
+const VARIANT_LABEL: Record<string, string> = {
+  NAME_TO_DEFINITION: "Nombre → definición",
+  DEFINITION_TO_NAME: "Definición → nombre",
+  NAME_FOCUS: "Enfoque en el nombre",
+};
+
+/** No auto-advance — user taps Siguiente after reading feedback. */
 export function MasFalladasClient() {
   const [items, setItems] = useState<WeakItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +43,13 @@ export function MasFalladasClient() {
   const [prompt, setPrompt] = useState<StudyPrompt | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [sessionStreak, setSessionStreak] = useState(0);
+  const [answered, setAnswered] = useState(0);
   const [feedback, setFeedback] = useState<AnswerStudyResponse | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [summary, setSummary] = useState<StudySessionSummary | null>(null);
+  const answeringRef = useRef(false);
+  const summaryRef = useRef<StudySessionSummary | null>(null);
+  const nextPromptRef = useRef<StudyPrompt | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -63,6 +80,11 @@ export function MasFalladasClient() {
     setStarted(null);
     setFeedback(null);
     setSelected(null);
+    setSummary(null);
+    summaryRef.current = null;
+    nextPromptRef.current = null;
+    answeringRef.current = false;
+    setAnswered(0);
     try {
       const res = await startWeakReview({});
       setStarted(res.session);
@@ -73,6 +95,7 @@ export function MasFalladasClient() {
       setPrompt(view.current);
       setRemaining(view.remaining);
       setSessionStreak(view.sessionStreak);
+      setAnswered(view.answered);
       setPhase(view.current ? "play" : "done");
     } catch (err) {
       setError(
@@ -86,7 +109,10 @@ export function MasFalladasClient() {
   }
 
   async function onAnswer(choiceIndex: 0 | 1 | 2 | 3) {
-    if (!sessionId || !prompt || feedback) return;
+    if (!sessionId || !prompt || answeringRef.current || phase !== "play") {
+      return;
+    }
+    answeringRef.current = true;
     setPending(true);
     setSelected(choiceIndex);
     setError(null);
@@ -98,27 +124,60 @@ export function MasFalladasClient() {
       setFeedback(res);
       setSessionStreak(res.sessionStreak);
       setRemaining(res.remaining);
-      if (res.finished) {
-        setPhase("done");
-        void load();
+      setAnswered((n) => n + 1);
+      setPhase("feedback");
+      if (res.finished && res.summary) {
+        summaryRef.current = res.summary;
+        nextPromptRef.current = null;
+      } else if (res.next) {
+        nextPromptRef.current = res.next;
+        summaryRef.current = null;
+      } else {
+        nextPromptRef.current = null;
+        if (res.finished) {
+          summaryRef.current = res.summary ?? null;
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al responder");
       setSelected(null);
+      answeringRef.current = false;
     } finally {
       setPending(false);
     }
   }
 
   function onNext() {
-    if (!feedback) return;
-    if (feedback.finished || !feedback.next) {
+    if (!feedback || phase !== "feedback") return;
+
+    if (summaryRef.current || feedback.finished || !nextPromptRef.current) {
+      setSummary(summaryRef.current);
       setPhase("done");
+      setFeedback(null);
+      setSelected(null);
+      answeringRef.current = false;
+      void load();
       return;
     }
-    setPrompt(feedback.next);
+
+    setPrompt(nextPromptRef.current);
+    nextPromptRef.current = null;
     setFeedback(null);
     setSelected(null);
+    answeringRef.current = false;
+    setPhase("play");
+  }
+
+  function backToList() {
+    setPhase("list");
+    setFeedback(null);
+    setSelected(null);
+    setSummary(null);
+    summaryRef.current = null;
+    nextPromptRef.current = null;
+    answeringRef.current = false;
+    setPrompt(null);
+    setSessionId(null);
   }
 
   if (authed === false) {
@@ -137,63 +196,229 @@ export function MasFalladasClient() {
     );
   }
 
-  if (phase === "play" && prompt) {
+  if ((phase === "play" || phase === "feedback") && prompt) {
+    const eyebrow =
+      (prompt.variant && VARIANT_LABEL[prompt.variant]) ||
+      prompt.variant ||
+      "Refuerzo";
+    const cardN = phase === "feedback" ? Math.max(answered, 1) : answered + 1;
+
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-        <p className="text-sm text-[var(--foreground-muted)]">
-          {remaining} · racha {sessionStreak}
-        </p>
+      <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+          <p className="font-semibold text-[var(--foreground)]">
+            Racha {sessionStreak}
+          </p>
+          <p className="text-[var(--foreground-muted)]">
+            quedan {remaining}
+          </p>
+        </div>
+
         {error ? (
-          <p className="mt-4 text-sm text-red-600" role="alert">
+          <p className="mt-4 text-sm text-[var(--danger)]" role="alert">
             {error}
           </p>
         ) : null}
-        <p className="mt-8 text-base font-medium leading-relaxed">
-          {prompt.stem}
-        </p>
-        <ul className="mt-6 space-y-2">
-          {prompt.choices.map((choice, idx) => {
-            const i = idx as 0 | 1 | 2 | 3;
-            const isSelected = selected === i;
-            const showKey = Boolean(feedback);
-            const isCorrect = feedback?.correctIndex === i;
-            return (
-              <li key={`${prompt.queueItemId}-${i}`}>
-                <button
-                  type="button"
-                  disabled={pending || Boolean(feedback)}
-                  onClick={() => void onAnswer(i)}
-                  className={cn(
-                    "w-full rounded-md border px-4 py-3 text-left text-sm transition-colors",
-                    showKey && isCorrect
-                      ? "border-emerald-500 bg-emerald-500/10"
-                      : showKey && isSelected && !feedback?.correct
-                        ? "border-red-500 bg-red-500/10"
-                        : isSelected
-                          ? "border-[var(--border-strong)] bg-[var(--surface-hover)]"
-                          : "border-[var(--border)] hover:bg-[var(--surface-hover)]",
+
+        <div key={prompt.queueItemId} className="mt-8">
+          <FlashDeck
+            eyebrow={eyebrow}
+            title={prompt.stem}
+            footer={`${cardN} · refuerzo de falladas`}
+            flipped={phase === "feedback" && Boolean(feedback)}
+            back={
+              feedback ? (
+                <div className="relative flex h-full flex-col" role="status">
+                  {feedback.correct ? <CelebrateBurst /> : null}
+                  <div className="flex items-start justify-between gap-3">
+                    <span
+                      className={cn(
+                        "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
+                        feedback.correct
+                          ? "bg-[var(--success)] text-[var(--success-fg)]"
+                          : "bg-[var(--danger)] text-[var(--danger-fg)]",
+                      )}
+                    >
+                      {feedback.correct ? (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden
+                        >
+                          <path
+                            d="M5 12.5l4.5 4.5L19 7"
+                            stroke="currentColor"
+                            strokeWidth="2.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden
+                        >
+                          <path
+                            d="M7 7l10 10M17 7L7 17"
+                            stroke="currentColor"
+                            strokeWidth="2.6"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      )}
+                      {feedback.correct ? "¡Correcto!" : "Incorrecto"}
+                    </span>
+                    <AwsMark height={26} />
+                  </div>
+
+                  <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
+                    {feedback.correct
+                      ? feedback.itemMastered
+                        ? "Concepto dominado"
+                        : "Muy bien"
+                      : "Casi — mira la respuesta correcta"}
+                  </p>
+
+                  {!feedback.correct ? (
+                    <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
+                      <span className="text-[var(--foreground-muted)]">
+                        Correcta:{" "}
+                      </span>
+                      <span className="font-semibold">
+                        {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
+                        {prompt.choices[feedback.correctIndex]}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm leading-snug text-[var(--foreground-muted)]">
+                      Elegiste:{" "}
+                      <span className="font-medium text-[var(--foreground)]">
+                        {selected != null
+                          ? `${String.fromCharCode(65 + selected)}. ${prompt.choices[selected]}`
+                          : "—"}
+                      </span>
+                    </p>
                   )}
-                >
-                  {choice}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        {feedback ? (
-          <div className="mt-6 space-y-3">
-            <p className="text-sm font-semibold">
-              {feedback.correct ? "Correcto" : "Incorrecto — vuelve en cola"}
-            </p>
-            <p className="text-sm text-[var(--foreground-muted)]">
-              {feedback.explanation}
-            </p>
-            <Button type="button" onClick={onNext}>
-              {feedback.finished ? "Ver resumen" : "Siguiente"}
-            </Button>
-          </div>
+
+                  <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                      Por qué{" "}
+                      {feedback.correct ? "es correcta" : "es incorrecta"}
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
+                      {feedback.explanation?.trim()
+                        ? feedback.explanation
+                        : feedback.correct
+                          ? "Esta opción coincide con la definición o el nombre que pedía la carta."
+                          : `La respuesta correcta es «${prompt.choices[feedback.correctIndex]}» porque describe el concepto del enunciado; la que elegiste no encaja con esa definición.`}
+                    </p>
+                  </div>
+
+                  <Button className="mt-5 w-full" onClick={onNext}>
+                    {summaryRef.current || feedback.finished
+                      ? "Ver resumen"
+                      : "Siguiente"}
+                  </Button>
+                </div>
+              ) : null
+            }
+          >
+            <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
+              {prompt.choices.map((choice, idx) => {
+                const i = idx as 0 | 1 | 2 | 3;
+                const isSelected = selected === i;
+                const showKey = phase === "feedback" && feedback;
+                const isCorrect = Boolean(
+                  showKey && feedback.correctIndex === i,
+                );
+                const isWrongPick = Boolean(
+                  showKey && isSelected && !feedback.correct,
+                );
+
+                return (
+                  <li key={`${prompt.queueItemId}-${i}`}>
+                    <button
+                      type="button"
+                      disabled={pending || phase === "feedback"}
+                      onClick={() => void onAnswer(i)}
+                      className={cn(
+                        "keycap w-full justify-start px-3.5 py-3 text-left text-sm leading-snug normal-case disabled:cursor-wait",
+                        isCorrect && "keycap-correct",
+                        isWrongPick && "keycap-wrong",
+                        !showKey && isSelected && "keycap-accent",
+                      )}
+                    >
+                      <span className="mr-2 font-semibold opacity-45">
+                        {String.fromCharCode(65 + i)}.
+                      </span>
+                      <span>{choice}</span>
+                      {pending && isSelected ? (
+                        <span className="ml-2 inline-flex align-middle">
+                          <Spinner label="Enviando respuesta" />
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </FlashDeck>
+        </div>
+      </section>
+    );
+  }
+
+  if (phase === "done") {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6 animate-[fade-up_0.35s_ease-out]">
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Refuerzo listo
+        </h1>
+        <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+          {summary
+            ? `${summary.correctAnswers}/${summary.answered} aciertos · racha máx. ${summary.maxSessionStreak}`
+            : started
+              ? `Sesión de ${started.size} ítems terminada`
+              : "Sesión terminada"}
+        </p>
+
+        {summary ? (
+          <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt className="text-[var(--foreground-muted)]">Precisión</dt>
+              <dd className="font-display text-2xl font-bold">
+                {summary.accuracyPct}%
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[var(--foreground-muted)]">Aciertos</dt>
+              <dd className="font-display text-2xl font-bold">
+                {summary.correctAnswers}/{summary.answered}
+              </dd>
+            </div>
+          </dl>
         ) : null}
-      </div>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/estudiar" className={cn(buttonVariants())}>
+            Estudiar
+          </Link>
+          <Link
+            href="/"
+            className={cn(buttonVariants({ variant: "secondary" }))}
+          >
+            Inicio
+          </Link>
+          <Button type="button" variant="ghost" onClick={backToList}>
+            Lista
+          </Button>
+        </div>
+      </section>
     );
   }
 
@@ -209,17 +434,6 @@ export function MasFalladasClient() {
         </p>
       ) : null}
 
-      {phase === "done" && started ? (
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <p className="text-sm text-[var(--foreground-muted)]">
-            Listo · {started.size}
-          </p>
-          <Button type="button" onClick={() => setPhase("list")}>
-            Lista
-          </Button>
-        </div>
-      ) : null}
-
       <div className="mt-6">
         <Button
           type="button"
@@ -227,7 +441,13 @@ export function MasFalladasClient() {
           disabled={pending || !items?.length}
           onClick={() => void onStudyWeak()}
         >
-          {pending ? "…" : "Estudiar"}
+          {pending ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner /> …
+            </span>
+          ) : (
+            "Estudiar"
+          )}
         </Button>
       </div>
 
@@ -236,7 +456,10 @@ export function MasFalladasClient() {
       ) : items.length === 0 ? (
         <p className="mt-8 text-sm text-[var(--foreground-muted)]">
           Sin fallos.{" "}
-          <Link href="/estudiar" className="text-[var(--foreground)] hover:underline">
+          <Link
+            href="/estudiar"
+            className="text-[var(--foreground)] hover:underline"
+          >
             Estudiar
           </Link>
         </p>
