@@ -11,6 +11,7 @@ import {
   useTransition,
 } from "react";
 import {
+  MASTERY_STREAK,
   STUDY_SIZES,
   type StudyPrompt,
   type StudySessionSummary,
@@ -75,6 +76,8 @@ export function FlashStudyClient() {
     correctIndex: number;
     explanation: string;
     itemMastered: boolean;
+    /** Consecutive correct on this item toward dominio (API `itemConsecutiveCorrect`). */
+    itemConsecutiveCorrect: number;
   } | null>(null);
   const [summary, setSummary] = useState<StudySessionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -269,11 +272,16 @@ export function FlashStudyClient() {
         if (currentQueueIdRef.current !== queueItemId) {
           return;
         }
+        const streakTowardMastery = Math.min(
+          Math.max(0, res.itemConsecutiveCorrect ?? (res.correct ? 1 : 0)),
+          MASTERY_STREAK,
+        );
         setFeedback({
           correct: res.correct,
           correctIndex: res.correctIndex,
           explanation: res.explanation,
           itemMastered: Boolean(res.itemMastered),
+          itemConsecutiveCorrect: streakTowardMastery,
         });
         setSessionStreak(res.sessionStreak);
         setRemaining(res.remaining);
@@ -529,10 +537,15 @@ export function FlashStudyClient() {
   }
 
   if (phase === "summary" && summary) {
+    const rachaDiaria = summary.dailyStreak ?? dailyStreak;
+    const dominados = summary.masteredInSession ?? 0;
     return (
       <section className="py-8 animate-[fade-up_0.35s_ease-out]">
         <Mascot pose="wave" size="md" float className="mb-6" />
-        <dl className="grid grid-cols-2 gap-4 text-sm">
+        <p className="font-display text-xl font-semibold tracking-tight">
+          Lección terminada
+        </p>
+        <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-[var(--foreground-muted)]">Precisión</dt>
             <dd className="font-display text-2xl font-bold">
@@ -546,12 +559,21 @@ export function FlashStudyClient() {
             </dd>
           </div>
           <div>
-            <dt className="text-[var(--foreground-muted)]">Racha</dt>
-            <dd className="text-lg font-semibold">{summary.maxSessionStreak}</dd>
+            <dt className="text-[var(--foreground-muted)]">Racha diaria</dt>
+            <dd className="font-display text-2xl font-bold">
+              {rachaDiaria}
+              <span className="ml-1 text-sm font-medium text-[var(--foreground-muted)]">
+                {rachaDiaria === 1 ? "día" : "días"}
+              </span>
+            </dd>
           </div>
           <div>
             <dt className="text-[var(--foreground-muted)]">Dominados</dt>
-            <dd className="text-lg font-semibold">{summary.masteredInSession}</dd>
+            <dd className="font-display text-2xl font-bold">{dominados}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--foreground-muted)]">Racha de sesión</dt>
+            <dd className="text-lg font-semibold">{summary.maxSessionStreak}</dd>
           </div>
         </dl>
         <div className="mt-8 flex flex-wrap gap-3">
@@ -564,15 +586,15 @@ export function FlashStudyClient() {
           >
             Otra de 10
           </Button>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setSummary(null);
-              setPhase("setup");
-            }}
-          >
-            Ajustar
-          </Button>
+          <Link href="/mas-falladas">
+            <Button variant="secondary">Más falladas</Button>
+          </Link>
+          <Link href="/podio">
+            <Button variant="secondary">Podio</Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button variant="ghost">Inicio</Button>
+          </Link>
         </div>
       </section>
     );
@@ -659,6 +681,33 @@ export function FlashStudyClient() {
                         : "Muy bien"
                       : "Casi — mira la respuesta correcta"}
                   </p>
+
+                  <div
+                    className="mt-3 flex items-center gap-3"
+                    aria-label={`Racha ${feedback.itemConsecutiveCorrect} de ${MASTERY_STREAK} hacia dominio`}
+                  >
+                    <p className="text-sm font-semibold text-[var(--foreground)]">
+                      Racha {feedback.itemConsecutiveCorrect} de {MASTERY_STREAK}
+                    </p>
+                    <ol className="flex gap-1.5" aria-hidden>
+                      {Array.from({ length: MASTERY_STREAK }, (_, i) => {
+                        const filled = i < feedback.itemConsecutiveCorrect;
+                        return (
+                          <li
+                            key={i}
+                            className={cn(
+                              "size-2.5 rounded-full transition-colors",
+                              filled
+                                ? feedback.itemMastered
+                                  ? "bg-[var(--success)]"
+                                  : "bg-[var(--foreground)]"
+                                : "bg-[var(--border-strong)]",
+                            )}
+                          />
+                        );
+                      })}
+                    </ol>
+                  </div>
 
                   {!feedback.correct ? (
                     <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
