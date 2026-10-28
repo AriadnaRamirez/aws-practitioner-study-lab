@@ -224,7 +224,7 @@ export function MasFalladasClient() {
           <FlashDeck
             eyebrow={eyebrow}
             title={prompt.stem}
-            footer={`${cardN} · refuerzo de falladas`}
+            footer={`${cardN} · refuerzo`}
             flipped={phase === "feedback" && Boolean(feedback)}
             back={
               feedback ? (
@@ -279,9 +279,9 @@ export function MasFalladasClient() {
                   <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
                     {feedback.correct
                       ? feedback.itemMastered
-                        ? "Concepto dominado"
-                        : "Muy bien"
-                      : "Casi — mira la respuesta correcta"}
+                        ? "¡Dominado!"
+                        : "Bien"
+                      : "Casi"}
                   </p>
 
                   {!feedback.correct ? (
@@ -294,34 +294,24 @@ export function MasFalladasClient() {
                         {prompt.choices[feedback.correctIndex]}
                       </span>
                     </p>
-                  ) : (
-                    <p className="mt-2 text-sm leading-snug text-[var(--foreground-muted)]">
-                      Elegiste:{" "}
-                      <span className="font-medium text-[var(--foreground)]">
-                        {selected != null
-                          ? `${String.fromCharCode(65 + selected)}. ${prompt.choices[selected]}`
-                          : "—"}
-                      </span>
-                    </p>
-                  )}
+                  ) : null}
 
                   <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-                      Por qué{" "}
-                      {feedback.correct ? "es correcta" : "es incorrecta"}
+                      Explicación
                     </p>
                     <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
                       {feedback.explanation?.trim()
                         ? feedback.explanation
                         : feedback.correct
-                          ? "Esta opción coincide con la definición o el nombre que pedía la carta."
-                          : `La respuesta correcta es «${prompt.choices[feedback.correctIndex]}» porque describe el concepto del enunciado; la que elegiste no encaja con esa definición.`}
+                          ? "Así se define este concepto."
+                          : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
                     </p>
                   </div>
 
                   <Button className="mt-5 w-full" onClick={onNext}>
                     {summaryRef.current || feedback.finished
-                      ? "Ver resumen"
+                      ? "Ver resultado"
                       : "Siguiente"}
                   </Button>
                 </div>
@@ -455,12 +445,12 @@ export function MasFalladasClient() {
         <p className="mt-8 text-sm text-[var(--foreground-muted)]">…</p>
       ) : items.length === 0 ? (
         <p className="mt-8 text-sm text-[var(--foreground-muted)]">
-          Sin fallos.{" "}
+          Nada por aquí.{" "}
           <Link
             href="/estudiar"
             className="text-[var(--foreground)] hover:underline"
           >
-            Estudiar
+            Ir a estudiar
           </Link>
         </p>
       ) : (

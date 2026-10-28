@@ -190,8 +190,8 @@ export interface MarkReviewRequest {
 
 /** Human labels for mode (UI Spanish). */
 export const STUDY_MODE_LABELS: Record<StudyMode, string> = {
-  FLASH_STUDY: 'Repaso flash',
-  EXAM_STUDY: 'Estudio para examen',
-  EXAM_TIMED: 'Modo examen',
+  FLASH_STUDY: 'Cartas',
+  EXAM_STUDY: 'Estudio',
+  EXAM_TIMED: 'Examen',
   WEAK_REVIEW: 'Más falladas',
 };

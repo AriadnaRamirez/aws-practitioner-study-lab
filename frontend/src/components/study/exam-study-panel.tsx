@@ -35,7 +35,7 @@ export function ExamStudyPanel() {
   async function onStart() {
     setError(null);
     if (!getStoredToken()) {
-      setError("Inicia sesión para guardar la sesión de estudio.");
+      setError("Entra para guardar tu progreso.");
       return;
     }
     setPending(true);
@@ -106,15 +106,11 @@ export function ExamStudyPanel() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
-      <p className="text-sm font-medium uppercase tracking-[0.14em] text-[var(--foreground)]">
-        Modo Estudio
-      </p>
-      <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
-        Estudio para examen
+      <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
+        Estudio
       </h1>
       <p className="mt-3 max-w-xl text-[var(--foreground-muted)] lg:max-w-2xl">
-        Banco CLF con feedback al momento: si fallas, la pregunta vuelve unas
-        cartas más adelante en la misma sesión.
+        Preguntas tipo examen. Si fallas, regresan más adelante.
       </p>
 
       {error ? (
@@ -124,7 +120,7 @@ export function ExamStudyPanel() {
         >
           {error}{" "}
           <Link href="/login" className="font-semibold underline">
-            Ir a entrar
+            Entrar
           </Link>
         </p>
       ) : null}
@@ -132,7 +128,7 @@ export function ExamStudyPanel() {
       {phase === "setup" ? (
         <section className="mt-10 animate-[fade-up_0.45s_ease-out]">
           <h2 className="font-display text-lg font-semibold">
-            Tamaño de sesión
+            ¿Cuántas preguntas?
           </h2>
           <div className="mt-4 flex flex-wrap gap-2">
             {STUDY_SIZES.map((n) => (
@@ -151,26 +147,16 @@ export function ExamStudyPanel() {
               </button>
             ))}
           </div>
-          <p className="mt-3 text-sm text-[var(--foreground-muted)]">
-            Si el banco publicado es menor que {size}, se usan todas las
-            preguntas disponibles.
-          </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button onClick={onStart} disabled={pending}>
               {pending ? (
                 <span className="inline-flex items-center gap-2">
-                  <Spinner /> Preparando…
+                  <Spinner /> …
                 </span>
               ) : (
-                "Empezar estudio"
+                "Empezar"
               )}
             </Button>
-            <Link
-              href="/login"
-              className="inline-flex h-11 items-center text-sm font-medium text-[var(--foreground-muted)] underline-offset-4 hover:underline"
-            >
-              ¿Sin cuenta? Entra primero
-            </Link>
           </div>
         </section>
       ) : null}
@@ -235,11 +221,11 @@ export function ExamStudyPanel() {
                 : "bg-[var(--danger)] text-[var(--danger-fg)]",
             )}
           >
-            {feedback.correct ? "¡Correcto!" : "Incorrecto — vuelve pronto"}
+            {feedback.correct ? "¡Correcto!" : "Incorrecto"}
           </p>
           {!feedback.correct ? (
             <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-              Respuesta correcta:{" "}
+              Correcta:{" "}
               <span className="font-medium text-[var(--foreground)]">
                 {prompt.choices[feedback.correctIndex]}
               </span>
@@ -247,25 +233,25 @@ export function ExamStudyPanel() {
           ) : null}
           <div className="mt-4 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-              Por qué {feedback.correct ? "es correcta" : "es incorrecta"}
+              Explicación
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
               {feedback.explanation?.trim() ||
                 (feedback.correct
-                  ? "Esta opción coincide con el concepto pedido."
+                  ? "Así se define este concepto."
                   : `La correcta es «${prompt.choices[feedback.correctIndex]}».`)}
             </p>
           </div>
           <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-            Racha de sesión:{" "}
+            Racha{" "}
             <span className="font-semibold text-[var(--foreground)]">
               {feedback.sessionStreak}
             </span>
             {" · "}
-            Restantes en cola: {feedback.remaining}
+            Quedan {feedback.remaining}
           </p>
           <Button className="mt-8" onClick={onContinue}>
-            {feedback.finished ? "Ver resumen" : "Siguiente"}
+            {feedback.finished ? "Ver resultado" : "Siguiente"}
           </Button>
         </section>
       ) : null}
@@ -289,7 +275,7 @@ function SummaryBlock({
 }) {
   return (
     <section className="mt-10 animate-[fade-up_0.4s_ease-out]">
-      <h2 className="font-display text-2xl font-bold">Resumen</h2>
+      <h2 className="font-display text-2xl font-bold">¡Listo!</h2>
       <dl className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Stat label="Precisión" value={`${summary.accuracyPct}%`} />
         <Stat label="Aciertos" value={String(summary.correctAnswers)} />

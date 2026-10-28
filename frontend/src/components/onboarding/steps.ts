@@ -1,4 +1,4 @@
-/** Spanish copy aligned with documento maestro product rules. */
+/** Copys de onboarding — cortos, para el estudiante. */
 
 export type OnboardingStep = {
   id: "flash" | "miss-repeat" | "dominio" | "examen";
@@ -10,28 +10,28 @@ export type OnboardingStep = {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "flash",
-    eyebrow: "Paso 1 · Repaso",
-    title: "Flashcards de opción múltiple",
-    body: "En Repaso / Memoriza cada concepto es una pregunta de 4 opciones sobre servicios y temas de AWS. El enunciado puede pedir la definición, el nombre o reconocer el servicio entre opciones parecidas.",
+    eyebrow: "1 · Cartas",
+    title: "Conceptos con 4 opciones",
+    body: "Practica nombre y definición de servicios AWS. Rápido y al grano.",
   },
   {
     id: "miss-repeat",
-    eyebrow: "Paso 2 · Refuerzo",
-    title: "Si fallas, vuelve a practicar",
-    body: "En Repaso y en Estudio para examen, un fallo se vuelve a colar unas cartas más adelante en la misma sesión. Así practicas otra vez lo que aún no dominas, sin esperar al día siguiente.",
+    eyebrow: "2 · Refuerzo",
+    title: "Si fallas, regresa",
+    body: "La carta vuelve más adelante en la misma sesión para que la practiques otra vez.",
   },
   {
     id: "dominio",
-    eyebrow: "Paso 3 · Memoria",
-    title: "Dominio = 3 aciertos seguidos",
-    body: "Un concepto queda dominado cuando lo aciertas 3 veces seguidas. Esas respuestas memorizadas son la métrica del podio — no el puntaje del examen cronometrado.",
+    eyebrow: "3 · Dominio",
+    title: "3 aciertos seguidos",
+    body: "Así marcas un concepto como dominado. Eso cuenta en el podio.",
   },
   {
     id: "examen",
-    eyebrow: "Paso 4 · Examen",
-    title: "Estudio vs examen cronometrado",
-    body: "Estudio para examen: feedback al momento, explicación y refuerzo si fallas. Modo Examen: cronometrado (tamaños 10–50 y simulación 65/90), sin refuerzo ni rachas en vivo; el resultado y las explicaciones llegan al final.",
+    eyebrow: "4 · Examen",
+    title: "Estudio o simulacro",
+    body: "En Estudio ves la respuesta al momento. En Examen, cronómetro y resultado al final.",
   },
 ];
 
-export const ONBOARDING_TITLE = "Así funciona…";
+export const ONBOARDING_TITLE = "Cómo estudiar aquí";

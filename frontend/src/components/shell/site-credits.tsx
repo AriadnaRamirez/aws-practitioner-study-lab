@@ -19,8 +19,7 @@ export function SiteCredits({ className, compact = false }: Props) {
         )}
       >
         <p className="text-[10px] leading-relaxed text-[var(--foreground-muted)]/40">
-          Material de estudio no oficial. No afiliado ni respaldado por Amazon
-          Web Services ni por Generation México.
+          Material no oficial. No afiliado a AWS ni a Generation México.
         </p>
 
         <div

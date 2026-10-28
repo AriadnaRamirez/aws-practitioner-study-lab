@@ -65,19 +65,11 @@ export default function PodioPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-14">
       <header className="animate-[fade-up_0.5s_ease-out]">
-        <p className="text-sm font-medium text-[var(--foreground)]">
-          Competencia sana
-        </p>
-        <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)]">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--foreground)]">
           Podio
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-[var(--foreground-muted)]">
-          Ranking por{" "}
-          <strong className="font-semibold text-[var(--foreground)]">
-            respuestas memorizadas
-          </strong>{" "}
-          — conceptos que alcanzaron dominio. Se muestra el usuario; el correo
-          nunca es público.
+        <p className="mt-2 text-base text-[var(--foreground-muted)]">
+          Quién lleva más conceptos dominados.
         </p>
       </header>
 
@@ -86,10 +78,8 @@ export default function PodioPage() {
           className="mt-10 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-6 animate-[fade-up_0.55s_ease-out]"
           style={{ animationDelay: "60ms", animationFillMode: "backwards" }}
         >
-          <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
-            El podio es solo para cuentas registradas. Los invitados no
-            participan ni ven el ranking. Crea una cuenta para guardar progreso
-            y subir al podio.
+          <p className="text-sm text-[var(--foreground-muted)]">
+            Crea una cuenta para aparecer en el ranking.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/register" className={cn(buttonVariants())}>

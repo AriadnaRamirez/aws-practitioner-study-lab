@@ -20,7 +20,7 @@ type SessionHistoryProps = {
 export function SessionHistory({
   sessions,
   timezone,
-  emptyHint = "Aún no hay sesiones. Empieza en Estudiar o en Más falladas.",
+  emptyHint = "Aún no has estudiado.",
   showMasFalladasLink = true,
   linkDetail = false,
 }: SessionHistoryProps) {
@@ -34,7 +34,7 @@ export function SessionHistory({
               href="/mas-falladas"
               className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
             >
-              Ver más falladas
+              Más falladas
             </Link>
           </p>
         ) : null}

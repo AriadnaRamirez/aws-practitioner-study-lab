@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export type EstudiarMode = "flash" | "estudio";
 
 const TAB_MODES = [
-  { id: "flash" as const, label: "Flashcards" },
+  { id: "flash" as const, label: "Cartas" },
   { id: "estudio" as const, label: "Estudio" },
 ];
 

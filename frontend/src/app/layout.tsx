@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s · Study Lab",
   },
   description:
-    "Lab de estudio para AWS Certified Cloud Practitioner: flashcards de opción múltiple, modos de examen y podio.",
+    "Prepárate para AWS Cloud Practitioner con cartas, estudio y examen.",
   icons: {
     icon: [{ url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" }],
     apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],

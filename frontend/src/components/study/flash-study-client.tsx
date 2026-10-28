@@ -48,9 +48,9 @@ type Phase =
   | "summary";
 
 const VARIANT_LABEL: Record<string, string> = {
-  NAME_TO_DEFINITION: "Flashcard · nombre → definición",
-  DEFINITION_TO_NAME: "Flashcard · definición → nombre",
-  NAME_FOCUS: "Flashcard · reconoce el nombre",
+  NAME_TO_DEFINITION: "¿Qué es?",
+  DEFINITION_TO_NAME: "¿Cuál es?",
+  NAME_FOCUS: "Elige el nombre",
 };
 
 /** No auto-advance — user reads the explanation on the flipped card. */
@@ -376,7 +376,7 @@ export function FlashStudyClient() {
       <section className="py-8" aria-busy="true">
         <Spinner label="Cargando" />
         <div className="mt-8">
-          <FlashDeck loading eyebrow="Flashcard" title="…" />
+          <FlashDeck loading eyebrow="Carta" title="…" />
         </div>
       </section>
     );
@@ -404,9 +404,8 @@ export function FlashStudyClient() {
     return (
       <section className="min-w-0">
         <div>
-          <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
-            Flashcards de conceptos: memoriza nombre ↔ definición (4 opciones).
-            Si fallas, la carta vuelve más adelante.
+          <p className="text-sm text-[var(--foreground-muted)]">
+            Conceptos con 4 opciones. Si fallas, la carta regresa.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Button
@@ -420,7 +419,7 @@ export function FlashStudyClient() {
                   <Spinner /> …
                 </span>
               ) : (
-                "10 flashcards mixtas"
+                "Empezar 10"
               )}
             </Button>
             <Button
@@ -430,18 +429,15 @@ export function FlashStudyClient() {
               onClick={() => void onStart(20, [])}
               className="w-full sm:w-auto"
             >
-              20 mixtas
+              Empezar 20
             </Button>
           </div>
         </div>
 
         <div className="mt-10 border-t border-[var(--border)] pt-6">
           <h2 className="text-sm font-medium text-[var(--foreground-muted)]">
-            Por mazo
+            Por tema
           </h2>
-          <p className="mt-1 text-xs text-[var(--foreground-muted)]/70">
-            Elige un grupo de conceptos (Linux, redes, servicios AWS…).
-          </p>
           <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {STUDY_CATEGORIES.map((cat) => {
               const ids = resolveCategoryTopicIds(
@@ -469,7 +465,7 @@ export function FlashStudyClient() {
                       </span>
                     </span>
                     <span className="shrink-0 text-sm font-medium text-[var(--foreground)]">
-                      Estudiar
+                      Ir
                     </span>
                   </button>
                 </li>
@@ -484,7 +480,7 @@ export function FlashStudyClient() {
           onClick={() => setCustomize((v) => !v)}
           aria-expanded={customize}
         >
-          {customize ? "Ocultar opciones" : "Más opciones"}
+          {customize ? "Menos" : "Elegir temas"}
         </button>
 
         {customize ? (
@@ -558,7 +554,7 @@ export function FlashStudyClient() {
       <section className="py-8 animate-[fade-up_0.35s_ease-out]">
         <Mascot pose="wave" size="md" float className="mb-6" />
         <p className="font-display text-xl font-semibold tracking-tight">
-          Lección terminada
+          ¡Listo!
         </p>
         <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -574,7 +570,7 @@ export function FlashStudyClient() {
             </dd>
           </div>
           <div>
-            <dt className="text-[var(--foreground-muted)]">Racha diaria</dt>
+            <dt className="text-[var(--foreground-muted)]">Racha</dt>
             <dd className="font-display text-2xl font-bold">
               {rachaDiaria}
               <span className="ml-1 text-sm font-medium text-[var(--foreground-muted)]">
@@ -585,10 +581,6 @@ export function FlashStudyClient() {
           <div>
             <dt className="text-[var(--foreground-muted)]">Dominados</dt>
             <dd className="font-display text-2xl font-bold">{dominados}</dd>
-          </div>
-          <div>
-            <dt className="text-[var(--foreground-muted)]">Racha de sesión</dt>
-            <dd className="text-lg font-semibold">{summary.maxSessionStreak}</dd>
           </div>
         </dl>
         <div className="mt-8 flex flex-wrap gap-3">
@@ -620,7 +612,7 @@ export function FlashStudyClient() {
       <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
         <p className="font-semibold text-[var(--foreground)]">Racha {sessionStreak}</p>
         <p className="text-[var(--foreground-muted)]">
-          {answered}/{uniqueItems || size} · quedan {remaining}
+          {answered}/{uniqueItems || size}
         </p>
       </div>
 
@@ -646,10 +638,10 @@ export function FlashStudyClient() {
             eyebrow={
               (prompt.variant && VARIANT_LABEL[prompt.variant]) ||
               prompt.variant ||
-              "Repaso"
+              "Carta"
             }
             title={prompt.stem}
-            footer={`${answered + 1} · ${uniqueItems || size} en la sesión`}
+            footer={`${answered + 1} de ${uniqueItems || size}`}
             flipped={phase === "feedback" && Boolean(feedback)}
             back={
               feedback ? (
@@ -692,17 +684,17 @@ export function FlashStudyClient() {
                   <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
                     {feedback.correct
                       ? feedback.itemMastered
-                        ? "Concepto dominado"
-                        : "Muy bien"
-                      : "Casi — mira la respuesta correcta"}
+                        ? "¡Dominado!"
+                        : "Bien"
+                      : "Casi"}
                   </p>
 
                   <div
                     className="mt-3 flex items-center gap-3"
-                    aria-label={`Racha ${feedback.itemConsecutiveCorrect} de ${MASTERY_STREAK} hacia dominio`}
+                    aria-label={`${feedback.itemConsecutiveCorrect} de ${MASTERY_STREAK} para dominarlo`}
                   >
                     <p className="text-sm font-semibold text-[var(--foreground)]">
-                      Racha {feedback.itemConsecutiveCorrect} de {MASTERY_STREAK}
+                      {feedback.itemConsecutiveCorrect}/{MASTERY_STREAK}
                     </p>
                     <ol className="flex gap-1.5" aria-hidden>
                       {Array.from({ length: MASTERY_STREAK }, (_, i) => {
@@ -732,32 +724,23 @@ export function FlashStudyClient() {
                         {prompt.choices[feedback.correctIndex]}
                       </span>
                     </p>
-                  ) : (
-                    <p className="mt-2 text-sm leading-snug text-[var(--foreground-muted)]">
-                      Elegiste:{" "}
-                      <span className="font-medium text-[var(--foreground)]">
-                        {selectedChoice != null
-                          ? `${String.fromCharCode(65 + selectedChoice)}. ${prompt.choices[selectedChoice]}`
-                          : "—"}
-                      </span>
-                    </p>
-                  )}
+                  ) : null}
 
                   <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-                      Por qué {feedback.correct ? "es correcta" : "es incorrecta"}
+                      Explicación
                     </p>
                     <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
                       {feedback.explanation?.trim()
                         ? feedback.explanation
                         : feedback.correct
-                          ? "Esta opción coincide con la definición o el nombre que pedía la carta."
-                          : `La respuesta correcta es «${prompt.choices[feedback.correctIndex]}» porque describe el concepto del enunciado; la que elegiste no encaja con esa definición.`}
+                          ? "Así se define este concepto."
+                          : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
                     </p>
                   </div>
 
                   <Button className="mt-5 w-full" onClick={goNext}>
-                    {summaryRef.current ? "Ver resumen" : "Siguiente carta"}
+                    {summaryRef.current ? "Ver resultado" : "Siguiente"}
                   </Button>
                 </div>
               ) : null
@@ -803,7 +786,7 @@ export function FlashStudyClient() {
         </div>
       ) : pending ? (
         <div className="mt-8">
-          <FlashDeck loading eyebrow="Flashcard" title="…" footer="Cargando" />
+          <FlashDeck loading eyebrow="Carta" title="…" footer="Cargando" />
         </div>
       ) : null}
 

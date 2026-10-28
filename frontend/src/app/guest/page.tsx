@@ -4,7 +4,7 @@ import { GuestTrial } from "@/components/guest/guest-trial";
 export const metadata: Metadata = {
   title: "Probar sin cuenta",
   description:
-    "Sesión limitada de marketing. Crea una cuenta para guardar progreso y subir al podio.",
+    "Prueba gratis. Crea una cuenta para guardar tu progreso.",
 };
 
 export default function GuestPage() {

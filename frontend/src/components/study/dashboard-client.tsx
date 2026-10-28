@@ -186,7 +186,7 @@ export function DashboardClient() {
                   "inline-flex w-full justify-center",
                 )}
               >
-                Continuar sesión
+                Continuar
               </Link>
               <p className="text-center text-xs text-[var(--foreground-muted)] lg:text-left">
                 {STUDY_MODE_LABELS[primarySession.mode]}{" "}
@@ -199,7 +199,7 @@ export function DashboardClient() {
                   "inline-flex w-full justify-center",
                 )}
               >
-                Nueva sesión (temas mixtos)
+                Empezar otra
               </Link>
             </>
           ) : (
@@ -210,12 +210,12 @@ export function DashboardClient() {
                 "inline-flex w-full justify-center",
               )}
             >
-              Empezar a estudiar
+              Empezar
             </Link>
           )}
           {!primarySession ? (
             <p className="text-center text-xs text-[var(--foreground-muted)] lg:text-left">
-              10 cartas · temas mixtos
+              10 cartas de todo
             </p>
           ) : null}
         </div>
@@ -248,7 +248,7 @@ export function DashboardClient() {
           id="temas-heading"
           className="text-sm font-medium text-[var(--foreground-muted)]"
         >
-          O elige un tema
+          Elige un tema
         </h2>
         <TopicFolders topics={topics} className="mt-3 lg:mt-4" />
       </section>

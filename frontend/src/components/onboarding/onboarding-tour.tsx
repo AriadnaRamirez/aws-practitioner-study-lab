@@ -130,7 +130,7 @@ export function OnboardingTour({
               ) : null}
               {isLast ? (
                 <Button type="button" size="sm" onClick={onComplete}>
-                  Empezar a estudiar
+                  Empezar
                 </Button>
               ) : (
                 <Button

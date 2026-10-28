@@ -62,7 +62,7 @@ export function LandingHero() {
                 Study Lab
               </span>
               <span className="font-display mt-0.5 text-lg font-semibold tracking-tight">
-                Empezar a estudiar
+                Empezar
               </span>
             </span>
             <span
@@ -112,7 +112,7 @@ export function LandingHero() {
             </span>
           </p>
           <p className="mt-2 text-xs text-[var(--brand-light-gray)]">
-            Por Ariadna Ramírez · Material no oficial
+            Por Ariadna Ramírez
           </p>
         </div>
       </main>
