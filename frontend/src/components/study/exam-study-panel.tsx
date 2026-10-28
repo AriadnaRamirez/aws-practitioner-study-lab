@@ -105,14 +105,14 @@ export function ExamStudyPanel() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+    <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
       <p className="text-sm font-medium uppercase tracking-[0.14em] text-[var(--foreground)]">
         Modo Estudio
       </p>
       <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
         Estudio para examen
       </h1>
-      <p className="mt-3 max-w-xl text-[var(--foreground-muted)]">
+      <p className="mt-3 max-w-xl text-[var(--foreground-muted)] lg:max-w-2xl">
         Banco CLF con feedback al momento: si fallas, la pregunta vuelve unas
         cartas más adelante en la misma sesión.
       </p>

@@ -156,7 +156,7 @@ export function ExamRunner() {
     const total = session.questions.length;
 
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-10">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
@@ -279,8 +279,8 @@ export function ExamRunner() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--foreground)] lg:text-3xl">
         Examen
       </h1>
 

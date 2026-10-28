@@ -182,7 +182,7 @@ export function MasFalladasClient() {
 
   if (authed === false) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-4xl lg:px-8">
         <h1 className="font-display text-2xl font-semibold tracking-tight">
           Más falladas
         </h1>
@@ -204,7 +204,7 @@ export function MasFalladasClient() {
     const cardN = phase === "feedback" ? Math.max(answered, 1) : answered + 1;
 
     return (
-      <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
         <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
           <p className="font-semibold text-[var(--foreground)]">
             Racha {sessionStreak}
@@ -375,7 +375,7 @@ export function MasFalladasClient() {
 
   if (phase === "done") {
     return (
-      <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6 animate-[fade-up_0.35s_ease-out]">
+      <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6 animate-[fade-up_0.35s_ease-out] lg:max-w-4xl lg:px-8 lg:py-12">
         <h1 className="font-display text-2xl font-semibold tracking-tight">
           Refuerzo listo
         </h1>
@@ -423,7 +423,7 @@ export function MasFalladasClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
       <h1 className="font-display text-2xl font-semibold tracking-tight">
         Más falladas
       </h1>

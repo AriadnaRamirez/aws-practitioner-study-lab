@@ -14,7 +14,7 @@ export function SiteCredits({ className, compact = false }: Props) {
     >
       <div
         className={cn(
-          "mx-auto flex w-full min-w-0 max-w-md flex-col items-center px-4 text-center sm:px-6",
+          "mx-auto flex w-full min-w-0 max-w-md flex-col items-center px-4 text-center sm:px-6 lg:max-w-lg",
           compact ? "py-7" : "py-9",
         )}
       >

@@ -38,7 +38,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
 
   if (authed === false) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-4xl lg:px-8">
         <h1 className="font-display text-3xl font-bold">Sesión</h1>
         <p className="mt-3 text-[var(--foreground-muted)]">
           Entra para ver el detalle.
@@ -52,7 +52,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-4xl lg:px-8">
         <p className="text-sm text-red-600" role="alert">
           {error}
         </p>
@@ -65,7 +65,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
 
   if (!detail) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-4xl lg:px-8">
         <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
       </div>
     );
@@ -74,7 +74,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
   const attempts = detail.attempts ?? [];
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-14">
       <Link
         href="/cuenta#historial"
         className="text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline"

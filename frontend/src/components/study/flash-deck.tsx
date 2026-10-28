@@ -40,7 +40,7 @@ export function FlashDeck({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full max-w-md min-w-0 animate-deck-in",
+        "relative mx-auto w-full max-w-md min-w-0 animate-deck-in lg:max-w-lg",
         className,
       )}
       style={{ minHeight: "17.5rem", perspective: "1400px" }}

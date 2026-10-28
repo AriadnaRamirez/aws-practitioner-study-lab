@@ -57,7 +57,7 @@ export function TopicFolders({ topics, className }: Props) {
 
   return (
     <section className={cn("w-full min-w-0", className)}>
-      <ul className="flex w-full min-w-0 flex-col gap-3">
+      <ul className="grid w-full min-w-0 grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         {folders.map(({ cat, pct }, i) => {
           const href = `/estudiar?category=${encodeURIComponent(cat.id)}&start=10`;
           return (
@@ -72,15 +72,21 @@ export function TopicFolders({ topics, className }: Props) {
               <Link
                 href={href}
                 className={cn(
-                  "flex min-w-0 items-center justify-between gap-3 rounded-2xl rounded-tl-none px-4 py-4 sm:px-5",
+                  "flex min-w-0 items-center justify-between gap-3 rounded-2xl rounded-tl-none px-4 py-4 transition-colors sm:px-5 lg:py-5",
+                  "hover:bg-[var(--surface-hover)]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
                   FOLDER_FACE[cat.tone],
                 )}
                 aria-label={cat.title}
               >
-                <p className="font-display min-w-0 truncate text-lg font-semibold tracking-tight sm:text-xl">
-                  {cat.title}
-                </p>
+                <div className="min-w-0">
+                  <p className="font-display truncate text-lg font-semibold tracking-tight sm:text-xl">
+                    {cat.title}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-[var(--foreground-muted)]">
+                    {cat.subtitle}
+                  </p>
+                </div>
                 <p className="shrink-0 font-mono text-sm tabular-nums opacity-80">
                   {pct}%
                 </p>

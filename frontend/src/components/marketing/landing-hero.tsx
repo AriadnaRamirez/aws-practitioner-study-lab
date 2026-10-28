@@ -33,7 +33,7 @@ export function LandingHero() {
         <ByeBanner />
       </Suspense>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 sm:px-6">
+      <header className="relative z-10 mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 sm:px-6 lg:max-w-5xl lg:px-8 lg:pt-8">
         <Link href="/" aria-label="Study Lab" className="inline-flex">
           <Logo size={36} priority />
         </Link>
@@ -42,11 +42,11 @@ export function LandingHero() {
         </p>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col px-5 pb-10 pt-4 sm:px-6">
-        <div className="relative flex flex-1 flex-col items-center justify-center gap-6">
+      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col px-5 pb-10 pt-4 sm:px-6 lg:max-w-lg lg:px-8 xl:max-w-xl">
+        <div className="relative flex flex-1 flex-col items-center justify-center gap-6 lg:gap-8">
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-[18%] h-56 w-56 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(232,80,2,0.28),transparent_68%)] blur-2xl sm:h-64 sm:w-64"
+            className="pointer-events-none absolute left-1/2 top-[18%] h-56 w-56 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(232,80,2,0.28),transparent_68%)] blur-2xl sm:h-64 sm:w-64 lg:h-72 lg:w-72"
           />
           <Mascot pose="study" size="hero" priority />
 
@@ -54,7 +54,7 @@ export function LandingHero() {
             href="/register"
             prefetch
             className={cn(
-              "glass-pill animate-pill-in w-full max-w-sm px-6 py-4 text-left",
+              "glass-pill animate-pill-in w-full max-w-sm px-6 py-4 text-left lg:max-w-md",
             )}
           >
             <span className="flex min-w-0 flex-1 flex-col">

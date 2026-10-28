@@ -442,7 +442,7 @@ export function FlashStudyClient() {
           <p className="mt-1 text-xs text-[var(--foreground-muted)]/70">
             Elige un grupo de conceptos (Linux, redes, servicios AWS…).
           </p>
-          <ul className="mt-3 divide-y divide-[var(--border)]">
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {STUDY_CATEGORIES.map((cat) => {
               const ids = resolveCategoryTopicIds(
                 cat.id,
@@ -458,12 +458,19 @@ export function FlashStudyClient() {
                       setSelectedTopics(ids);
                       void onStart(10, ids);
                     }}
-                    className="flex w-full items-center justify-between gap-3 py-3 text-left disabled:opacity-50"
+                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3.5 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-50"
                   >
-                    <span className="font-display text-sm font-semibold">
-                      {cat.title}
+                    <span className="min-w-0">
+                      <span className="font-display block text-sm font-semibold">
+                        {cat.title}
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs text-[var(--foreground-muted)]">
+                        {cat.subtitle}
+                      </span>
                     </span>
-                    <span className="text-sm text-[var(--foreground)]">Estudiar</span>
+                    <span className="shrink-0 text-sm font-medium text-[var(--foreground)]">
+                      Estudiar
+                    </span>
                   </button>
                 </li>
               );
@@ -482,7 +489,7 @@ export function FlashStudyClient() {
 
         {customize ? (
           <div className="mt-6 space-y-6 animate-[fade-up_0.3s_ease-out]">
-            <ul className="flex flex-col gap-2">
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {topics.map((t) => {
                 const on = selectedTopics.includes(t.id);
                 return (

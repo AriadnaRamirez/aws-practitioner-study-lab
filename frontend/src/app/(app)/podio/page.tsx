@@ -63,7 +63,7 @@ export default function PodioPage() {
     WINDOWS.find((w) => w.id === window)?.hint ?? WINDOWS[0].hint;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-14">
       <header className="animate-[fade-up_0.5s_ease-out]">
         <p className="text-sm font-medium text-[var(--foreground)]">
           Competencia sana

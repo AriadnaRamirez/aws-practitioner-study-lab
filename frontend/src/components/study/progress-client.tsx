@@ -33,7 +33,7 @@ export function ProgressClient() {
 
   if (authed === false) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-4xl lg:px-8">
         <h1 className="font-display text-2xl font-semibold">Progreso</h1>
         <Link href="/login" className={cn(buttonVariants(), "mt-8 inline-flex")}>
           Entrar
@@ -43,7 +43,7 @@ export function ProgressClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
       <h1 className="font-display text-2xl font-semibold tracking-tight">
         Progreso
       </h1>

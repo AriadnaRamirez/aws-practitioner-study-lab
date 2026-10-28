@@ -124,16 +124,16 @@ function EstudiarHubInner() {
   return (
     <div
       className={cn(
-        "mx-auto w-full min-w-0 px-4 py-8 sm:px-6 sm:py-10",
-        mode === "flash" ? "max-w-xl" : "max-w-2xl",
+        "mx-auto w-full min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12",
+        mode === "flash" ? "max-w-xl lg:max-w-4xl" : "max-w-2xl lg:max-w-4xl",
       )}
     >
-      <h1 className="font-display text-2xl font-semibold tracking-tight">
+      <h1 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
         Estudiar
       </h1>
       <EstudiarModeTabs mode={mode} />
 
-      <section className="mt-6 min-w-0" aria-live="polite">
+      <section className="mt-6 min-w-0 lg:mt-8" aria-live="polite">
         {mode === "flash" ? (
           <Suspense fallback={<FlashBootFallback />}>
             <FlashStudyClient />
@@ -142,7 +142,7 @@ function EstudiarHubInner() {
           <FlashBootFallback />
         ) : (
           // Panel brings its own inner padding; tighten negative margin so hub chrome aligns
-          <div className="-mx-4 -mt-2 sm:-mx-6">
+          <div className="-mx-4 -mt-2 sm:-mx-6 lg:-mx-8">
             <ExamStudyPanel />
           </div>
         )}

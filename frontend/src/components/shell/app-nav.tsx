@@ -153,8 +153,8 @@ export function AppNav() {
       >
         Saltar al contenido
       </a>
-      <div className="mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2.5">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:max-w-6xl lg:px-8">
+        <div className="flex min-w-0 items-center gap-2.5 lg:gap-3">
           <Link
             href={user ? "/dashboard" : "/"}
             className="inline-flex min-w-0 items-center"
@@ -163,7 +163,7 @@ export function AppNav() {
             <Logo size={28} withWordmark />
           </Link>
           {masteryPct != null ? (
-            <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">
+            <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] md:inline">
               {masteryPct}%
               {dailyStreak != null ? (
                 <>
@@ -179,7 +179,7 @@ export function AppNav() {
 
         <nav
           aria-label="Principal"
-          className="hidden items-center gap-4 sm:flex"
+          className="hidden items-center gap-5 lg:flex xl:gap-6"
         >
           {items.map((item) => (
             <Link
@@ -205,7 +205,7 @@ export function AppNav() {
         <button
           ref={buttonRef}
           type="button"
-          className="inline-flex h-9 items-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--foreground)] sm:hidden"
+          className="inline-flex h-9 items-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--foreground)] lg:hidden"
           aria-expanded={menuOpen}
           aria-controls={MENU_ID}
           aria-haspopup="true"
@@ -221,7 +221,7 @@ export function AppNav() {
           <button
             type="button"
             aria-label="Cerrar menú"
-            className="fixed inset-0 z-[60] bg-black/55 sm:hidden"
+            className="fixed inset-0 z-[60] bg-black/55 lg:hidden"
             style={{ top: panelTop }}
             onClick={() => setMenuOpen(false)}
           />
@@ -229,10 +229,10 @@ export function AppNav() {
             ref={panelRef}
             id={MENU_ID}
             aria-label="Móvil"
-            className="fixed inset-x-0 z-[70] border-b border-[var(--border)] bg-[var(--background)] px-4 py-3 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.75)] sm:hidden"
+            className="fixed inset-x-0 z-[70] border-b border-[var(--border)] bg-[var(--background)] px-4 py-3 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.75)] lg:hidden"
             style={{ top: panelTop }}
           >
-            <ul className="mx-auto flex w-full max-w-3xl flex-col">
+            <ul className="mx-auto flex w-full max-w-5xl flex-col lg:max-w-6xl">
               {items.map((item) => (
                 <li key={item.href}>
                   <Link
