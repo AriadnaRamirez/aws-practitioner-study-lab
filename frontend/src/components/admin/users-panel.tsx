@@ -119,8 +119,8 @@ export function UsersPanel({ initialUsers }: Props) {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-zinc-50 text-zinc-500 dark:bg-zinc-900">
               <tr>
-                <th className="px-3 py-2 font-medium">Username</th>
-                <th className="px-3 py-2 font-medium">Email</th>
+                <th className="px-3 py-2 font-medium">Usuario</th>
+                <th className="px-3 py-2 font-medium">Correo</th>
                 <th className="px-3 py-2 font-medium">Rol</th>
                 <th className="px-3 py-2 font-medium">Estado</th>
                 <th className="px-3 py-2 font-medium">Acciones</th>

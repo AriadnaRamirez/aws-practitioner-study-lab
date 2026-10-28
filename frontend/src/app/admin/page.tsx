@@ -35,7 +35,7 @@ export default async function AdminResumenPage() {
             </Link>
           </li>
           <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500">Guests (marketing)</p>
+            <p className="text-sm text-zinc-500">Invitados (marketing)</p>
             <p className="mt-1 text-3xl font-semibold">{data.guestsTotal}</p>
             <p className="mt-1 text-xs text-zinc-500">
               {data.guestsConverted} convertidos
@@ -48,7 +48,7 @@ export default async function AdminResumenPage() {
             </Link>
           </li>
           <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500">Conversión guest→registro</p>
+            <p className="text-sm text-zinc-500">Conversión invitado→cuenta</p>
             <p className="mt-1 text-3xl font-semibold">
               {pct(data.conversionRate)}
             </p>
@@ -57,7 +57,7 @@ export default async function AdminResumenPage() {
             </p>
           </li>
           <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500">Sesiones guest</p>
+            <p className="text-sm text-zinc-500">Sesiones de invitados</p>
             <p className="mt-1 text-3xl font-semibold">
               {data.guestSessionsTotal}
             </p>
@@ -78,7 +78,7 @@ export default async function AdminResumenPage() {
             </p>
           </li>
           <li className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500">Finish rate (7d)</p>
+            <p className="text-sm text-zinc-500">Tasa de cierre (7d)</p>
             <p className="mt-1 text-3xl font-semibold">
               {pct(data.finishRateLast7d)}
             </p>

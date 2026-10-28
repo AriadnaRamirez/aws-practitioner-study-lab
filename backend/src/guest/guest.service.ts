@@ -18,7 +18,7 @@ export class GuestService {
   async getProbe(id: string): Promise<GuestProbe> {
     const probe = await this.prisma.guestProbe.findUnique({ where: { id } });
     if (!probe) {
-      throw new NotFoundException('Guest probe no encontrado');
+      throw new NotFoundException('Prueba de invitado no encontrada');
     }
     return this.toPublic(probe);
   }
@@ -30,11 +30,11 @@ export class GuestService {
   async recordSession(id: string): Promise<GuestProbe> {
     const probe = await this.prisma.guestProbe.findUnique({ where: { id } });
     if (!probe) {
-      throw new NotFoundException('Guest probe no encontrado');
+      throw new NotFoundException('Prueba de invitado no encontrada');
     }
     if (probe.convertedUserId) {
       throw new BadRequestException(
-        'Este guest ya se convirtió en cuenta; inicia sesión',
+        'Esta prueba ya se convirtió en cuenta; entra con tu usuario',
       );
     }
     if (probe.sessionsCount >= GUEST_MAX_SESSIONS) {

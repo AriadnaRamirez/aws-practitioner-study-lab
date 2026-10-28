@@ -51,7 +51,7 @@ export function SessionHistory({
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {modeLabel(s.mode)}
                 <span className="ml-2 font-normal text-[var(--foreground-muted)]">
-                  · {s.size} ítems
+                  · {s.size} conceptos
                 </span>
               </p>
               <p className="text-xs text-[var(--foreground-muted)]">
@@ -60,7 +60,7 @@ export function SessionHistory({
             </div>
             <div className="flex flex-wrap gap-3 text-xs text-[var(--foreground-muted)] sm:text-right">
               <span>
-                Score{" "}
+                Puntaje{" "}
                 <strong className="text-[var(--foreground)]">
                   {formatScore(s)}
                 </strong>

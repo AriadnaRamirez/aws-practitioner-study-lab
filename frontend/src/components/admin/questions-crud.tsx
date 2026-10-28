@@ -102,7 +102,7 @@ export function QuestionsCrud({ initial, topics }: Props) {
         onSubmit={onCreate}
         className="grid gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
       >
-        <h2 className="text-sm font-semibold">Nueva pregunta MCQ</h2>
+        <h2 className="text-sm font-semibold">Nueva pregunta (opción múltiple)</h2>
         <label className="text-sm">
           Stem
           <Input

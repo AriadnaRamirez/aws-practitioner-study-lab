@@ -177,13 +177,13 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
         <div className="flex flex-1 flex-col p-4">
           <AwsMark height={20} />
           <span className="font-display mt-auto text-lg font-bold text-[var(--foreground)]">
-            Flash MCQ
+            Flash · opción múltiple
           </span>
         </div>
         <div className="bg-white px-4 py-3">
           <p className="text-xs font-semibold text-black">Listo para estudiar</p>
           <p className="mt-0.5 text-[11px] text-black/50">
-            10 cartas · miss-repeat
+            10 cartas · si fallas, vuelve
           </p>
         </div>
       </div>

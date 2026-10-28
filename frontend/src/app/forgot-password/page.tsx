@@ -35,7 +35,11 @@ function ForgotPasswordForm() {
         `${res.message} (En desarrollo el enlace se imprime en el log de la API.)`,
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo solicitar el reset');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo solicitar el restablecimiento',
+      );
     } finally {
       setPending(false);
     }
@@ -65,15 +69,15 @@ function ForgotPasswordForm() {
         </h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-300">
           {mode === 'reset'
-            ? 'Introduce el token y tu nueva contraseña.'
-            : 'Te enviaremos un enlace de un solo uso al email de registro.'}
+            ? 'Escribe el token y tu nueva contraseña.'
+            : 'Te enviaremos un enlace de un solo uso al correo con el que te registraste.'}
         </p>
       </div>
 
       {mode === 'request' ? (
         <form onSubmit={onRequest} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm">
-            Email
+            Correo
             <input
               type="email"
               required
@@ -150,7 +154,7 @@ function ForgotPasswordForm() {
 
       <p className="text-sm text-zinc-500">
         <Link className="underline underline-offset-4" href="/login">
-          Volver al login
+          Volver a entrar
         </Link>
       </p>
     </main>

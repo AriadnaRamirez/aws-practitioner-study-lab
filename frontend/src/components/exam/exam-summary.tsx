@@ -69,7 +69,7 @@ export function ExamSummary({ summary, onAgain }: Props) {
                 className="border-t border-[var(--border)] pt-5"
               >
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
-                  Ítem {idx + 1}
+                  Pregunta {idx + 1}
                 </p>
                 <p className="mb-3 font-medium text-[var(--foreground)]">
                   {m.stem}

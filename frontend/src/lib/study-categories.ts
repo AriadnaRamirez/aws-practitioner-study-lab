@@ -25,7 +25,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
   {
     id: "aws-services",
     title: "Servicios de AWS",
-    subtitle: "Cómputo, storage, IAM y más",
+    subtitle: "Cómputo, almacenamiento, IAM y más",
     topicIds: [
       "topic-compute",
       "topic-storage",
@@ -54,7 +54,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
   {
     id: "cloud-concepts",
     title: "Fundamentos cloud",
-    subtitle: "Modelo, pilares y shared responsibility",
+    subtitle: "Modelo, pilares y responsabilidad compartida",
     topicIds: ["topic-cloud-fundamentals"],
     tone: "cream",
     glyph: "book",

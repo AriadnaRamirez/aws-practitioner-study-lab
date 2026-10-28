@@ -41,7 +41,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
         <h1 className="font-display text-3xl font-bold">Sesión</h1>
         <p className="mt-3 text-[var(--foreground-muted)]">
-          Entrá para ver el detalle.
+          Entra para ver el detalle.
         </p>
         <Link href="/login" className={cn(buttonVariants(), "mt-8 inline-flex")}>
           Entrar
@@ -85,14 +85,14 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
         {modeLabel(detail.mode)}
       </h1>
       <p className="mt-2 text-sm text-[var(--foreground-muted)]">
-        {formatSessionWhen(detail, detail.timezone)} · {detail.size} ítems ·
-        score {formatScore(detail)} · {formatDuration(detail.durationMs)}
+        {formatSessionWhen(detail, detail.timezone)} · {detail.size} conceptos ·
+        puntaje {formatScore(detail)} · {formatDuration(detail.durationMs)}
       </p>
 
       {attempts.length === 0 ? (
         <p className="mt-10 text-sm text-[var(--foreground-muted)]">
-          Esta sesión no tiene intentos registrados (abandono temprano o solo
-          en curso).
+          Esta sesión no tiene intentos registrados (la dejaste a medias o
+          sigue en curso).
         </p>
       ) : (
         <ol className="mt-10 space-y-4">

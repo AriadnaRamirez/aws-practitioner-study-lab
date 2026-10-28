@@ -32,8 +32,8 @@ export default async function AdminBancoPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Banco</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          CRUD de preguntas de examen MCQ-4. Meta seed ≈200+ (CLF) + AIF
-          gated.
+          Preguntas de examen de opción múltiple (4 opciones). Meta seed ≈200+
+          (CLF) + AIF con bandera.
         </p>
       </div>
       <QuestionsCrud initial={questions} topics={topics} />

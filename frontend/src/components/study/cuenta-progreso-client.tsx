@@ -178,12 +178,14 @@ export function CuentaProgresoClient() {
             <dd className="font-semibold">@{user.username}</dd>
           </div>
           <div>
-            <dt className="text-[var(--foreground-muted)]">Email</dt>
+            <dt className="text-[var(--foreground-muted)]">Correo</dt>
             <dd className="font-medium">{user.email}</dd>
           </div>
           <div>
             <dt className="text-[var(--foreground-muted)]">Rol</dt>
-            <dd className="font-medium">{user.role}</dd>
+            <dd className="font-medium">
+              {user.role === "ADMIN" ? "Administrador" : "Estudiante"}
+            </dd>
           </div>
         </dl>
       ) : null}

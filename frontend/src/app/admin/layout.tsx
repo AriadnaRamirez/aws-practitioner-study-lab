@@ -4,11 +4,11 @@ import { APP_NAME } from "@aps/shared";
 const NAV = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/usuarios", label: "Usuarios" },
-  { href: "/admin/guests", label: "Guests" },
+  { href: "/admin/guests", label: "Invitados" },
   { href: "/admin/temas", label: "Temas" },
   { href: "/admin/flash", label: "Flash" },
   { href: "/admin/banco", label: "Banco" },
-  { href: "/admin/import", label: "Import" },
+  { href: "/admin/import", label: "Importar" },
   { href: "/admin/flags", label: "Flags" },
 ] as const;
 

@@ -3,6 +3,6 @@ import { IsEmail } from 'class-validator';
 
 export class ForgotPasswordDto {
   @ApiProperty({ example: 'estudiante@example.com' })
-  @IsEmail({}, { message: 'Email inválido' })
+  @IsEmail({}, { message: 'Correo inválido' })
   email!: string;
 }

@@ -21,7 +21,7 @@ export function SiteFooter() {
               Entrar
             </Link>
             <Link href="/register" className="hover:text-[var(--foreground)]">
-              Registro
+              Crear cuenta
             </Link>
           </nav>
         </div>

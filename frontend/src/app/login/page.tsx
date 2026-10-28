@@ -13,7 +13,7 @@ import { login, storeAuth } from "@/lib/api";
 const DEMO_ACCOUNTS = [
   { label: "Estudiante", identifier: "demo", password: "StudyPass1!" },
   {
-    label: "Admin",
+    label: "Administrador",
     identifier: "admin",
     password: "ChangeMeAdmin1!",
   },
@@ -89,13 +89,13 @@ function LoginForm() {
 
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          Correo o username
+          Correo o usuario
           <Input
             name="identifier"
             type="text"
             required
             autoComplete="username"
-            placeholder="demo · admin · tu@email.com"
+            placeholder="demo · admin · tu@correo.com"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />
@@ -148,10 +148,10 @@ function LoginForm() {
 
       <p className="mt-6 flex flex-wrap gap-x-4 gap-y-2 text-sm">
         <Link href="/forgot-password" className="text-[var(--foreground)] hover:underline">
-          Contraseña
+          Olvidé mi contraseña
         </Link>
         <Link href="/register" className="text-[var(--foreground)] hover:underline">
-          Registro
+          Crear cuenta
         </Link>
         <Link href="/guest" className="text-[var(--foreground)] hover:underline">
           Probar

@@ -109,7 +109,10 @@ export function AppNav() {
     ? GUEST_ITEMS
     : user
       ? user.role === "ADMIN"
-        ? [...STUDENT_ITEMS, { href: "/admin", label: "Admin", match: ["/admin"] }]
+        ? [
+            ...STUDENT_ITEMS,
+            { href: "/admin", label: "Admin", match: ["/admin"] },
+          ]
         : STUDENT_ITEMS
       : GUEST_ITEMS;
 

@@ -91,7 +91,7 @@ export function GuestTrial() {
         if (next.convertedUserId) {
           setPhase("error");
           setError(
-            "Este guest ya se convirtió en cuenta. Entra o crea otra prueba.",
+            "Esta prueba ya se convirtió en cuenta. Entra o crea otra prueba.",
           );
         } else if (next.sessionsRemaining <= 0) {
           setPhase("capped");
@@ -220,7 +220,7 @@ export function GuestTrial() {
             href={registerHref}
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
-            Registro
+            Crear cuenta
           </Link>
         </div>
       ) : null}

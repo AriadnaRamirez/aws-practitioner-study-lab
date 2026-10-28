@@ -11,12 +11,12 @@ const WINDOWS: { id: PodiumWindow; label: string; hint: string }[] = [
   {
     id: "all",
     label: "Histórico",
-    hint: "Todos los ítems que has dominado",
+    hint: "Todos los conceptos que has dominado",
   },
   {
     id: "week",
     label: "Esta semana",
-    hint: "Dominios en los últimos 7 días (rodante)",
+    hint: "Dominios de los últimos 7 días",
   },
 ];
 
@@ -76,7 +76,7 @@ export default function PodioPage() {
           <strong className="font-semibold text-[var(--foreground)]">
             respuestas memorizadas
           </strong>{" "}
-          — ítems que alcanzaron dominio. Se muestra el username; el correo
+          — conceptos que alcanzaron dominio. Se muestra el usuario; el correo
           nunca es público.
         </p>
       </header>
@@ -174,8 +174,8 @@ export default function PodioPage() {
             </p>
           ) : data && data.entries.length === 0 ? (
             <p className="mt-10 text-sm text-[var(--foreground-muted)]">
-              Todavía no hay ítems dominados en esta ventana. Estudia con
-              flashcards o el banco para subir.
+              Todavía no hay conceptos dominados en esta ventana. Estudia con
+              flashcards o el banco de preguntas para subir.
             </p>
           ) : data ? (
             <ol className="mt-8 divide-y divide-[var(--border)] border-y border-[var(--border)]">
@@ -217,10 +217,9 @@ export default function PodioPage() {
           ) : null}
 
           <p className="mt-8 text-xs leading-relaxed text-[var(--foreground-muted)]">
-            Métrica: conteo de ítems con dominio alcanzado. Admin incluido.
-            Cuentas con{" "}
-            <code className="font-mono">podiumHidden</code> no aparecen en el
-            ranking público.
+            Métrica: conteo de conceptos con dominio alcanzado. Incluye
+            cuentas de administrador. Quien oculta su perfil del podio no
+            aparece en el ranking público.
           </p>
         </>
       )}

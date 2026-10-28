@@ -58,7 +58,12 @@ export function TopicsCrud({ initial }: Props) {
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm("¿Borrar este tema? (fallará si tiene ítems)")) return;
+    if (
+      !window.confirm(
+        "¿Borrar este tema? (fallará si tiene conceptos asociados)",
+      )
+    )
+      return;
     setError(null);
     setBusy(true);
     try {

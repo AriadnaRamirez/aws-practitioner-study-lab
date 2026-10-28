@@ -81,8 +81,8 @@ export default function RegisterPage() {
       {doneUser ? (
         <div className="mt-8 space-y-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm">
           <p>
-            Cuenta creada. Bienvenida/o, <strong>{doneUser}</strong>. Te
-            llevamos a Estudiar con el tour «Así funciona…».
+            Cuenta creada. Bienvenido/a, <strong>{doneUser}</strong>. Te
+            llevamos a Estudiar con la guía «Así funciona…».
           </p>
           <Link
             className="text-[var(--foreground)] underline-offset-4 hover:underline"
@@ -104,7 +104,7 @@ export default function RegisterPage() {
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-medium">
-            Username ({USERNAME_MIN}–{USERNAME_MAX}, letras/números/_)
+            Usuario ({USERNAME_MIN}–{USERNAME_MAX}, letras/números/_)
             <Input
               type="text"
               required

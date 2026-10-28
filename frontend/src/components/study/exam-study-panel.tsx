@@ -113,8 +113,8 @@ export function ExamStudyPanel() {
         Estudio para examen
       </h1>
       <p className="mt-3 max-w-xl text-[var(--foreground-muted)]">
-        Banco CLF con feedback inmediato y miss-repeat: si fallas, la pregunta
-        vuelve unas cartas más adelante.
+        Banco CLF con feedback al momento: si fallas, la pregunta vuelve unas
+        cartas más adelante en la misma sesión.
       </p>
 
       {error ? (
@@ -124,7 +124,7 @@ export function ExamStudyPanel() {
         >
           {error}{" "}
           <Link href="/login" className="font-semibold underline">
-            Ir a login
+            Ir a entrar
           </Link>
         </p>
       ) : null}
@@ -294,9 +294,9 @@ function SummaryBlock({
         <Stat label="Precisión" value={`${summary.accuracyPct}%`} />
         <Stat label="Aciertos" value={String(summary.correctAnswers)} />
         <Stat label="Fallos" value={String(summary.incorrectAnswers)} />
-        <Stat label="Miss-repeats" value={String(summary.missRepeats)} />
+        <Stat label="Refuerzos" value={String(summary.missRepeats)} />
         <Stat label="Racha máx." value={String(summary.maxSessionStreak)} />
-        <Stat label="Ítems" value={String(summary.uniqueItems)} />
+        <Stat label="Conceptos" value={String(summary.uniqueItems)} />
       </dl>
       <Button className="mt-10" onClick={onReset}>
         Nueva sesión

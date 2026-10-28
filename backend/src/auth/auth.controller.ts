@@ -29,14 +29,14 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Registro con email + username + contraseña' })
+  @ApiOperation({ summary: 'Registro con correo + usuario + contraseña' })
   @ApiOkResponse({ description: 'Usuario creado + JWT' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login con email o username + contraseña' })
+  @ApiOperation({ summary: 'Entrar con correo o usuario + contraseña' })
   @ApiOkResponse({ description: 'JWT de acceso' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);

@@ -65,9 +65,9 @@ export class AuthService {
 
     if (existing) {
       if (existing.email === email) {
-        throw new ConflictException('Ya existe una cuenta con ese email');
+        throw new ConflictException('Ya existe una cuenta con ese correo');
       }
-      throw new ConflictException('Ese username ya está en uso');
+      throw new ConflictException('Ese usuario ya está en uso');
     }
 
     const passwordHash = await hashPassword(dto.password);
@@ -126,7 +126,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     const message =
-      'Si el email existe, recibirás instrucciones para restablecer la contraseña';
+      'Si el correo existe, recibirás instrucciones para restablecer la contraseña';
 
     if (!user) {
       return { message };

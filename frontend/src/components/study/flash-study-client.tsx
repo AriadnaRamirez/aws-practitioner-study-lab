@@ -376,13 +376,15 @@ export function FlashStudyClient() {
   if (phase === "auth") {
     return (
       <section className="py-8">
-        <p className="text-sm text-[var(--foreground-muted)]">Entrá para estudiar.</p>
+        <p className="text-sm text-[var(--foreground-muted)]">
+          Entra para estudiar.
+        </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/login">
             <Button>Entrar</Button>
           </Link>
           <Link href="/register">
-            <Button variant="secondary">Registro</Button>
+            <Button variant="secondary">Crear cuenta</Button>
           </Link>
         </div>
       </section>
@@ -607,10 +609,10 @@ export function FlashStudyClient() {
             eyebrow={
               (prompt.variant && VARIANT_LABEL[prompt.variant]) ||
               prompt.variant ||
-              "FLASH"
+              "Repaso"
             }
             title={prompt.stem}
-            footer={`${answered + 1} · ${uniqueItems || size} en el mazo`}
+            footer={`${answered + 1} · ${uniqueItems || size} en la sesión`}
             flipped={phase === "feedback" && Boolean(feedback)}
             back={
               feedback ? (

@@ -11,15 +11,19 @@ import { USERNAME_MAX, USERNAME_MIN, USERNAME_PATTERN } from '@aps/shared';
 
 export class RegisterDto {
   @ApiProperty({ example: 'estudiante@example.com' })
-  @IsEmail({}, { message: 'Email inválido' })
+  @IsEmail({}, { message: 'Correo inválido' })
   email!: string;
 
   @ApiProperty({ example: 'ariadna', minLength: USERNAME_MIN, maxLength: USERNAME_MAX })
   @IsString()
-  @MinLength(USERNAME_MIN, { message: `Username mínimo ${USERNAME_MIN} caracteres` })
-  @MaxLength(USERNAME_MAX, { message: `Username máximo ${USERNAME_MAX} caracteres` })
+  @MinLength(USERNAME_MIN, {
+    message: `Usuario: mínimo ${USERNAME_MIN} caracteres`,
+  })
+  @MaxLength(USERNAME_MAX, {
+    message: `Usuario: máximo ${USERNAME_MAX} caracteres`,
+  })
   @Matches(USERNAME_PATTERN, {
-    message: 'Username solo puede contener letras, números y _',
+    message: 'El usuario solo puede contener letras, números y _',
   })
   username!: string;
 
