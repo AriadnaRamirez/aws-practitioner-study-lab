@@ -4,13 +4,35 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
-/** Civil YYYY-MM-DD → days from today (viewer local midnight). */
-export function daysUntilExam(examDate: string, now = new Date()): number {
+/** Civil calendar parts for `now` in a given IANA timezone (default es-MX). */
+export function civilTodayInTz(
+  timeZone = "America/Mexico_City",
+  now = new Date(),
+): { y: number; m: number; d: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? NaN);
+  return { y: get("year"), m: get("month"), d: get("day") };
+}
+
+/** Civil YYYY-MM-DD → days from today (user timezone midnight). */
+export function daysUntilExam(
+  examDate: string,
+  now = new Date(),
+  timeZone = "America/Mexico_City",
+): number {
   const [y, m, d] = examDate.split("-").map(Number);
   if (!y || !m || !d) return NaN;
-  const target = new Date(y, m - 1, d);
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  const today = civilTodayInTz(timeZone, now);
+  if (!today.y || !today.m || !today.d) return NaN;
+  const targetUtc = Date.UTC(y, m - 1, d);
+  const todayUtc = Date.UTC(today.y, today.m - 1, today.d);
+  return Math.round((targetUtc - todayUtc) / 86_400_000);
 }
 
 function formatLongDate(examDate: string, locale = "es-MX"): string {
@@ -36,7 +58,7 @@ type Props = {
  */
 export function ExamCountdown({ examDate, className, compact }: Props) {
   const days = useMemo(
-    () => (examDate ? daysUntilExam(examDate) : null),
+    () => (examDate ? daysUntilExam(examDate, new Date(), "America/Mexico_City") : null),
     [examDate],
   );
 

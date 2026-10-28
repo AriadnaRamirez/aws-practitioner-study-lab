@@ -42,6 +42,7 @@ function greetingName(user: PublicUser): string {
 
 function examGreetingLine(
   examDate: string | null | undefined,
+  timeZone?: string | null,
 ): { primary: string; secondary?: string } {
   if (!examDate) {
     return {
@@ -49,7 +50,11 @@ function examGreetingLine(
       secondary: "para ver la cuenta regresiva",
     };
   }
-  const days = daysUntilExam(examDate);
+  const days = daysUntilExam(
+    examDate,
+    new Date(),
+    timeZone || "America/Mexico_City",
+  );
   if (Number.isNaN(days)) {
     return { primary: "Revisa la fecha de tu examen" };
   }
@@ -127,7 +132,7 @@ export function DashboardClient() {
   const otherSessions = hasActive ? activeSessions.slice(1) : [];
 
   const name = greetingName(user);
-  const examLine = examGreetingLine(user.examDate);
+  const examLine = examGreetingLine(user.examDate, user.timezone);
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-10">
