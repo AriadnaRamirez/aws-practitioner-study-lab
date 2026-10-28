@@ -17,6 +17,8 @@ type NavItem = { href: string; label: string; match?: string[] };
 const STUDENT_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Inicio", match: ["/dashboard"] },
   { href: "/estudiar", label: "Estudiar", match: ["/estudiar"] },
+  { href: "/mas-falladas", label: "Más falladas" },
+  { href: "/podio", label: "Podio" },
   { href: "/progreso", label: "Progreso" },
   { href: "/cuenta", label: "Cuenta", match: ["/cuenta"] },
 ];
@@ -36,6 +38,7 @@ export function AppNav() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [user, setUser] = useState<PublicUser | null>(null);
   const [masteryPct, setMasteryPct] = useState<number | null>(null);
+  const [dailyStreak, setDailyStreak] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [panelTop, setPanelTop] = useState(56);
@@ -47,11 +50,18 @@ export function AppNav() {
     setReady(true);
     if (!token) {
       setMasteryPct(null);
+      setDailyStreak(null);
       return;
     }
     void fetchProgressOverview()
-      .then((ov) => setMasteryPct(ov.masteryPct))
-      .catch(() => setMasteryPct(null));
+      .then((ov) => {
+        setMasteryPct(ov.masteryPct);
+        setDailyStreak(ov.dailyStreak);
+      })
+      .catch(() => {
+        setMasteryPct(null);
+        setDailyStreak(null);
+      });
   }, [pathname]);
 
   useEffect(() => {
@@ -155,6 +165,14 @@ export function AppNav() {
           {masteryPct != null ? (
             <span className="hidden font-mono text-xs tabular-nums text-[var(--foreground-muted)] sm:inline">
               {masteryPct}%
+              {dailyStreak != null ? (
+                <>
+                  {" · "}
+                  <span aria-label={`Racha de ${dailyStreak} días`}>
+                    Racha {dailyStreak}
+                  </span>
+                </>
+              ) : null}
             </span>
           ) : null}
         </div>

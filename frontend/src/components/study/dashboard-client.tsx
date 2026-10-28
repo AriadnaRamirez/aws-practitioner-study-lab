@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type {
+  ActiveSessionSummary,
   ProgressOverview,
   PublicUser,
   TopicProgressRow,
@@ -20,6 +21,16 @@ import {
   getStoredToken,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
+
+function resumeHref(s: ActiveSessionSummary): string {
+  if (s.mode === "EXAM_TIMED") return `/estudiar/examen?session=${s.id}`;
+  if (s.mode === "WEAK_REVIEW") return "/mas-falladas";
+  return `/estudiar?session=${s.id}`;
+}
+
+function streakLabel(n: number): string {
+  return n === 1 ? "1 día" : `${n} días`;
+}
 
 export function DashboardClient() {
   const [user, setUser] = useState<PublicUser | null>(null);
@@ -73,6 +84,11 @@ export function DashboardClient() {
   }
 
   const pct = overview?.masteryPct ?? 0;
+  const dailyStreak = overview?.dailyStreak ?? 0;
+  const activeSessions = overview?.activeSessions ?? [];
+  const hasActive = activeSessions.length > 0;
+  const primarySession = hasActive ? activeSessions[0] : null;
+  const otherSessions = hasActive ? activeSessions.slice(1) : [];
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-10">
@@ -84,6 +100,19 @@ export function DashboardClient() {
           <p className="mt-0.5 font-mono text-sm tabular-nums text-[var(--foreground)]">
             {pct}%
           </p>
+          <p
+            className="mt-1 text-sm text-[var(--foreground-muted)]"
+            aria-label={`Racha diaria: ${streakLabel(dailyStreak)}`}
+          >
+            Racha{" "}
+            <span className="font-mono tabular-nums text-[var(--foreground)]">
+              {dailyStreak}
+            </span>
+            <span className="text-[var(--foreground-muted)]">
+              {" "}
+              · {streakLabel(dailyStreak)}
+            </span>
+          </p>
         </div>
         <Mascot pose="wave" size="sm" className="shrink-0" />
       </header>
@@ -92,19 +121,46 @@ export function DashboardClient() {
 
       <TopicFolders topics={topics} className="mt-7" />
 
-      <Link
-        href="/estudiar?start=10"
-        className={cn(
-          buttonVariants({ size: "lg" }),
-          "mt-7 inline-flex w-full justify-center",
-        )}
-      >
-        Empezar 10
-      </Link>
+      {primarySession ? (
+        <div className="mt-7 space-y-3">
+          <Link
+            href={resumeHref(primarySession)}
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "inline-flex w-full justify-center",
+            )}
+          >
+            Continuar
+          </Link>
+          <p className="text-center text-xs text-[var(--foreground-muted)]">
+            {STUDY_MODE_LABELS[primarySession.mode]}{" "}
+            {primarySession.answered}/{primarySession.size}
+          </p>
+          <Link
+            href="/estudiar?start=10"
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "lg" }),
+              "inline-flex w-full justify-center",
+            )}
+          >
+            Empezar 10
+          </Link>
+        </div>
+      ) : (
+        <Link
+          href="/estudiar?start=10"
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "mt-7 inline-flex w-full justify-center",
+          )}
+        >
+          Empezar 10
+        </Link>
+      )}
 
-      {overview?.activeSessions?.length ? (
-        <ul className="mt-8 space-y-0 border-t border-[var(--border)]">
-          {overview.activeSessions.map((s) => (
+      {otherSessions.length ? (
+        <ul className="mt-6 space-y-0 border-t border-[var(--border)]">
+          {otherSessions.map((s) => (
             <li
               key={s.id}
               className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3"
@@ -113,13 +169,7 @@ export function DashboardClient() {
                 {STUDY_MODE_LABELS[s.mode]} {s.answered}/{s.size}
               </p>
               <Link
-                href={
-                  s.mode === "EXAM_TIMED"
-                    ? `/estudiar/examen?session=${s.id}`
-                    : s.mode === "WEAK_REVIEW"
-                      ? "/mas-falladas"
-                      : `/estudiar?session=${s.id}`
-                }
+                href={resumeHref(s)}
                 className="shrink-0 text-sm font-semibold text-[var(--foreground)]"
               >
                 Continuar
@@ -128,6 +178,18 @@ export function DashboardClient() {
           ))}
         </ul>
       ) : null}
+
+      <nav
+        className="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-t border-[var(--border)] pt-6 text-sm"
+        aria-label="Atajos"
+      >
+        <Link href="/podio" className="hover:text-[var(--foreground)]">
+          Podio
+        </Link>
+        <Link href="/mas-falladas" className="hover:text-[var(--foreground)]">
+          Más falladas
+        </Link>
+      </nav>
     </div>
   );
 }
