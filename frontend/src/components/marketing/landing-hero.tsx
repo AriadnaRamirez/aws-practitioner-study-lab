@@ -108,18 +108,6 @@ export function LandingHero() {
         <p className="mt-8 max-w-[18rem] text-sm leading-snug text-[var(--brand-light-gray)] sm:mt-10">
           Prepárate para la certificación AWS Cloud Practitioner
         </p>
-
-        <p className="mt-4 text-xs text-[var(--foreground-muted)]">
-          Autora ·{" "}
-          <a
-            href={AUTHOR_LINKEDIN}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-[var(--foreground)] underline-offset-2 hover:underline"
-          >
-            Ariadna Ramírez
-          </a>
-        </p>
       </main>
 
       <div className="relative z-10 mt-auto">
