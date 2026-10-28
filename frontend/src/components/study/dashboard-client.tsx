@@ -10,7 +10,7 @@ import type {
 } from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
 import { Mascot } from "@/components/brand/mascot";
-import { ExamCountdown } from "@/components/study/exam-countdown";
+import { daysUntilExam } from "@/components/study/exam-countdown";
 import { TopicFolders } from "@/components/study/topic-folders";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -30,6 +30,42 @@ function resumeHref(s: ActiveSessionSummary): string {
 
 function streakLabel(n: number): string {
   return n === 1 ? "1 día" : `${n} días`;
+}
+
+/** Nombre corto para el saludo (Ariadna → Ari). */
+function greetingName(user: PublicUser): string {
+  const u = user.username.trim().toLowerCase();
+  if (user.role === "ADMIN" || u === "ariadna" || u === "ari") return "Ari";
+  if (!u) return "tú";
+  return u.charAt(0).toUpperCase() + u.slice(1);
+}
+
+function examGreetingLine(
+  examDate: string | null | undefined,
+): { primary: string; secondary?: string } {
+  if (!examDate) {
+    return {
+      primary: "Agrega la fecha de tu examen",
+      secondary: "para ver la cuenta regresiva",
+    };
+  }
+  const days = daysUntilExam(examDate);
+  if (Number.isNaN(days)) {
+    return { primary: "Revisa la fecha de tu examen" };
+  }
+  if (days > 1) {
+    return { primary: `faltan ${days} días para tu examen` };
+  }
+  if (days === 1) {
+    return { primary: "mañana es tu examen" };
+  }
+  if (days === 0) {
+    return { primary: "hoy es tu examen" };
+  }
+  const ago = Math.abs(days);
+  return {
+    primary: ago === 1 ? "tu examen fue ayer" : `tu examen fue hace ${ago} días`,
+  };
 }
 
 export function DashboardClient() {
@@ -90,34 +126,48 @@ export function DashboardClient() {
   const primarySession = hasActive ? activeSessions[0] : null;
   const otherSessions = hasActive ? activeSessions.slice(1) : [];
 
+  const name = greetingName(user);
+  const examLine = examGreetingLine(user.examDate);
+
   return (
     <div className="mx-auto w-full min-w-0 max-w-xl px-4 py-8 sm:px-6 sm:py-10">
-      <header className="flex min-w-0 items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display min-w-0 truncate text-2xl font-semibold tracking-tight">
-            @{user.username}
+      <header className="flex min-w-0 items-center gap-4 sm:gap-5">
+        <Mascot pose="wave" size="md" className="shrink-0" />
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-3xl">
+            Hola {name},
           </h1>
-          <p className="mt-0.5 font-mono text-sm tabular-nums text-[var(--foreground)]">
-            {pct}%
-          </p>
           <p
-            className="mt-1 text-sm text-[var(--foreground-muted)]"
-            aria-label={`Racha diaria: ${streakLabel(dailyStreak)}`}
+            className="mt-1 text-base leading-snug text-[var(--foreground-muted)] sm:text-lg"
+            aria-live="polite"
           >
-            Racha{" "}
+            {examLine.primary}
+            {examLine.secondary ? (
+              <>
+                <br />
+                <span className="text-sm">{examLine.secondary}</span>
+              </>
+            ) : null}
+          </p>
+          <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--foreground-muted)]">
             <span className="font-mono tabular-nums text-[var(--foreground)]">
-              {dailyStreak}
+              {pct}%
             </span>
-            <span className="text-[var(--foreground-muted)]">
-              {" "}
-              · {streakLabel(dailyStreak)}
+            <span aria-label={`Racha diaria: ${streakLabel(dailyStreak)}`}>
+              Racha{" "}
+              <span className="font-mono tabular-nums text-[var(--foreground)]">
+                {dailyStreak}
+              </span>
             </span>
+            <Link
+              href="/cuenta"
+              className="text-[var(--foreground)] underline-offset-4 hover:underline"
+            >
+              {user.examDate ? "Cambiar fecha" : "Agregar fecha"}
+            </Link>
           </p>
         </div>
-        <Mascot pose="wave" size="sm" className="shrink-0" />
       </header>
-
-      <ExamCountdown className="mt-5" examDate={user.examDate} compact />
 
       <TopicFolders topics={topics} className="mt-7" />
 
