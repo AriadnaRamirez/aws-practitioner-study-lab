@@ -174,51 +174,57 @@ export function DashboardClient() {
         </div>
       </header>
 
-      <TopicFolders topics={topics} className="mt-7" />
-
-      {primarySession ? (
-        <div className="mt-7 space-y-3">
+      {/* CTA principal: sesión mixta, justo debajo del personaje */}
+      <div className="mt-6 space-y-3">
+        {primarySession ? (
+          <>
+            <Link
+              href={resumeHref(primarySession)}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "inline-flex w-full justify-center",
+              )}
+            >
+              Continuar sesión
+            </Link>
+            <p className="text-center text-xs text-[var(--foreground-muted)]">
+              {STUDY_MODE_LABELS[primarySession.mode]}{" "}
+              {primarySession.answered}/{primarySession.size}
+            </p>
+            <Link
+              href="/estudiar?start=10"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "lg" }),
+                "inline-flex w-full justify-center",
+              )}
+            >
+              Nueva sesión (temas mixtos)
+            </Link>
+          </>
+        ) : (
           <Link
-            href={resumeHref(primarySession)}
+            href="/estudiar?start=10"
             className={cn(
               buttonVariants({ size: "lg" }),
               "inline-flex w-full justify-center",
             )}
           >
-            Continuar
+            Empezar a estudiar
           </Link>
+        )}
+        {!primarySession ? (
           <p className="text-center text-xs text-[var(--foreground-muted)]">
-            {STUDY_MODE_LABELS[primarySession.mode]}{" "}
-            {primarySession.answered}/{primarySession.size}
+            10 cartas · temas mixtos
           </p>
-          <Link
-            href="/estudiar?start=10"
-            className={cn(
-              buttonVariants({ variant: "secondary", size: "lg" }),
-              "inline-flex w-full justify-center",
-            )}
-          >
-            Empezar 10
-          </Link>
-        </div>
-      ) : (
-        <Link
-          href="/estudiar?start=10"
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            "mt-7 inline-flex w-full justify-center",
-          )}
-        >
-          Empezar 10
-        </Link>
-      )}
+        ) : null}
+      </div>
 
       {otherSessions.length ? (
-        <ul className="mt-6 space-y-0 border-t border-[var(--border)]">
+        <ul className="mt-5 space-y-0 border-t border-[var(--border)]/60">
           {otherSessions.map((s) => (
             <li
               key={s.id}
-              className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3"
+              className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)]/60 py-3"
             >
               <p className="min-w-0 truncate text-sm text-[var(--foreground-muted)]">
                 {STUDY_MODE_LABELS[s.mode]} {s.answered}/{s.size}
@@ -234,8 +240,19 @@ export function DashboardClient() {
         </ul>
       ) : null}
 
+      {/* Después: personalizar por tema */}
+      <section className="mt-8" aria-labelledby="temas-heading">
+        <h2
+          id="temas-heading"
+          className="text-sm font-medium text-[var(--foreground-muted)]"
+        >
+          O elige un tema
+        </h2>
+        <TopicFolders topics={topics} className="mt-3" />
+      </section>
+
       <nav
-        className="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-t border-[var(--border)] pt-6 text-sm"
+        className="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-t border-[var(--border)]/40 pt-5 text-sm text-[var(--foreground-muted)]"
         aria-label="Atajos"
       >
         <Link href="/podio" className="hover:text-[var(--foreground)]">
