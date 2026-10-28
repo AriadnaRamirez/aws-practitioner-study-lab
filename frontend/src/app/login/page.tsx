@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormEvent, Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mascot } from "@/components/brand/mascot";
+import { buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { login, storeAuth } from "@/lib/api";
 
@@ -20,9 +22,10 @@ function safeNextPath(raw: string | null, role: string): string {
   return raw;
 }
 
-const fieldClass =
-  "flex h-12 w-full rounded-xl border border-[#D4D4D0] bg-white px-4 text-sm text-[#1A1A1A] placeholder:text-[#A7A7A7] transition-[border-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1A1A]/30";
-
+/**
+ * Disposición del boceto mobile (header + mascot, form compacto, ojo).
+ * Paleta: tokens de producción — sin tip light.
+ */
 function LoginForm() {
   const searchParams = useSearchParams();
   const nextParam = searchParams.get("next");
@@ -62,63 +65,65 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-[#F6F6F4] text-[#1A1A1A]">
+    <div className="flex min-h-dvh w-full flex-col bg-[var(--background)] text-[var(--foreground)]">
       <main className="mx-auto flex w-full max-w-[22rem] flex-1 flex-col px-7 py-10 sm:max-w-sm sm:px-8 sm:py-14">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 pt-1">
             <Link
               href="/"
-              className="font-display text-sm font-semibold tracking-tight text-[#1A1A1A]"
+              className="font-display text-sm font-semibold tracking-tight text-[var(--foreground)]"
             >
-              AWS Study Lab
+              Study Lab
             </Link>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-tight">
               Entrar
             </h1>
             {hint ? (
-              <p className="mt-2 text-xs text-[#646464]">{hint}</p>
+              <p className="mt-2 text-xs text-[var(--foreground-muted)]">{hint}</p>
             ) : null}
           </div>
-          <div className="flex size-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#EBEBE8] sm:size-28">
+          <div className="relative flex size-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--surface)] sm:size-28">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_55%,rgba(232,80,2,0.2),transparent_70%)]"
+            />
             <Mascot
               pose="wave"
               size="sm"
               priority
-              glow={false}
-              className="!h-16 !w-20 sm:!h-20 sm:!w-24"
+              className="relative !h-16 !w-20 sm:!h-20 sm:!w-24"
             />
           </div>
         </div>
 
         <form onSubmit={onSubmit} className="mt-10 flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-left text-sm font-medium text-[#333]">
+          <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
             Correo o usuario
-            <input
+            <Input
               name="identifier"
               type="text"
               required
               autoComplete="username"
-              className={fieldClass}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
             />
           </label>
 
-          <label className="flex flex-col gap-1.5 text-left text-sm font-medium text-[#333]">
+          <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
             Contraseña
             <span className="relative block">
-              <input
+              <Input
                 name="password"
                 type={showPassword ? "text" : "password"}
                 required
                 autoComplete="current-password"
-                className={cn(fieldClass, "pr-12")}
+                className="pr-12"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-[#646464] hover:text-[#1A1A1A]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
                 aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                 aria-pressed={showPassword}
                 onClick={() => setShowPassword((v) => !v)}
@@ -149,7 +154,7 @@ function LoginForm() {
           </label>
 
           {error ? (
-            <p className="text-sm text-[#C10801]" role="alert">
+            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
               {error}
             </p>
           ) : null}
@@ -157,10 +162,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={pending}
-            className={cn(
-              "mt-1 flex h-12 w-full items-center justify-center rounded-xl text-base font-semibold transition-colors",
-              "bg-[#E4E4E0] text-[#1A1A1A] hover:bg-[#D8D8D2] disabled:opacity-60",
-            )}
+            className={cn(buttonVariants({ size: "lg" }), "mt-1 w-full")}
           >
             {pending ? "Entrando…" : "Entrar"}
           </button>
@@ -169,16 +171,16 @@ function LoginForm() {
         <p className="mt-4 text-right text-sm">
           <Link
             href="/forgot-password"
-            className="text-[#646464] underline-offset-4 hover:text-[#1A1A1A] hover:underline"
+            className="text-[var(--foreground-muted)] underline-offset-4 hover:text-[var(--foreground)] hover:underline"
           >
             Olvidé mi contraseña
           </Link>
         </p>
 
-        <p className="mt-auto pt-12 text-center text-sm text-[#646464]">
+        <p className="mt-auto pt-12 text-center text-sm text-[var(--foreground-muted)]">
           <Link
             href="/register"
-            className="font-medium text-[#1A1A1A] underline-offset-4 hover:underline"
+            className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
           >
             Crear cuenta
           </Link>
@@ -187,7 +189,7 @@ function LoginForm() {
           </span>
           <Link
             href="/guest"
-            className="font-medium text-[#1A1A1A] underline-offset-4 hover:underline"
+            className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
           >
             Probar sin cuenta
           </Link>
@@ -204,7 +206,7 @@ function LoginForm() {
                   setPassword(acc.password);
                   void doLogin(acc.identifier, acc.password);
                 }}
-                className="w-full rounded-lg px-2 py-1.5 text-center text-[11px] text-[#A7A7A7] hover:bg-[#EBEBE8] hover:text-[#646464] disabled:opacity-50"
+                className="w-full rounded-lg px-2 py-1.5 text-center text-[11px] text-[var(--foreground-muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)] disabled:opacity-50"
               >
                 {acc.label}
               </button>
@@ -220,8 +222,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto flex min-h-dvh max-w-[22rem] items-center justify-center bg-[#F6F6F4] px-7">
-          <p className="text-sm text-[#646464]">Cargando…</p>
+        <main className="mx-auto flex min-h-dvh max-w-[22rem] items-center justify-center bg-[var(--background)] px-7">
+          <p className="text-sm text-[var(--foreground-muted)]">Cargando…</p>
         </main>
       }
     >
