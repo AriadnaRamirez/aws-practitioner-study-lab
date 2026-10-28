@@ -117,7 +117,13 @@ export function LandingHero() {
         </div>
       </main>
 
-      <SiteCredits className="relative z-10 border-t border-[var(--border)]/40 bg-[var(--background)]/60" />
+      <div className="relative z-10">
+        <div
+          aria-hidden
+          className="mx-auto h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-[var(--border)] to-transparent"
+        />
+        <SiteCredits className="bg-[var(--background)]/40" />
+      </div>
     </div>
   );
 }

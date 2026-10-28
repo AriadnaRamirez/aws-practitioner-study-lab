@@ -5,7 +5,7 @@ type Props = {
   compact?: boolean;
 };
 
-/** Disclaimer + partner marks (subtle) + author. */
+/** Disclaimer + partner marks — quiet, centered, no visual noise. */
 export function SiteCredits({ className, compact = false }: Props) {
   return (
     <aside
@@ -14,67 +14,63 @@ export function SiteCredits({ className, compact = false }: Props) {
     >
       <div
         className={cn(
-          "mx-auto w-full min-w-0 max-w-3xl px-4 sm:px-6",
-          compact ? "py-3" : "py-5",
+          "mx-auto flex w-full min-w-0 max-w-md flex-col items-center px-4 text-center sm:px-6",
+          compact ? "py-7" : "py-9",
         )}
       >
-        <p className="text-[11px] leading-relaxed text-[var(--foreground-muted)]/70">
+        <p className="text-[10px] leading-relaxed text-[var(--foreground-muted)]/40">
           Material de estudio no oficial. No afiliado ni respaldado por Amazon
           Web Services ni por Generation México.
         </p>
 
         <div
           className={cn(
-            "flex flex-wrap items-center gap-x-5 gap-y-2 opacity-45",
-            compact ? "mt-3" : "mt-4",
+            "flex items-center justify-center gap-3",
+            compact ? "mt-3.5" : "mt-4",
           )}
         >
           <a
             href="https://mexico.generation.org/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center transition-opacity hover:opacity-80"
+            className="inline-flex h-3.5 w-[5.25rem] items-center justify-center opacity-[0.26] transition-opacity duration-300 hover:opacity-45"
             title="Generation México"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/partners/generation-mexico.svg"
               alt="Generation México"
-              width={112}
-              height={32}
-              className="h-5 w-auto sm:h-6"
+              className="!h-full !w-full object-contain"
               loading="lazy"
               decoding="async"
             />
           </a>
 
+          <span
+            aria-hidden
+            className="h-2.5 w-px shrink-0 bg-[var(--foreground)]/12"
+          />
+
           <a
             href="https://aws.amazon.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center transition-opacity hover:opacity-80"
+            className="inline-flex h-3.5 w-9 items-center justify-center opacity-[0.26] transition-opacity duration-300 hover:opacity-45"
             title="Amazon Web Services"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/partners/aws-logo-white.png"
               alt="AWS"
-              width={72}
-              height={45}
-              className="h-5 w-auto sm:h-6"
+              className="!h-full !w-full object-contain"
               loading="lazy"
               decoding="async"
             />
           </a>
         </div>
 
-        <p
-          className={cn(
-            "text-[11px] text-[var(--foreground-muted)]/60",
-            compact ? "mt-3" : "mt-4",
-          )}
-        >
-          Autora: Ariadna Ramírez
+        <p className="mt-3 text-[10px] tracking-[0.06em] text-[var(--foreground-muted)]/28">
+          Ariadna Ramírez
         </p>
       </div>
     </aside>
