@@ -117,7 +117,7 @@ export function LandingHero() {
         </div>
       </main>
 
-      <SiteCredits className="relative z-10 bg-[var(--background)]/80" />
+      <SiteCredits className="relative z-10 border-t border-[var(--border)]/40 bg-[var(--background)]/60" />
     </div>
   );
 }
