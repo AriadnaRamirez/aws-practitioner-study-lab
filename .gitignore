@@ -13,3 +13,4 @@ frontend/.next
 packages/shared/dist
 *.tsbuildinfo
 agent-tools
+.worktrees/
