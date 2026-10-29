@@ -2,12 +2,12 @@
 
 /*
   Brand palette (locked):
-  Orange #E85002 · Black #000000 · White #F9F9F9
+  Copper #D2652F · Black #000000 · White #F9F9F9
   Light gray #A7A7A7 · Gray #646464 · Dark gray #333333
-  Gradient #000000 → #C10801 → #F16001 → #D9C3AB
+  Gradient #0A0F1A → #9E4320 → #D2652F → #D9C3AB
 */
 :root {
-  --brand-orange: #e85002;
+  --brand-orange: #d2652f;
   --brand-black: #000000;
   /* Matches mascot plate backgrounds so characters blend seamlessly */
   --brand-ink: #0a0f1a;
@@ -16,8 +16,8 @@
   --brand-gray: #646464;
   --brand-dark-gray: #1a2233;
   --brand-grad-1: #0a0f1a;
-  --brand-grad-2: #c10801;
-  --brand-grad-3: #f16001;
+  --brand-grad-2: #9e4320;
+  --brand-grad-3: #d2652f;
   --brand-grad-4: #d9c3ab;
 
   --background: var(--brand-ink);
@@ -29,10 +29,10 @@
   --border: rgba(249, 249, 249, 0.12);
   --border-strong: rgba(249, 249, 249, 0.22);
   --accent: var(--brand-orange);
-  --accent-hover: #f16001;
+  --accent-hover: #df7843;
   --accent-foreground: var(--brand-white);
-  --accent-soft: rgba(232, 80, 2, 0.14);
-  --accent-deep: #c10801;
+  --accent-soft: rgba(210, 101, 47, 0.14);
+  --accent-deep: #9e4320;
   --accent-warm: var(--brand-orange);
   /* Neutral focus ring — orange reserved for primary CTAs */
   --ring: rgba(249, 249, 249, 0.55);
@@ -80,10 +80,10 @@
   --border: rgba(249, 249, 249, 0.12);
   --border-strong: rgba(249, 249, 249, 0.22);
   --accent: var(--brand-orange);
-  --accent-hover: #f16001;
+  --accent-hover: #df7843;
   --accent-foreground: var(--brand-white);
-  --accent-soft: rgba(232, 80, 2, 0.14);
-  --accent-deep: #c10801;
+  --accent-soft: rgba(210, 101, 47, 0.14);
+  --accent-deep: #9e4320;
   --accent-warm: var(--brand-orange);
   /* Neutral focus ring — orange reserved for primary CTAs */
   --ring: rgba(249, 249, 249, 0.55);
@@ -259,18 +259,15 @@ code,
   gap: 0.75rem;
   border-radius: 9999px;
   background: var(--glass);
-  border: 1px solid var(--glass-border);
   box-shadow: var(--pill-shadow);
   color: var(--foreground);
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
     transform 0.15s ease;
 }
 
 .glass-pill:hover {
   background: var(--glass-strong);
-  border-color: rgba(249, 249, 249, 0.28);
 }
 
 .glass-pill:active {
@@ -279,14 +276,12 @@ code,
 
 .glass-pill-solid {
   background: var(--brand-dark-gray);
-  border-color: rgba(249, 249, 249, 0.12);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
 .glass-pill-solid:hover {
-  background: #3d3d3d;
-  border-color: rgba(249, 249, 249, 0.22);
+  background: var(--surface-hover);
 }
 
 /* Soft branding atmosphere — pre-softened gradients (no live CSS blur) */
@@ -350,42 +345,45 @@ code,
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: var(--surface);
+  background: var(--surface-elevated);
   color: var(--foreground);
-  border: 1px solid var(--border);
   font-weight: 600;
   letter-spacing: -0.02em;
   transition:
     background-color 0.15s ease,
-    border-color 0.15s ease,
+    color 0.15s ease,
     transform 0.12s ease;
-}
-
-.keycap-accent {
-  background: var(--surface-hover);
-  color: var(--foreground);
-  border-color: var(--border-strong);
 }
 
 .keycap:hover {
   background: var(--surface-hover);
 }
 
-.keycap-accent:hover {
-  background: var(--surface-hover);
-  border-color: rgba(249, 249, 249, 0.28);
+/* Answer options wrap to several lines; a pill radius would eat the text at the corners. */
+.keycap-option {
+  border-radius: 1rem;
+  align-items: baseline;
+  justify-content: flex-start;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
-.keycap-correct {
+.keycap-accent,
+.keycap-accent:hover {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-elevated));
+  color: var(--foreground);
+}
+
+.keycap-correct,
+.keycap-correct:hover {
   background: var(--success);
   color: var(--success-fg);
-  border-color: transparent;
 }
 
-.keycap-wrong {
+.keycap-wrong,
+.keycap-wrong:hover {
   background: var(--danger);
   color: var(--danger-fg);
-  border-color: transparent;
 }
 
 @keyframes celebrate-pop {
@@ -427,6 +425,51 @@ code,
 
 .keycap:active {
   transform: scale(0.98);
+}
+
+/* Session size picker: each mini deck fans out when its option is chosen.
+   Per-card geometry comes from inline custom properties (session-size-picker.tsx). */
+.size-stack-card {
+  --t-rest: translate(calc(-50% + var(--rest-x)), var(--rest-y))
+    rotate(var(--rest-rot));
+  --t-fan: translate(calc(-50% + var(--fan-x)), var(--fan-y))
+    rotate(var(--fan-rot));
+  --t-peek: translate(calc(-50% + var(--peek-x)), var(--peek-y))
+    rotate(var(--peek-rot));
+  transform: var(--t-rest);
+  transform-origin: 50% 100%;
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--delay-out, 0ms),
+    background-color 200ms ease;
+}
+
+.size-option[aria-checked="true"] .size-stack-card {
+  transform: var(--t-fan);
+  transition-delay: var(--delay-in, 0ms), 0ms;
+}
+
+.size-option[aria-checked="false"]:hover .size-stack-card,
+.size-option[aria-checked="false"]:focus-visible .size-stack-card {
+  transform: var(--t-peek);
+  transition-delay: 0ms, 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .size-stack-card,
+  .size-option[aria-checked="true"] .size-stack-card,
+  .size-option[aria-checked="false"]:hover .size-stack-card,
+  .size-option[aria-checked="false"]:focus-visible .size-stack-card {
+    transform: var(--t-rest);
+    transition: background-color 150ms ease;
+  }
+}
+
+/* Arma tu partida: overflow-x: hidden turns these ancestors into scroll
+   containers, which disables the sticky summary column / bottom bar. */
+body:has([data-session-builder]),
+body:has([data-session-builder]) div:has(> main#contenido),
+body:has([data-session-builder]) main#contenido {
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {

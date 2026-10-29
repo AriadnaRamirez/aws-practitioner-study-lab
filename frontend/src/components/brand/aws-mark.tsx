@@ -10,6 +10,8 @@ type Props = {
    * `onDarkColor`: white wordmark + orange smile (color accent on dark).
    */
   tone?: "onDark" | "onLight" | "onDarkColor";
+  /** Pass `""` when adjacent text already names AWS. */
+  alt?: string;
 };
 
 const ASPECT: Record<NonNullable<Props["tone"]>, number> = {
@@ -27,14 +29,20 @@ const SRC: Record<NonNullable<Props["tone"]>, string> = {
 };
 
 /** Official AWS wordmark + smile (assets provided by product). */
-export function AwsMark({ className, height = 28, tone = "onDark" }: Props) {
+export function AwsMark({
+  className,
+  height = 28,
+  tone = "onDark",
+  alt = "AWS",
+}: Props) {
   const width = Math.round(height * ASPECT[tone]);
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={SRC[tone]}
-      alt="AWS"
+      alt={alt}
+      aria-hidden={alt === "" ? true : undefined}
       width={width}
       height={height}
       className={cn("w-auto object-contain", className)}

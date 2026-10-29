@@ -1,6 +1,7 @@
 import { OnboardingHost } from "@/components/onboarding/onboarding-host";
 import { AppNav } from "@/components/shell/app-nav";
 import { SiteFooter } from "@/components/shell/site-footer";
+import { TimezoneSync } from "@/components/shell/timezone-sync";
 
 export default function AppShellLayout({
   children,
@@ -15,6 +16,7 @@ export default function AppShellLayout({
       </main>
       <SiteFooter />
       <OnboardingHost />
+      <TimezoneSync />
     </div>
   );
 }

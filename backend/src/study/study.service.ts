@@ -10,6 +10,7 @@ import {
   MISS_REPEAT_OFFSET,
   STUDY_SIZES,
   examTimedLimitSec,
+  planWeakReview,
   type AnswerStudyResponse,
   type ExamQuestion,
   type ExamTimedMistake,
@@ -30,7 +31,6 @@ import {
   type StudySessionSummary,
   type StudySessionView,
   type StudySize,
-  type WeakItem,
   type WeakItemsResponse,
 } from '@aps/shared';
 import {
@@ -40,6 +40,7 @@ import {
   type User,
 } from '@prisma/client';
 import { ContentService } from '../content/content.service';
+import { FeatureFlagsService } from '../feature-flags/feature-flags.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   parseExamQueueState,
@@ -47,8 +48,20 @@ import {
   serializeExamQueue,
   serializeTimed,
 } from './exam-session-state';
+import { sampleBalancedByTopic } from './balanced-sampler';
+import {
+  TODAY_LOOKBACK_MS,
+  civilDateInTz,
+  countOnCivilDay,
+} from './civil-day';
 import { pickVariant, renderFlashVariant } from './flash-render';
 import {
+  RECENT_ACCURACY_SAMPLE,
+  countMasteredToday,
+  recentAccuracy,
+} from './progress-today';
+import {
+  flashScopeOf,
   parseState,
   serializeState,
   type QueueEntry as FlashQueueEntry,
@@ -61,8 +74,16 @@ import {
   type TimedSessionRecord,
   StudyStore,
 } from './study.store';
-
-const STEM_PREVIEW = 96;
+import {
+  WEAK_REVIEW_CANDIDATES,
+  failureStatsByItem,
+  knowledgeContent,
+  missingContent,
+  questionContent,
+  toWeakItem,
+  weakItemKey,
+  type WeakItemContent,
+} from './weak-items';
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -79,19 +100,6 @@ function shuffle<T>(items: T[]): T[] {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
-}
-
-function civilDateInTz(date: Date, timeZone: string): string {
-  try {
-    return new Intl.DateTimeFormat('en-CA', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(date);
-  } catch {
-    return date.toISOString().slice(0, 10);
-  }
 }
 
 function dayDiff(a: string, b: string): number {
@@ -182,6 +190,11 @@ export function requeueMiss(
 /** Short in-memory cache so each flash answer does not re-query all knowledge. */
 const KNOWLEDGE_CACHE_TTL_MS = 20_000;
 
+type TrackableItems = {
+  knowledge: { id: string; topicId: string }[];
+  questions: { id: string; topicId: string }[];
+};
+
 @Injectable()
 export class StudyService {
   private knowledgeCache: { at: number; items: KnowledgeItem[] } | null = null;
@@ -192,6 +205,7 @@ export class StudyService {
     private readonly store: StudyStore,
     private readonly content: ContentService,
     private readonly prisma: PrismaService,
+    private readonly flags: FeatureFlagsService,
   ) {}
 
   private async withSessionAnswerLock<T>(
@@ -235,7 +249,27 @@ export class StudyService {
     size: SessionSize;
     topicIds?: string[];
     timezone?: string;
+    balanced?: boolean;
   }): Promise<StudySessionView | ExamTimedSessionView> {
+    if (
+      (opts.mode === 'EXAM_STUDY' || opts.mode === 'EXAM_TIMED') &&
+      !(await this.flags.isExamModesEnabled())
+    ) {
+      throw new BadRequestException(
+        'El modo examen está en pausa; por ahora solo están disponibles las cartas',
+      );
+    }
+
+    if (
+      opts.mode === 'FLASH_STUDY' &&
+      opts.balanced &&
+      !opts.topicIds?.some(Boolean)
+    ) {
+      throw new BadRequestException(
+        'La partida rápida necesita la lista de temas (topicIds)',
+      );
+    }
+
     // CCST parity: starting a new session abandons open ones of the same mode.
     await this.abandonOpenSessions(opts.user.id, opts.mode);
 
@@ -244,6 +278,7 @@ export class StudyService {
         size: opts.size,
         topicIds: opts.topicIds,
         timezone: opts.timezone,
+        balanced: opts.balanced,
       });
     }
     if (opts.mode === 'EXAM_TIMED') {
@@ -552,7 +587,12 @@ export class StudyService {
 
   private async startFlashSession(
     user: User,
-    opts: { size: SessionSize; topicIds?: string[]; timezone?: string },
+    opts: {
+      size: SessionSize;
+      topicIds?: string[];
+      timezone?: string;
+      balanced?: boolean;
+    },
   ): Promise<StudySessionView> {
     if (!(STUDY_SIZES as readonly number[]).includes(opts.size)) {
       throw new BadRequestException(
@@ -561,7 +601,8 @@ export class StudyService {
     }
 
     const topicIds = opts.topicIds?.filter(Boolean) ?? [];
-    let pool = await this.publishedKnowledge();
+    const allKnowledge = await this.publishedKnowledge();
+    let pool = allKnowledge;
     if (topicIds.length) {
       const set = new Set(topicIds);
       pool = pool.filter((k) => set.has(k.topicId));
@@ -572,10 +613,9 @@ export class StudyService {
       );
     }
 
-    const picked = shuffle(pool).slice(
-      0,
-      Math.min(opts.size as StudySize, pool.length),
-    );
+    const picked = opts.balanced
+      ? sampleBalancedByTopic(pool, topicIds, opts.size)
+      : shuffle(pool).slice(0, Math.min(opts.size as StudySize, pool.length));
     const queue: FlashQueueEntry[] = picked.map((item) => ({
       queueItemId: crypto.randomUUID(),
       itemId: item.id,
@@ -586,8 +626,9 @@ export class StudyService {
       queue,
       current: null,
       masteredItemIds: [],
+      ...(opts.balanced ? { balanced: true } : {}),
     };
-    this.advanceFlashCurrent(state, pool);
+    this.advanceFlashCurrent(state, allKnowledge);
 
     const tz = opts.timezone || user.timezone || 'UTC';
     const session = await this.prisma.studySession.create({
@@ -655,14 +696,19 @@ export class StudyService {
         latencyMs: dto.latencyMs,
         variant: current.variant,
         choiceIndex: dto.choiceIndex,
+        chosenText: current.choices[dto.choiceIndex] ?? null,
       },
     });
 
+    const progressUpdatedAt = new Date();
     const progress = await this.updateItemProgress(
       user.id,
       current.itemId,
       correct,
     );
+    const masteredNow =
+      progress.masteredAt != null &&
+      progress.masteredAt.getTime() >= progressUpdatedAt.getTime();
 
     let sessionStreak = session.sessionStreak;
     let maxSessionStreak = session.maxSessionStreak;
@@ -674,10 +720,7 @@ export class StudyService {
       correctCount += 1;
       sessionStreak += 1;
       maxSessionStreak = Math.max(maxSessionStreak, sessionStreak);
-      if (
-        progress.masteredAt &&
-        !state.masteredItemIds.includes(current.itemId)
-      ) {
+      if (masteredNow && !state.masteredItemIds.includes(current.itemId)) {
         state.masteredItemIds.push(current.itemId);
       }
     } else {
@@ -916,6 +959,7 @@ export class StudyService {
       maxSessionStreak: number;
       answeredCount: number;
       endedAt: Date | null;
+      scopeJson: string;
     },
     state: SessionRuntimeState,
     dailyStreak: number,
@@ -923,6 +967,7 @@ export class StudyService {
     return {
       sessionId: session.id,
       mode: session.mode as StudyMode,
+      scope: flashScopeOf(session.scopeJson, state),
       size: session.size,
       uniqueItems: session.uniqueItems,
       remaining: state.queue.length + (state.current ? 1 : 0),
@@ -1332,20 +1377,68 @@ export class StudyService {
     }
   }
 
-  async getProgressOverview(userId: string) {
+  /**
+   * Items that count toward mastery %. While exam modes are paused only
+   * studyable cards count, otherwise every published card and question.
+   */
+  private async trackableItems(): Promise<TrackableItems> {
+    if (!(await this.flags.isExamModesEnabled())) {
+      const knowledge = await this.publishedKnowledge();
+      return {
+        knowledge: knowledge.map((k) => ({ id: k.id, topicId: k.topicId })),
+        questions: [],
+      };
+    }
+    const [knowledge, questions] = await Promise.all([
+      this.prisma.knowledgeItem.findMany({
+        where: { status: 'published' },
+        select: { id: true, topicId: true },
+      }),
+      this.prisma.examQuestion.findMany({
+        where: { status: 'published' },
+        select: { id: true, topicId: true },
+      }),
+    ]);
+    return { knowledge, questions };
+  }
+
+  private async masteredTrackableIds(userId: string): Promise<{
+    trackable: TrackableItems;
+    masteredIds: Set<string>;
+    masteredAt: Date[];
+  }> {
+    const [trackable, progress] = await Promise.all([
+      this.trackableItems(),
+      this.prisma.itemProgress.findMany({
+        where: { userId, masteredAt: { not: null } },
+        select: { itemId: true, itemType: true, masteredAt: true },
+      }),
+    ]);
+    const knowledgeIds = new Set(trackable.knowledge.map((k) => k.id));
+    const questionIds = new Set(trackable.questions.map((q) => q.id));
+    const tracked = progress.filter((p) =>
+      p.itemType === 'KNOWLEDGE'
+        ? knowledgeIds.has(p.itemId)
+        : questionIds.has(p.itemId),
+    );
+    const masteredIds = new Set(tracked.map((p) => p.itemId));
+    const masteredAt = tracked
+      .map((p) => p.masteredAt)
+      .filter((d): d is Date => d !== null);
+    return { trackable, masteredIds, masteredAt };
+  }
+
+  async getProgressOverview(userId: string, timeZone = 'UTC') {
+    const now = new Date();
     const [
-      knowledgeTotal,
-      questionTotal,
-      masteredItems,
+      { trackable, masteredIds, masteredAt },
       weakItems,
       streak,
       activeRows,
+      recentAttempts,
+      lastResults,
     ] = await Promise.all([
-      this.prisma.knowledgeItem.count({ where: { status: 'published' } }),
-      this.prisma.examQuestion.count({ where: { status: 'published' } }),
-      this.prisma.itemProgress.count({
-        where: { userId, masteredAt: { not: null } },
-      }),
+      this.masteredTrackableIds(userId),
       this.prisma.itemProgress.count({
         where: { userId, failCount: { gt: 0 } },
       }),
@@ -1355,9 +1448,24 @@ export class StudyService {
         orderBy: { startedAt: 'desc' },
         take: 5,
       }),
+      this.prisma.attempt.findMany({
+        where: {
+          userId,
+          createdAt: { gte: new Date(now.getTime() - TODAY_LOOKBACK_MS) },
+        },
+        select: { createdAt: true },
+      }),
+      this.prisma.attempt.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: RECENT_ACCURACY_SAMPLE,
+        select: { correct: true },
+      }),
     ]);
 
-    const totalTrackableItems = knowledgeTotal + questionTotal;
+    const masteredItems = masteredIds.size;
+    const totalTrackableItems =
+      trackable.knowledge.length + trackable.questions.length;
     const masteryPct = totalTrackableItems
       ? Math.round((masteredItems / totalTrackableItems) * 1000) / 10
       : 0;
@@ -1369,6 +1477,13 @@ export class StudyService {
       weakItems,
       dailyStreak: streak?.current ?? 0,
       longestDailyStreak: streak?.longest ?? 0,
+      answeredToday: countOnCivilDay(
+        recentAttempts.map((a) => a.createdAt),
+        now,
+        timeZone || 'UTC',
+      ),
+      masteredToday: countMasteredToday(masteredAt, now, timeZone || 'UTC'),
+      recentAccuracy: recentAccuracy(lastResults.map((a) => a.correct)),
       activeSessions: activeRows.map((r) => ({
         id: r.id,
         mode: r.mode as StudyMode,
@@ -1380,23 +1495,12 @@ export class StudyService {
   }
 
   async getTopicProgress(userId: string) {
-    const [topics, knowledge, questions, progress] = await Promise.all([
+    const [topics, { trackable, masteredIds }] = await Promise.all([
       this.prisma.topic.findMany({ orderBy: { sortOrder: 'asc' } }),
-      this.prisma.knowledgeItem.findMany({
-        where: { status: 'published' },
-        select: { id: true, topicId: true },
-      }),
-      this.prisma.examQuestion.findMany({
-        where: { status: 'published' },
-        select: { id: true, topicId: true },
-      }),
-      this.prisma.itemProgress.findMany({
-        where: { userId, masteredAt: { not: null } },
-        select: { itemId: true, itemType: true },
-      }),
+      this.masteredTrackableIds(userId),
     ]);
+    const { knowledge, questions } = trackable;
 
-    const masteredIds = new Set(progress.map((p) => p.itemId));
     const byTopic = new Map<
       string,
       { total: number; mastered: number; name: string; trackId: string }
@@ -1446,8 +1550,50 @@ export class StudyService {
       orderBy: [{ failCount: 'desc' }, { updatedAt: 'desc' }],
       take: limit,
     });
+    if (rows.length === 0) return { items: [], total: 0 };
 
-    const items = await Promise.all(rows.map((row) => this.toWeakItem(row)));
+    const [contents, failedRows] = await Promise.all([
+      Promise.all(
+        rows.map((row) => this.weakItemContent(row.itemType, row.itemId)),
+      ),
+      this.prisma.attempt.findMany({
+        where: {
+          userId,
+          correct: false,
+          itemId: { in: rows.map((r) => r.itemId) },
+        },
+        select: {
+          itemType: true,
+          itemId: true,
+          createdAt: true,
+          chosenText: true,
+          variant: true,
+        },
+      }),
+    ]);
+    const topicIds = [
+      ...new Set(contents.flatMap((c) => (c.topicId ? [c.topicId] : []))),
+    ];
+    const topics = topicIds.length
+      ? await this.prisma.topic.findMany({
+          where: { id: { in: topicIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+    const topicNames = new Map(topics.map((t) => [t.id, t.name]));
+    const failures = failureStatsByItem(failedRows);
+
+    const items = rows.map((row, i) => {
+      const content = contents[i];
+      const stats = failures.get(weakItemKey(row.itemType, row.itemId));
+      return toWeakItem(row, content, {
+        topicName: content.topicId
+          ? (topicNames.get(content.topicId) ?? null)
+          : null,
+        lastFailedAt: stats?.lastFailedAt ?? null,
+        confusion: stats?.confusion ?? null,
+      });
+    });
     return { items, total: items.length };
   }
 
@@ -1566,8 +1712,7 @@ export class StudyService {
     limit?: number,
   ): Promise<StudyHistoryDetail> {
     await this.abandonOpenSessions(user.id, 'WEAK_REVIEW');
-    const cap = Math.min(limit ?? 50, 50);
-    const weak = await this.listWeakItems(user.id, cap);
+    const weak = await this.listWeakItems(user.id, WEAK_REVIEW_CANDIDATES);
 
     if (weak.items.length === 0) {
       throw new BadRequestException(
@@ -1575,7 +1720,8 @@ export class StudyService {
       );
     }
 
-    const queueMeta: StudyQueueItem[] = weak.items.map((w) => ({
+    const round = planWeakReview(weak.items, limit).queue;
+    const queueMeta: StudyQueueItem[] = round.map((w) => ({
       itemType: w.itemType,
       itemId: w.itemId,
     }));
@@ -1585,7 +1731,7 @@ export class StudyService {
     const playQueue: QueueEntry[] = [];
     const knowledgePool = await this.publishedKnowledge();
 
-    for (const w of weak.items) {
+    for (const w of round) {
       if (w.itemType === 'KNOWLEDGE') {
         try {
           const k = await this.content.getKnowledge(w.itemId, {
@@ -1670,54 +1816,17 @@ export class StudyService {
     return this.toHistoryDetail(row, queueMeta);
   }
 
-  private async toWeakItem(row: {
-    itemType: string;
-    itemId: string;
-    failCount: number;
-    passCount: number;
-    consecutiveCorrect: number;
-    masteredAt: Date | null;
-  }): Promise<WeakItem> {
-    const itemType = row.itemType as SharedStudyItemType;
-    const enriched = await this.enrichItem(itemType, row.itemId);
-    return {
-      itemType,
-      itemId: row.itemId,
-      failCount: row.failCount,
-      passCount: row.passCount,
-      consecutiveCorrect: row.consecutiveCorrect,
-      masteredAt: row.masteredAt?.toISOString() ?? null,
-      title: enriched.title,
-      subtitle: enriched.subtitle,
-      topicId: enriched.topicId,
-    };
-  }
-
-  private async enrichItem(
+  private async weakItemContent(
     itemType: SharedStudyItemType,
     itemId: string,
-  ): Promise<{ title: string; subtitle: string | null; topicId: string | null }> {
+  ): Promise<WeakItemContent> {
     try {
       if (itemType === 'KNOWLEDGE') {
-        const k = await this.content.getKnowledge(itemId);
-        return {
-          title: k.name,
-          subtitle: k.definition,
-          topicId: k.topicId,
-        };
+        return knowledgeContent(await this.content.getKnowledge(itemId));
       }
-      const q = await this.content.getQuestion(itemId);
-      const stem =
-        q.stem.length > STEM_PREVIEW
-          ? `${q.stem.slice(0, STEM_PREVIEW).trim()}…`
-          : q.stem;
-      return { title: stem, subtitle: null, topicId: q.topicId };
+      return questionContent(await this.content.getQuestion(itemId));
     } catch {
-      return {
-        title: itemId,
-        subtitle: null,
-        topicId: null,
-      };
+      return missingContent(itemId);
     }
   }
 

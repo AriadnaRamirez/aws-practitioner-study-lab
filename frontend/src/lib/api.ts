@@ -2,6 +2,8 @@ import type {
   AdminGuestRow,
   AdminUserRow,
   AuthResponse,
+  CreateUserExamRequest,
+  DeleteUserExamResponse,
   ForgotPasswordRequest,
   GuestProbe,
   LoginRequest,
@@ -13,7 +15,9 @@ import type {
   StartWeakReviewRequest,
   StartWeakReviewResponse,
   StudyHistoryResponse,
+  UpdateUserExamRequest,
   UsageSummary,
+  UserExam,
   WeakItemsResponse,
 } from '@aps/shared';
 import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
@@ -186,6 +190,7 @@ export function fetchMe() {
 }
 
 export function updateProfile(body: {
+  username?: string;
   timezone?: string;
   podiumHidden?: boolean;
   examDate?: string | null;
@@ -195,6 +200,41 @@ export function updateProfile(body: {
     auth: true,
     body: JSON.stringify(body),
   });
+}
+
+export function deleteAccount(body: { password: string }) {
+  return apiFetch<{ message: string }>('/auth/me', {
+    method: 'DELETE',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function fetchMyExams() {
+  return apiFetch<UserExam[]>('/me/exams', { auth: true });
+}
+
+export function createMyExam(body: CreateUserExamRequest) {
+  return apiFetch<UserExam>('/me/exams', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateMyExam(id: string, body: UpdateUserExamRequest) {
+  return apiFetch<UserExam>(`/me/exams/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteMyExam(id: string) {
+  return apiFetch<DeleteUserExamResponse>(
+    `/me/exams/${encodeURIComponent(id)}`,
+    { method: 'DELETE', auth: true },
+  );
 }
 
 export function changePassword(body: {

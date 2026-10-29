@@ -17,6 +17,12 @@ describe('AdminUsageService', () => {
     studySession: {
       groupBy: jest.Mock;
       count: jest.Mock;
+      aggregate: jest.Mock;
+    };
+    itemProgress: {
+      groupBy: jest.Mock;
+      count: jest.Mock;
+      aggregate: jest.Mock;
     };
   };
   let service: AdminUsageService;
@@ -37,6 +43,12 @@ describe('AdminUsageService', () => {
       studySession: {
         groupBy: jest.fn(),
         count: jest.fn(),
+        aggregate: jest.fn(),
+      },
+      itemProgress: {
+        groupBy: jest.fn(),
+        count: jest.fn(),
+        aggregate: jest.fn(),
       },
     };
     service = new AdminUsageService(prisma as never);
@@ -58,7 +70,9 @@ describe('AdminUsageService', () => {
         { userId: 'b' },
         { userId: 'c' },
       ]);
-    prisma.studySession.count.mockResolvedValueOnce(20).mockResolvedValueOnce(15);
+    prisma.studySession.count
+      .mockResolvedValueOnce(20)
+      .mockResolvedValueOnce(15);
 
     const summary = await service.getUsageSummary();
     expect(summary).toEqual({
@@ -88,8 +102,24 @@ describe('AdminUsageService', () => {
         podiumHidden: false,
         bannedAt: null,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        dailyStreak: { current: 4 },
       },
     ]);
+    prisma.studySession.groupBy.mockResolvedValue([
+      {
+        userId: 'u1',
+        _count: { _all: 6 },
+        _max: { startedAt: new Date('2026-10-28T10:00:00.000Z') },
+      },
+    ]);
+    prisma.itemProgress.groupBy
+      .mockResolvedValueOnce([{ userId: 'u1', _count: { _all: 12 } }])
+      .mockResolvedValueOnce([
+        {
+          userId: 'u1',
+          _max: { updatedAt: new Date('2026-10-27T10:00:00.000Z') },
+        },
+      ]);
     prisma.guestProbe.findMany.mockResolvedValue([
       {
         id: 'g1',
@@ -103,6 +133,12 @@ describe('AdminUsageService', () => {
     const guests = await service.listGuests();
     expect(users[0]?.username).toBe('ana');
     expect(users[0]?.bannedAt).toBeNull();
+    expect(users[0]).toMatchObject({
+      sessionsTotal: 6,
+      masteredCount: 12,
+      lastActiveAt: '2026-10-28T10:00:00.000Z',
+      currentStreak: 4,
+    });
     expect(guests[0]).toMatchObject({
       id: 'g1',
       sessionsCount: 2,
@@ -131,6 +167,15 @@ describe('AdminUsageService', () => {
       podiumHidden: true,
       bannedAt,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      dailyStreak: null,
+    });
+    prisma.studySession.aggregate.mockResolvedValue({
+      _count: { _all: 0 },
+      _max: { startedAt: null },
+    });
+    prisma.itemProgress.count.mockResolvedValue(0);
+    prisma.itemProgress.aggregate.mockResolvedValue({
+      _max: { updatedAt: null },
     });
 
     const row = await service.updateUser('u1', {
@@ -139,5 +184,6 @@ describe('AdminUsageService', () => {
     });
     expect(row.podiumHidden).toBe(true);
     expect(row.bannedAt).toBe(bannedAt.toISOString());
+    expect(row.lastActiveAt).toBeNull();
   });
 });

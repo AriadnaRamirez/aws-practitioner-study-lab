@@ -18,9 +18,10 @@ const figtree = Figtree({
 
 export const metadata: Metadata = {
   title: {
-    default: "Study Lab",
-    template: "%s · Study Lab",
+    default: "AWS Study Lab",
+    template: "%s · AWS Study Lab",
   },
+  applicationName: "AWS Study Lab",
   description:
     "Prepárate para AWS Cloud Practitioner con cartas, estudio y examen.",
   icons: {

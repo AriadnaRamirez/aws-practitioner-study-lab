@@ -1,16 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { KnowledgeItem, Topic } from "@aps/shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   createKnowledge,
   deleteKnowledge,
   updateKnowledge,
 } from "@/lib/admin-content-api";
+import {
+  ADMIN_BUTTON,
+  ADMIN_INPUT,
+  ADMIN_LABEL,
+  ADMIN_TABLE,
+  ADMIN_TEXTAREA,
+  AdminBadge,
+  AdminEmpty,
+  AdminNotice,
+  AdminSection,
+} from "./admin-ui";
+import {
+  ADMIN_SELECT,
+  AdminStat,
+  AdminStatGrid,
+  ContentStatusBadge,
+} from "./admin-metrics";
 
 type Props = { initial: KnowledgeItem[]; topics: Topic[] };
+
+const ROW_BUTTON = "h-8 px-2.5 text-xs";
 
 export function KnowledgeCrud({ initial, topics }: Props) {
   const [rows, setRows] = useState(initial);
@@ -23,6 +41,31 @@ export function KnowledgeCrud({ initial, topics }: Props) {
   const [topicId, setTopicId] = useState(topics[0]?.id ?? "");
   const [trackId, setTrackId] = useState(topics[0]?.trackId ?? "CLF");
   const [status, setStatus] = useState<KnowledgeItem["status"]>("published");
+  const [filter, setFilter] = useState("");
+
+  const topicName = useMemo(
+    () => new Map(topics.map((t) => [t.id, t.name])),
+    [topics],
+  );
+
+  const stats = useMemo(
+    () => ({
+      published: rows.filter((r) => r.status === "published").length,
+      draft: rows.filter((r) => r.status === "draft").length,
+      aif: rows.filter((r) => r.trackId === "AIF").length,
+    }),
+    [rows],
+  );
+
+  const visible = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.definition.toLowerCase().includes(q),
+    );
+  }, [rows, filter]);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -74,7 +117,7 @@ export function KnowledgeCrud({ initial, topics }: Props) {
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm("¿Borrar este ítem flash?")) return;
+    if (!window.confirm("¿Borrar esta carta flash?")) return;
     setBusy(true);
     try {
       await deleteKnowledge(id);
@@ -88,131 +131,177 @@ export function KnowledgeCrud({ initial, topics }: Props) {
 
   return (
     <div className="space-y-6">
-      {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <AdminStatGrid>
+        <AdminStat label="Cartas" value={rows.length} />
+        <AdminStat label="Publicadas" value={stats.published} tone="success" />
+        <AdminStat label="Borrador" value={stats.draft} />
+        <AdminStat label="Track AIF" value={stats.aif} tone="accent" />
+      </AdminStatGrid>
 
-      <form
-        onSubmit={onCreate}
-        className="grid gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800 sm:grid-cols-2"
-      >
-        <h2 className="sm:col-span-2 text-sm font-semibold">Nuevo flash</h2>
-        <label className="text-sm sm:col-span-2">
-          Nombre
-          <Input
-            className="mt-1"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </label>
-        <label className="text-sm sm:col-span-2">
-          Definición
-          <Input
-            className="mt-1"
-            value={definition}
-            onChange={(e) => setDefinition(e.target.value)}
-            required
-          />
-        </label>
-        <label className="text-sm sm:col-span-2">
-          Explicación
-          <Input
-            className="mt-1"
-            value={explanation}
-            onChange={(e) => setExplanation(e.target.value)}
-            required
-          />
-        </label>
-        <label className="text-sm sm:col-span-2">
-          Distractores (coma)
-          <Input
-            className="mt-1"
-            value={distractors}
-            onChange={(e) => setDistractors(e.target.value)}
-            required
-          />
-        </label>
-        <label className="text-sm">
-          Tema
-          <select
-            className="mt-1 flex h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            value={topicId}
-            onChange={(e) => {
-              const id = e.target.value;
-              setTopicId(id);
-              const t = topics.find((x) => x.id === id);
-              if (t) setTrackId(t.trackId);
-            }}
-          >
-            {topics.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.trackId})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          Status
-          <select
-            className="mt-1 flex h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value as KnowledgeItem["status"])
-            }
-          >
-            <option value="published">published</option>
-            <option value="draft">draft</option>
-            <option value="archived">archived</option>
-          </select>
-        </label>
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={busy || !topicId}>
-            Crear flash
-          </Button>
+      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
+        <AdminSection title="Nueva carta" description="Se usan las tres variantes de pregunta.">
+          <form onSubmit={onCreate} className="grid gap-4">
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Nombre</span>
+              <input
+                className={ADMIN_INPUT}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Definición</span>
+              <textarea
+                className={cn(ADMIN_TEXTAREA, "min-h-20")}
+                value={definition}
+                onChange={(e) => setDefinition(e.target.value)}
+                required
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Explicación</span>
+              <textarea
+                className={cn(ADMIN_TEXTAREA, "min-h-20")}
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                required
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Distractores (separados por coma)</span>
+              <input
+                className={ADMIN_INPUT}
+                value={distractors}
+                onChange={(e) => setDistractors(e.target.value)}
+                required
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Tema</span>
+              <select
+                className={ADMIN_SELECT}
+                value={topicId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setTopicId(id);
+                  const t = topics.find((x) => x.id === id);
+                  if (t) setTrackId(t.trackId);
+                }}
+              >
+                {topics.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.trackId})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Estado</span>
+              <select
+                className={ADMIN_SELECT}
+                value={status}
+                onChange={(e) =>
+                  setStatus(e.target.value as KnowledgeItem["status"])
+                }
+              >
+                <option value="published">Publicada</option>
+                <option value="draft">Borrador</option>
+                <option value="archived">Archivada</option>
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={busy || !topicId}
+              className={ADMIN_BUTTON.primary}
+            >
+              Crear carta
+            </button>
+          </form>
+        </AdminSection>
+
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-[var(--foreground-muted)] tabular-nums">
+              Mostrando {visible.length} de {rows.length}
+            </p>
+            <input
+              type="search"
+              placeholder="Filtrar por nombre o definición…"
+              aria-label="Filtrar cartas"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className={cn(ADMIN_INPUT, "sm:max-w-xs")}
+            />
+          </div>
+
+          {visible.length === 0 ? (
+            <AdminEmpty>
+              {rows.length === 0 ? "Todavía no hay cartas." : "Ninguna carta coincide con el filtro."}
+            </AdminEmpty>
+          ) : (
+            <div className={cn(ADMIN_TABLE.wrap, "max-h-[40rem] overflow-y-auto")}>
+              <table className={ADMIN_TABLE.table}>
+                <thead className={cn(ADMIN_TABLE.thead, "sticky top-0 z-10")}>
+                  <tr>
+                    <th className={ADMIN_TABLE.th}>Concepto</th>
+                    <th className={ADMIN_TABLE.th}>Tema</th>
+                    <th className={ADMIN_TABLE.th}>Estado</th>
+                    <th className={ADMIN_TABLE.th}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((item) => (
+                    <tr key={item.id} className={ADMIN_TABLE.tr}>
+                      <td className={cn(ADMIN_TABLE.td, "min-w-64 max-w-md")}>
+                        <p className="font-semibold">{item.name}</p>
+                        <p className="line-clamp-2 text-xs text-[var(--foreground-muted)]">
+                          {item.definition}
+                        </p>
+                      </td>
+                      <td className={ADMIN_TABLE.td}>
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <AdminBadge tone={item.trackId === "AIF" ? "accent" : "neutral"}>
+                            {item.trackId}
+                          </AdminBadge>
+                          <span className="text-xs text-[var(--foreground-muted)]">
+                            {topicName.get(item.topicId) ?? "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className={ADMIN_TABLE.td}>
+                        <ContentStatusBadge status={item.status} />
+                      </td>
+                      <td className={ADMIN_TABLE.td}>
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            className={cn(ADMIN_BUTTON.secondary, ROW_BUTTON)}
+                            disabled={busy}
+                            onClick={() => void onToggleStatus(item)}
+                          >
+                            {item.status === "published" ? "Pasar a borrador" : "Publicar"}
+                          </button>
+                          <button
+                            type="button"
+                            className={cn(ADMIN_BUTTON.danger, ROW_BUTTON)}
+                            disabled={busy}
+                            onClick={() => void onDelete(item.id)}
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      </form>
-
-      <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-        {rows.map((item) => (
-          <li
-            key={item.id}
-            className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <p className="font-medium">
-                {item.name}{" "}
-                <span className="text-xs font-normal text-zinc-500">
-                  {item.trackId} · {item.status}
-                </span>
-              </p>
-              <p className="text-xs text-zinc-500 line-clamp-2">
-                {item.definition}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={busy}
-                onClick={() => void onToggleStatus(item)}
-              >
-                {item.status === "published" ? "A draft" : "Publicar"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => void onDelete(item.id)}
-              >
-                Borrar
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      </div>
     </div>
   );
 }

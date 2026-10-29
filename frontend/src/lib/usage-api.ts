@@ -1,4 +1,9 @@
-import type { AdminGuestRow, AdminUserRow, UsageSummary } from "@aps/shared";
+import type {
+  AdminGuestRow,
+  AdminMetrics,
+  AdminUserRow,
+  UsageSummary,
+} from "@aps/shared";
 
 /** Browser: same-origin proxy. Server components: hit Nest directly. */
 export const API_URL =
@@ -33,6 +38,10 @@ export async function getUsageSummary(): Promise<{
   const data = await adminFetchJson<UsageSummary>("/admin/usage");
   if (data) return { data, source: "api" };
   return { data: null, source: "unavailable" };
+}
+
+export async function getAdminMetrics(): Promise<AdminMetrics | null> {
+  return adminFetchJson<AdminMetrics>("/admin/metrics");
 }
 
 export async function getAdminUsers(): Promise<{

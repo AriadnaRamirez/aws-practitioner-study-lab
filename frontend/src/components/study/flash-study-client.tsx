@@ -16,27 +16,33 @@ import {
   type StudyPrompt,
   type StudySessionSummary,
   type StudySize,
-  type Topic,
+  type TopicProgressRow,
 } from "@aps/shared";
 import { AwsMark } from "@/components/brand/aws-mark";
-import { Mascot } from "@/components/brand/mascot";
 import { CelebrateBurst } from "@/components/study/celebrate-burst";
 import { FlashDeck } from "@/components/study/flash-deck";
+import {
+  SessionBuilder,
+  type BuilderPreselect,
+} from "@/components/study/session-builder/session-builder";
+import { SessionSummary } from "@/components/study/session-summary";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchMe, getStoredToken } from "@/lib/api";
+import { fetchMe, fetchTopicProgress, getStoredToken } from "@/lib/api";
 import { getTopics } from "@/lib/content-api";
 import {
-  STUDY_CATEGORIES,
+  ALL_INICIO_TOPIC_IDS,
   categoryById,
   resolveCategoryTopicIds,
+  scopeForTopicIds,
+  scopeTitle,
 } from "@/lib/study-categories";
 import {
   answerStudy,
   getStudySession,
   startFlashSession,
 } from "@/lib/study-api";
-import { cn } from "@/lib/utils";
+import { cn, hasTextSelection } from "@/lib/utils";
 
 type Phase =
   | "boot"
@@ -53,16 +59,30 @@ const VARIANT_LABEL: Record<string, string> = {
   NAME_FOCUS: "Elige el nombre",
 };
 
+/** Encabezado de partida: todos los temas repartidos parejo = partida rápida. */
+function sessionLabel(
+  topicIds: readonly string[],
+  balanced: boolean,
+  knownIds?: Iterable<string>,
+): string {
+  const scope = scopeForTopicIds(topicIds, knownIds);
+  return balanced && scope.kind === "all" ? "Partida rápida" : scopeTitle(scope);
+}
+
 /** No auto-advance — user reads the explanation on the flipped card. */
 
 export function FlashStudyClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>("boot");
-  const [topics, setTopics] = useState<Topic[]>([]);
+  /** Topic ids published in the bank; null until boot loads them. */
+  const [knownTopicIds, setKnownTopicIds] = useState<string[] | null>(null);
+  const [progressRows, setProgressRows] = useState<TopicProgressRow[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [size, setSize] = useState<StudySize>(10);
-  const [customize, setCustomize] = useState(false);
+  const [preselect, setPreselect] = useState<BuilderPreselect | null>(null);
+  /** Encabezado de la sesión en curso (null al reanudar: alcance desconocido). */
+  const [scopeLabel, setScopeLabel] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<StudyPrompt | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -87,10 +107,13 @@ export function FlashStudyClient() {
   const nextPromptRef = useRef<StudyPrompt | null>(null);
   const summaryRef = useRef<StudySessionSummary | null>(null);
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const bootOnce = useRef(false);
   /** Sync lock — React state `pending` is too slow to stop double-clicks. */
   const answeringRef = useRef(false);
   const currentQueueIdRef = useRef<string | null>(null);
+  /** "Otra partida" replays a partida rápida as balanced too. */
+  const lastBalancedRef = useRef(false);
+  /** Last query string acted on — links within /estudiar don't remount. */
+  const handledQueryRef = useRef<string | null>(null);
 
   const applyView = useCallback(
     (view: {
@@ -123,19 +146,29 @@ export function FlashStudyClient() {
   );
 
   const onStart = useCallback(
-    async (overrideSize?: StudySize, topicOverride?: string[]) => {
+    async (
+      overrideSize?: StudySize,
+      topicOverride?: string[],
+      balanced = false,
+    ) => {
       setError(null);
       setPending(true);
       setPhase("starting");
+      lastBalancedRef.current = balanced;
       const useSize = overrideSize ?? size;
       const topicsForStart =
         topicOverride ??
         (selectedTopics.length ? selectedTopics : undefined);
+      if (topicOverride) setSelectedTopics(topicOverride);
+      setScopeLabel(
+        sessionLabel(topicsForStart ?? [], balanced, knownTopicIds ?? undefined),
+      );
       try {
         const view = await startFlashSession({
           mode: "FLASH_STUDY",
           size: useSize,
           topicIds: topicsForStart,
+          ...(balanced ? { balanced: true } : {}),
         });
         applyView(view);
         // Drop query params so refresh doesn't restart
@@ -151,12 +184,71 @@ export function FlashStudyClient() {
         setPending(false);
       }
     },
-    [applyView, router, searchParams, selectedTopics, size],
+    [applyView, knownTopicIds, router, searchParams, selectedTopics, size],
+  );
+
+  /** Acts on deep-link params: ?session, ?quick, ?category, ?topics, ?start… */
+  const handleQuery = useCallback(
+    async (params: URLSearchParams, knownIds: string[]) => {
+      const resumeId = params.get("session");
+      if (resumeId) {
+        setPending(true);
+        setPhase("starting");
+        setScopeLabel(null);
+        try {
+          const view = await getStudySession(resumeId);
+          if (view.scope) {
+            const { topicIds, balanced } = view.scope;
+            // "Otra partida" replays the same scope.
+            lastBalancedRef.current = balanced;
+            setSelectedTopics(topicIds);
+            setScopeLabel(sessionLabel(topicIds, balanced, knownIds));
+          }
+          applyView(view);
+        } catch {
+          setError("No se pudo reanudar la sesión. Empieza una nueva.");
+          setPhase("setup");
+        } finally {
+          setPending(false);
+        }
+        return;
+      }
+      const topicParam = params.get("topic");
+      const topicsParam = params.get("topics");
+      const categoryParam = params.get("category");
+      const quick = params.get("quick") === "1";
+      const balanced = quick || params.get("balanced") === "1";
+      let topicIds: string[] = [];
+      if (quick) {
+        topicIds = ALL_INICIO_TOPIC_IDS.filter((id) => knownIds.includes(id));
+      } else if (topicsParam) {
+        topicIds = topicsParam.split(",").filter((id) => knownIds.includes(id));
+      } else if (topicParam && knownIds.includes(topicParam)) {
+        topicIds = [topicParam];
+      } else if (categoryParam && categoryById(categoryParam)) {
+        topicIds = resolveCategoryTopicIds(categoryParam, knownIds);
+      }
+      if (topicIds.length) {
+        setSelectedTopics(topicIds);
+      }
+      const sizeParam = Number(params.get("size"));
+      const urlSize = (STUDY_SIZES as readonly number[]).includes(sizeParam)
+        ? (sizeParam as StudySize)
+        : null;
+      if (urlSize) setSize(urlSize);
+      const startParam = Number(params.get("start"));
+      if ((STUDY_SIZES as readonly number[]).includes(startParam)) {
+        const n = startParam as StudySize;
+        setSize(n);
+        await onStart(n, topicIds, balanced && topicIds.length > 0);
+      } else if (topicIds.length || urlSize) {
+        setPreselect({ topicIds: topicIds.length ? topicIds : null, size: urlSize });
+      }
+    },
+    [applyView, onStart],
   );
 
   useEffect(() => {
-    if (bootOnce.current) return;
-    bootOnce.current = true;
     let cancelled = false;
 
     (async () => {
@@ -166,46 +258,18 @@ export function FlashStudyClient() {
         return;
       }
       try {
-        const [, topicsRes] = await Promise.all([fetchMe(), getTopics()]);
+        const [, topicsRes, progressRes] = await Promise.all([
+          fetchMe(),
+          getTopics(),
+          fetchTopicProgress().catch(() => null),
+        ]);
         if (cancelled) return;
-        setTopics(topicsRes.data);
-        const resumeId = searchParams.get("session");
-        const quickStart = searchParams.get("start");
-        if (resumeId) {
-          setPending(true);
-          setPhase("starting");
-          try {
-            const view = await getStudySession(resumeId);
-            if (cancelled) return;
-            applyView(view);
-          } catch {
-            if (!cancelled) {
-              setError("No se pudo reanudar la sesión. Empieza una nueva.");
-              setPhase("setup");
-            }
-          } finally {
-            if (!cancelled) setPending(false);
-          }
-          return;
-        }
-        setPhase("setup");
-        const topicParam = searchParams.get("topic");
-        const categoryParam = searchParams.get("category");
         const knownIds = topicsRes.data.map((t) => t.id);
-        let topicIds: string[] = [];
-        if (topicParam && knownIds.includes(topicParam)) {
-          topicIds = [topicParam];
-        } else if (categoryParam && categoryById(categoryParam)) {
-          topicIds = resolveCategoryTopicIds(categoryParam, knownIds);
-        }
-        if (topicIds.length) {
-          setSelectedTopics(topicIds);
-        }
-        if (quickStart === "10" || quickStart === "20" || quickStart === "30" || quickStart === "50") {
-          const n = Number(quickStart) as StudySize;
-          setSize(n);
-          void onStart(n, topicIds);
-        }
+        setKnownTopicIds(knownIds);
+        setProgressRows(progressRes?.topics ?? []);
+        setPhase("setup");
+        handledQueryRef.current = searchParams.toString();
+        await handleQuery(new URLSearchParams(searchParams.toString()), knownIds);
       } catch {
         if (!cancelled) setPhase("auth");
       }
@@ -217,6 +281,15 @@ export function FlashStudyClient() {
     // intentionally once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Links inside /estudiar (folders, Partida rápida…) only change the query.
+  useEffect(() => {
+    if (!knownTopicIds || (phase !== "setup" && phase !== "summary")) return;
+    const qs = searchParams.toString();
+    if (qs === handledQueryRef.current) return;
+    handledQueryRef.current = qs;
+    void handleQuery(new URLSearchParams(qs), knownTopicIds);
+  }, [handleQuery, knownTopicIds, phase, searchParams]);
 
   const goNext = useCallback(() => {
     // Clear the answer lock first — it must not block "Siguiente".
@@ -321,6 +394,10 @@ export function FlashStudyClient() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
+      // Ctrl/⌘+C and friends must copy, not answer.
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || hasTextSelection()) {
+        return;
+      }
       if (phase === "feedback") {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -365,18 +442,12 @@ export function FlashStudyClient() {
     return Math.round((done / uniqueItems) * 100);
   }, [answered, uniqueItems]);
 
-  function toggleTopic(id: string) {
-    setSelectedTopics((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  }
-
   if (phase === "boot" || phase === "starting") {
     return (
       <section className="py-8" aria-busy="true">
         <Spinner label="Cargando" />
         <div className="mt-8">
-          <FlashDeck loading eyebrow="Carta" title="…" />
+          <FlashDeck wide loading eyebrow="Carta" title="…" />
         </div>
       </section>
     );
@@ -403,212 +474,52 @@ export function FlashStudyClient() {
   if (phase === "setup") {
     return (
       <section className="min-w-0">
-        <div>
-          <p className="text-sm text-[var(--foreground-muted)]">
-            Conceptos con 4 opciones. Si fallas, la carta regresa.
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <Button
-              size="lg"
-              disabled={pending}
-              onClick={() => void onStart(10, [])}
-              className="w-full sm:w-auto"
-            >
-              {pending ? (
-                <span className="inline-flex items-center gap-2">
-                  <Spinner /> …
-                </span>
-              ) : (
-                "Empezar 10"
-              )}
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              disabled={pending}
-              onClick={() => void onStart(20, [])}
-              className="w-full sm:w-auto"
-            >
-              Empezar 20
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-10 border-t border-[var(--border)] pt-6">
-          <h2 className="text-sm font-medium text-[var(--foreground-muted)]">
-            Por tema
-          </h2>
-          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {STUDY_CATEGORIES.map((cat) => {
-              const ids = resolveCategoryTopicIds(
-                cat.id,
-                topics.map((t) => t.id),
-              );
-              if (!ids.length) return null;
-              return (
-                <li key={cat.id}>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      setSelectedTopics(ids);
-                      void onStart(10, ids);
-                    }}
-                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3.5 text-left transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-50"
-                  >
-                    <span className="min-w-0">
-                      <span className="font-display block text-sm font-semibold">
-                        {cat.title}
-                      </span>
-                      <span className="mt-0.5 block truncate text-xs text-[var(--foreground-muted)]">
-                        {cat.subtitle}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-sm font-medium text-[var(--foreground)]">
-                      Ir
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <button
-          type="button"
-          className="mt-6 text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
-          onClick={() => setCustomize((v) => !v)}
-          aria-expanded={customize}
-        >
-          {customize ? "Menos" : "Elegir temas"}
-        </button>
-
-        {customize ? (
-          <div className="mt-6 space-y-6 animate-[fade-up_0.3s_ease-out]">
-            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {topics.map((t) => {
-                const on = selectedTopics.includes(t.id);
-                return (
-                  <li key={t.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggleTopic(t.id)}
-                      className={cn(
-                        "flex w-full items-center justify-between rounded-md px-4 py-3 text-left text-sm transition-colors",
-                        on
-                          ? "bg-[var(--surface-hover)] ring-1 ring-[var(--border-strong)]"
-                          : "bg-[var(--surface-elevated)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
-                      )}
-                    >
-                      <span>{t.name}</span>
-                      <span className="text-xs font-semibold text-[var(--foreground)]">
-                        {on ? "✓" : "+"}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="flex flex-wrap gap-2">
-              {STUDY_SIZES.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setSize(n)}
-                    className={cn(
-                      "keycap h-12 min-w-14 px-4 text-sm",
-                      size === n && "keycap-accent",
-                    )}
-                  >
-                    {n}
-                  </button>
-              ))}
-            </div>
-
-            <Button size="lg" disabled={pending} onClick={() => void onStart()}>
-              {pending ? (
-                <span className="inline-flex items-center gap-2">
-                  <Spinner /> …
-                </span>
-              ) : (
-                `Empezar ${size}`
-              )}
-            </Button>
-          </div>
-        ) : null}
-
         {error ? (
-          <p className="mt-6 text-sm text-red-600 dark:text-red-400" role="alert">
+          <p
+            className="mb-6 rounded-xl bg-[color-mix(in_srgb,var(--danger)_18%,var(--surface))] px-4 py-3 text-sm text-[var(--foreground)]"
+            role="alert"
+          >
             {error}
           </p>
         ) : null}
+        <SessionBuilder
+          progressRows={progressRows}
+          knownTopicIds={knownTopicIds ?? []}
+          preselect={preselect}
+        />
       </section>
     );
   }
 
   if (phase === "summary" && summary) {
-    const rachaDiaria = summary.dailyStreak ?? dailyStreak;
-    const dominados = summary.masteredInSession ?? 0;
     return (
-      <section className="py-8 animate-[fade-up_0.35s_ease-out]">
-        <Mascot pose="wave" size="md" float className="mb-6" />
-        <p className="font-display text-xl font-semibold tracking-tight">
-          ¡Listo!
-        </p>
-        <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <dt className="text-[var(--foreground-muted)]">Precisión</dt>
-            <dd className="font-display text-2xl font-bold">
-              {summary.accuracyPct}%
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--foreground-muted)]">Aciertos</dt>
-            <dd className="font-display text-2xl font-bold">
-              {summary.correctAnswers}/{summary.answered}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--foreground-muted)]">Racha</dt>
-            <dd className="font-display text-2xl font-bold">
-              {rachaDiaria}
-              <span className="ml-1 text-sm font-medium text-[var(--foreground-muted)]">
-                {rachaDiaria === 1 ? "día" : "días"}
-              </span>
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[var(--foreground-muted)]">Dominados</dt>
-            <dd className="font-display text-2xl font-bold">{dominados}</dd>
-          </div>
-        </dl>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button
-            onClick={() => {
-              setSummary(null);
-              summaryRef.current = null;
-              void onStart(10, []);
-            }}
-          >
-            Otra de 10
-          </Button>
-          <Link href="/mas-falladas">
-            <Button variant="secondary">Más falladas</Button>
-          </Link>
-          <Link href="/podio">
-            <Button variant="secondary">Podio</Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button variant="ghost">Inicio</Button>
-          </Link>
-        </div>
-      </section>
+      <SessionSummary
+        summary={{
+          ...summary,
+          dailyStreak: summary.dailyStreak ?? dailyStreak,
+        }}
+        playAgain={{
+          label: "Otra partida",
+          onClick: () => {
+            setSummary(null);
+            summaryRef.current = null;
+            void onStart(undefined, undefined, lastBalancedRef.current);
+          },
+        }}
+      />
     );
   }
 
   return (
-    <section className="min-w-0 py-2">
+    <section
+      data-study-card
+      className="mx-auto w-full min-w-0 py-2 md:max-w-xl lg:max-w-4xl [@media(max-height:500px)]:py-0 [@media(max-height:500px)]:md:max-w-none"
+    >
+      {scopeLabel ? (
+        <p className="mb-2 truncate text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)] [@media(max-height:500px)]:mb-1">
+          {scopeLabel}
+        </p>
+      ) : null}
       <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
         <p className="font-semibold text-[var(--foreground)]">Racha {sessionStreak}</p>
         <p className="text-[var(--foreground-muted)]">
@@ -617,7 +528,7 @@ export function FlashStudyClient() {
       </div>
 
       <div
-        className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]"
+        className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)] [@media(max-height:500px)]:mt-2"
         role="progressbar"
         aria-valuenow={progressPct}
         aria-valuemin={0}
@@ -633,8 +544,9 @@ export function FlashStudyClient() {
       </div>
 
       {prompt ? (
-        <div key={prompt.queueItemId} className="mt-8">
+        <div key={prompt.queueItemId} className="mt-8 [@media(max-height:500px)]:mt-3">
           <FlashDeck
+            wide
             eyebrow={
               (prompt.variant && VARIANT_LABEL[prompt.variant]) ||
               prompt.variant ||
@@ -645,103 +557,113 @@ export function FlashStudyClient() {
             flipped={phase === "feedback" && Boolean(feedback)}
             back={
               feedback ? (
-                <div className="relative flex h-full flex-col" role="status">
+                <div
+                  className="relative flex h-full flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8 [@media(max-height:500px)]:md:grid [@media(max-height:500px)]:md:grid-cols-2 [@media(max-height:500px)]:md:items-start [@media(max-height:500px)]:md:gap-x-6"
+                  role="status"
+                >
                   {feedback.correct ? <CelebrateBurst /> : null}
-                  <div className="flex items-start justify-between gap-3">
-                    <span
-                      className={cn(
-                        "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
-                        feedback.correct
-                          ? "bg-[var(--success)] text-[var(--success-fg)]"
-                          : "bg-[var(--danger)] text-[var(--danger-fg)]",
-                      )}
-                    >
-                      {feedback.correct ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                          <path
-                            d="M5 12.5l4.5 4.5L19 7"
-                            stroke="currentColor"
-                            strokeWidth="2.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                          <path
-                            d="M7 7l10 10M17 7L7 17"
-                            stroke="currentColor"
-                            strokeWidth="2.6"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      )}
-                      {feedback.correct ? "¡Correcto!" : "Incorrecto"}
-                    </span>
-                    <AwsMark height={26} />
-                  </div>
-
-                  <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
-                    {feedback.correct
-                      ? feedback.itemMastered
-                        ? "¡Dominado!"
-                        : "Bien"
-                      : "Casi"}
-                  </p>
-
-                  <div
-                    className="mt-3 flex items-center gap-3"
-                    aria-label={`${feedback.itemConsecutiveCorrect} de ${MASTERY_STREAK} para dominarlo`}
-                  >
-                    <p className="text-sm font-semibold text-[var(--foreground)]">
-                      {feedback.itemConsecutiveCorrect}/{MASTERY_STREAK}
-                    </p>
-                    <ol className="flex gap-1.5" aria-hidden>
-                      {Array.from({ length: MASTERY_STREAK }, (_, i) => {
-                        const filled = i < feedback.itemConsecutiveCorrect;
-                        return (
-                          <li
-                            key={i}
-                            className={cn(
-                              "size-2.5 rounded-full transition-colors",
-                              filled
-                                ? feedback.itemMastered
-                                  ? "bg-[var(--success)]"
-                                  : "bg-[var(--foreground)]"
-                                : "bg-[var(--border-strong)]",
-                            )}
-                          />
-                        );
-                      })}
-                    </ol>
-                  </div>
-
-                  {!feedback.correct ? (
-                    <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
-                      <span className="text-[var(--foreground-muted)]">Correcta: </span>
-                      <span className="font-semibold">
-                        {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
-                        {prompt.choices[feedback.correctIndex]}
+                  <div className="min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <span
+                        className={cn(
+                          "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
+                          feedback.correct
+                            ? "bg-[var(--success)] text-[var(--success-fg)]"
+                            : "bg-[var(--danger)] text-[var(--danger-fg)]",
+                        )}
+                      >
+                        {feedback.correct ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                            <path
+                              d="M5 12.5l4.5 4.5L19 7"
+                              stroke="currentColor"
+                              strokeWidth="2.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                            <path
+                              d="M7 7l10 10M17 7L7 17"
+                              stroke="currentColor"
+                              strokeWidth="2.6"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        )}
+                        {feedback.correct ? "¡Correcto!" : "Incorrecto"}
                       </span>
-                    </p>
-                  ) : null}
+                      <AwsMark height={26} />
+                    </div>
 
-                  <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-                      Explicación
+                    <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)] [@media(max-height:500px)]:mt-2">
+                      {feedback.correct
+                        ? feedback.itemMastered
+                          ? "¡Dominado!"
+                          : "Bien"
+                        : "Casi"}
                     </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
-                      {feedback.explanation?.trim()
-                        ? feedback.explanation
-                        : feedback.correct
-                          ? "Así se define este concepto."
-                          : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
-                    </p>
+
+                    <div
+                      className="mt-3 flex items-center gap-3 [@media(max-height:500px)]:mt-2"
+                      aria-label={`${feedback.itemConsecutiveCorrect} de ${MASTERY_STREAK} para dominarlo`}
+                    >
+                      <p className="text-sm font-semibold text-[var(--foreground)]">
+                        {feedback.itemConsecutiveCorrect}/{MASTERY_STREAK}
+                      </p>
+                      <ol className="flex gap-1.5" aria-hidden>
+                        {Array.from({ length: MASTERY_STREAK }, (_, i) => {
+                          const filled = i < feedback.itemConsecutiveCorrect;
+                          return (
+                            <li
+                              key={i}
+                              className={cn(
+                                "size-2.5 rounded-full transition-colors",
+                                filled
+                                  ? feedback.itemMastered
+                                    ? "bg-[var(--success)]"
+                                    : "bg-[var(--foreground)]"
+                                  : "bg-[var(--border-strong)]",
+                              )}
+                            />
+                          );
+                        })}
+                      </ol>
+                    </div>
+
+                    {!feedback.correct ? (
+                      <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
+                        <span className="text-[var(--foreground-muted)]">Correcta: </span>
+                        <span className="font-semibold">
+                          {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
+                          {prompt.choices[feedback.correctIndex]}
+                        </span>
+                      </p>
+                    ) : null}
                   </div>
 
-                  <Button className="mt-5 w-full" onClick={goNext}>
-                    {summaryRef.current ? "Ver resultado" : "Siguiente"}
-                  </Button>
+                  <div className="min-w-0">
+                    <div className="mt-4 rounded-xl bg-[var(--surface-elevated)] px-3.5 py-3 lg:mt-0 [@media(max-height:500px)]:md:mt-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+                        Explicación
+                      </p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
+                        {feedback.explanation?.trim()
+                          ? feedback.explanation
+                          : feedback.correct
+                            ? "Así se define este concepto."
+                            : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
+                      </p>
+                    </div>
+
+                    <Button
+                      className="mt-5 w-full [@media(max-height:500px)]:mt-3"
+                      onClick={goNext}
+                    >
+                      {summaryRef.current ? "Ver resultado" : "Siguiente"}
+                    </Button>
+                  </div>
                 </div>
               ) : null
             }
@@ -760,15 +682,18 @@ export function FlashStudyClient() {
                     <button
                       type="button"
                       disabled={pending || phase === "feedback"}
-                      onClick={() => void onAnswer(i)}
+                      onClick={() => {
+                        if (hasTextSelection()) return;
+                        void onAnswer(i);
+                      }}
                       className={cn(
-                        "keycap w-full justify-start px-3.5 py-3 text-left text-sm leading-snug normal-case disabled:cursor-wait",
+                        "keycap keycap-option w-full select-text px-4 py-3 text-sm leading-snug normal-case disabled:cursor-wait [@media(max-height:500px)]:py-2",
                         isCorrect && "keycap-correct",
                         isWrongPick && "keycap-wrong",
                         !showKey && isSelected && "keycap-accent",
                       )}
                     >
-                      <span className="mr-2 font-semibold opacity-45">
+                      <span className="mr-2 shrink-0 font-semibold opacity-45">
                         {String.fromCharCode(65 + i)}.
                       </span>
                       <span>{choice}</span>
@@ -785,8 +710,8 @@ export function FlashStudyClient() {
           </FlashDeck>
         </div>
       ) : pending ? (
-        <div className="mt-8">
-          <FlashDeck loading eyebrow="Carta" title="…" footer="Cargando" />
+        <div className="mt-8 [@media(max-height:500px)]:mt-3">
+          <FlashDeck wide loading eyebrow="Carta" title="…" footer="Cargando" />
         </div>
       ) : null}
 

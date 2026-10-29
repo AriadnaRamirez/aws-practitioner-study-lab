@@ -26,7 +26,7 @@ export function SessionHistory({
 }: SessionHistoryProps) {
   if (sessions.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-8 text-center">
+      <div className="rounded-lg bg-[var(--surface-elevated)] px-4 py-8 text-center">
         <p className="text-sm text-[var(--foreground-muted)]">{emptyHint}</p>
         {showMasFalladasLink ? (
           <p className="mt-3 text-sm">
@@ -43,7 +43,7 @@ export function SessionHistory({
   }
 
   return (
-    <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)]">
+    <ul className="flex flex-col gap-1 overflow-hidden rounded-lg">
       {sessions.map((s) => {
         const body = (
           <>
@@ -82,7 +82,7 @@ export function SessionHistory({
         );
 
         return (
-          <li key={s.id}>
+          <li key={s.id} className="bg-[var(--surface-elevated)]">
             {linkDetail ? (
               <Link
                 href={`/cuenta/historial/${s.id}`}

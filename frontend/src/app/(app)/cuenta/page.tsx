@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
-import { CuentaProgresoClient } from "@/components/study/cuenta-progreso-client";
+import { CuentaClient } from "@/components/study/cuenta/cuenta-client";
+import { parseCuentaTab } from "@/components/study/cuenta/cuenta-tabs";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {
   title: "Cuenta",
 };
 
-export default function CuentaPage() {
+export default async function CuentaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   return (
     <RequireAuth>
-      <CuentaProgresoClient />
+      <CuentaClient initialTab={parseCuentaTab(tab)} />
     </RequireAuth>
   );
 }

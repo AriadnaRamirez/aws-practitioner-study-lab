@@ -59,14 +59,11 @@ function packChoices(
   };
 }
 
+/** Same-topic names make plausible distractors; fall back to the whole pool. */
 function otherNames(item: KnowledgeItem, pool: KnowledgeItem[]): string[] {
-  return pool.filter((k) => k.id !== item.id).map((k) => k.name);
-}
-
-function truncateDef(definition: string, max = 120): string {
-  const t = definition.trim();
-  if (t.length <= max) return t;
-  return `${t.slice(0, max - 1).trimEnd()}…`;
+  const others = pool.filter((k) => k.id !== item.id);
+  const sameTopic = others.filter((k) => k.topicId === item.topicId);
+  return (sameTopic.length >= 3 ? sameTopic : others).map((k) => k.name);
 }
 
 export function pickVariant(item: KnowledgeItem): FlashVariant {
@@ -123,7 +120,7 @@ export function renderFlashVariant(
       const packed = packChoices(item.name, distractors);
       return {
         variant,
-        stem: `Identifica el nombre correcto: «${truncateDef(item.definition)}»`,
+        stem: `Identifica el nombre correcto: «${item.definition.trim()}»`,
         explanation: item.explanation,
         ...packed,
       };

@@ -56,7 +56,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
         <p className="text-sm text-red-600" role="alert">
           {error}
         </p>
-        <Link href="/cuenta#historial" className={cn(buttonVariants(), "mt-6 inline-flex")}>
+        <Link href="/cuenta?tab=historial" className={cn(buttonVariants(), "mt-6 inline-flex")}>
           Volver al historial
         </Link>
       </div>
@@ -76,7 +76,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-14">
       <Link
-        href="/cuenta#historial"
+        href="/cuenta?tab=historial"
         className="text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
       >
         ← Historial
@@ -99,7 +99,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
           {attempts.map((a, i) => (
             <li
               key={a.id}
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-4"
+              className="rounded-lg bg-[var(--surface-elevated)] px-4 py-4"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="text-sm font-semibold">

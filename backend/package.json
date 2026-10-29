@@ -22,6 +22,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
+    "prisma:seed:podium": "node -r dotenv/config -r ts-node/register prisma/seed-demo-podium.ts",
     "prisma:migrate:deploy": "prisma migrate deploy"
   },
   "prisma": {
@@ -92,7 +93,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@aps/shared$": "<rootDir>/../../../packages/shared/src/index.ts"
+      "^@aps/shared$": "<rootDir>/../../packages/shared/src/index.ts"
     }
   }
 }

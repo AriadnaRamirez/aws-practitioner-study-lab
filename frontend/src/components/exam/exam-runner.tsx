@@ -217,10 +217,10 @@ export function ExamRunner() {
                       void selectChoice(i as 0 | 1 | 2 | 3)
                     }
                     className={cn(
-                      "flex w-full items-start gap-3 rounded-md border px-4 py-3 text-left text-sm transition-colors",
+                      "flex w-full items-start gap-3 rounded-md px-4 py-3 text-left text-sm transition-colors",
                       active
-                        ? "border-[var(--border-strong)] bg-[var(--surface-hover)] text-[var(--foreground)]"
-                        : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]",
+                        ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))] text-[var(--foreground)]"
+                        : "bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]",
                     )}
                   >
                     <span className="font-mono text-[var(--foreground-muted)]">
@@ -299,10 +299,10 @@ export function ExamRunner() {
               <label
                 key={n}
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
+                  "flex cursor-pointer items-center gap-3 rounded-md px-4 py-3 text-sm transition-colors",
                   size === n
-                    ? "border-[var(--border-strong)] bg-[var(--surface-hover)]"
-                    : "border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
+                    ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))]"
+                    : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
                 )}
               >
                 <input

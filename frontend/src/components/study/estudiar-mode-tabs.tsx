@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
+import { FEATURE_FLAG_EXAM_MODES } from "@aps/shared";
 import { ExamStudyPanel } from "@/components/study/exam-study-panel";
 import { FlashStudyClient } from "@/components/study/flash-study-client";
 import { Skeleton, Spinner } from "@/components/ui/spinner";
+import { useFeatureFlag } from "@/lib/use-feature-flag";
 import { cn } from "@/lib/utils";
 
 export type EstudiarMode = "flash" | "estudio";
@@ -112,34 +114,47 @@ function EstudiarHubInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const parsed = parseMode(searchParams.get("mode"));
+  const examModes = useFeatureFlag(FEATURE_FLAG_EXAM_MODES);
+  const wantsExam = parsed === "estudio" || parsed === "examen";
+  const redirecting = parsed === "examen" || (wantsExam && examModes !== true);
 
   useEffect(() => {
-    if (parsed === "examen") {
+    if (!wantsExam || examModes === null) return;
+    if (!examModes) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("mode");
+      const q = params.toString();
+      router.replace(q ? `/estudiar?${q}` : "/estudiar");
+    } else if (parsed === "examen") {
       router.replace("/estudiar/examen");
     }
-  }, [parsed, router]);
+  }, [wantsExam, examModes, parsed, router, searchParams]);
 
   const mode: EstudiarMode = parsed === "estudio" ? "estudio" : "flash";
 
   return (
     <div
       className={cn(
-        "mx-auto w-full min-w-0 px-6 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12",
-        mode === "flash" ? "max-w-xl lg:max-w-4xl" : "max-w-2xl lg:max-w-4xl",
+        "mx-auto w-full min-w-0 px-6 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12 [@media(max-height:500px)]:md:py-4",
+        "[&:has([data-session-summary])>h1]:hidden [&:has([data-session-summary])>section]:mt-0",
+        "[@media(max-height:500px)]:[&:has([data-study-card])>h1]:hidden [@media(max-height:500px)]:[&:has([data-study-card])>[role=tablist]]:hidden [@media(max-height:500px)]:[&:has([data-study-card])>section]:mt-0",
+        mode === "flash"
+          ? "max-w-xl md:max-w-4xl lg:max-w-6xl"
+          : "max-w-2xl lg:max-w-4xl",
       )}
     >
       <h1 className="font-display text-2xl font-semibold tracking-tight lg:text-3xl">
         Estudiar
       </h1>
-      <EstudiarModeTabs mode={mode} />
+      {examModes ? <EstudiarModeTabs mode={mode} /> : null}
 
       <section className="mt-6 min-w-0 lg:mt-8" aria-live="polite">
-        {mode === "flash" ? (
+        {redirecting ? (
+          <FlashBootFallback />
+        ) : mode === "flash" ? (
           <Suspense fallback={<FlashBootFallback />}>
             <FlashStudyClient />
           </Suspense>
-        ) : parsed === "examen" ? (
-          <FlashBootFallback />
         ) : (
           // Panel brings its own inner padding; tighten negative margin so hub chrome aligns
           <div className="-mx-6 -mt-2 sm:-mx-6 lg:-mx-8">

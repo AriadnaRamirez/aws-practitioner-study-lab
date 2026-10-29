@@ -67,6 +67,14 @@ describe('flash-render', () => {
     expect(new Set(card.choices).size).toBe(4);
   });
 
+  it('NAME_FOCUS keeps long definitions whole', () => {
+    const definition = `${'Definición larga de un servicio de AWS. '.repeat(6)}Fin.`;
+    const item = base({ definition });
+    const card = renderFlashVariant(item, 'NAME_FOCUS', pool);
+    expect(card.stem).toContain(definition);
+    expect(card.stem).not.toContain('…');
+  });
+
   it('pickVariant respects allowedVariants', () => {
     const item = base({ allowedVariants: ['NAME_TO_DEFINITION'] });
     for (let i = 0; i < 8; i++) {

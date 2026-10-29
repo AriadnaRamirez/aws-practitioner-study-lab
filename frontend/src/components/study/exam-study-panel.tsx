@@ -116,7 +116,7 @@ export function ExamStudyPanel() {
       {error ? (
         <p
           role="alert"
-          className="mt-6 rounded-md border border-red-300/60 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+          className="mt-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200"
         >
           {error}{" "}
           <Link href="/login" className="font-semibold underline">
@@ -140,7 +140,7 @@ export function ExamStudyPanel() {
                   "min-w-16 rounded-md px-4 py-3 text-sm font-semibold transition-colors",
                   size === n
                     ? "bg-[var(--foreground)] text-[var(--accent-foreground)]"
-                    : "bg-[var(--surface-elevated)] text-[var(--foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--surface-hover)]",
+                    : "bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]",
                 )}
               >
                 {n}
@@ -181,10 +181,10 @@ export function ExamStudyPanel() {
                   type="button"
                   onClick={() => setSelected(idx)}
                   className={cn(
-                    "w-full rounded-md px-4 py-3 text-left text-sm transition-colors ring-1",
+                    "w-full rounded-md px-4 py-3 text-left text-sm transition-colors",
                     selected === idx
-                      ? "bg-[var(--surface-hover)] ring-[var(--border-strong)]"
-                      : "bg-[var(--surface-elevated)] ring-[var(--border)] hover:bg-[var(--surface-hover)]",
+                      ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))]"
+                      : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
                   )}
                 >
                   <span className="mr-2 font-mono text-xs text-[var(--foreground-muted)]">
@@ -231,7 +231,7 @@ export function ExamStudyPanel() {
               </span>
             </p>
           ) : null}
-          <div className="mt-4 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+          <div className="mt-4 rounded-md bg-[var(--surface-elevated)] p-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
               Explicación
             </p>
@@ -293,7 +293,7 @@ function SummaryBlock({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-[var(--surface-elevated)] px-4 py-3 ring-1 ring-[var(--border)]">
+    <div className="rounded-md bg-[var(--surface-elevated)] px-4 py-3">
       <dt className="text-xs uppercase tracking-wide text-[var(--foreground-muted)]">
         {label}
       </dt>

@@ -22,6 +22,9 @@ import { getKnowledgeItems, MOCK_KNOWLEDGE } from "@/lib/content-api";
 
 type Phase = "loading" | "intro" | "quiz" | "done" | "capped" | "error";
 
+/** From `md` the active phase fills the right column beside the mascot. */
+const PHASE_SLOT = "md:col-start-2 md:row-start-2 md:mt-0";
+
 type SampleQ = {
   id: string;
   prompt: string;
@@ -149,10 +152,10 @@ export function GuestTrial() {
     : "/register";
 
   return (
-    <main className="relative isolate mx-auto flex min-h-dvh w-full min-w-0 max-w-2xl flex-col overflow-x-hidden px-4 py-10 sm:px-6">
+    <main className="relative isolate mx-auto flex min-h-dvh w-full min-w-0 max-w-2xl flex-col overflow-x-hidden px-4 py-10 sm:px-6 md:grid md:max-w-5xl md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:grid-rows-[auto_1fr] md:items-center md:gap-x-12 md:px-8 lg:max-w-6xl lg:gap-x-16 [@media(max-height:500px)]:md:py-4">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 md:fixed"
         style={{
           background: `
             radial-gradient(ellipse 60% 40% at 10% 0%, var(--hero-mesh-a), transparent 60%),
@@ -163,27 +166,34 @@ export function GuestTrial() {
 
       <Link
         href="/"
-        className="font-display text-sm font-semibold tracking-tight text-[var(--foreground)]"
+        className="font-display text-sm font-semibold tracking-tight text-[var(--foreground)] md:col-span-2 md:self-start md:justify-self-start"
       >
-        Study Lab
+        AWS Study Lab
       </Link>
 
-      <Mascot pose="rocket" size="lg" float className="mt-8" />
-      <h1 className="font-display mt-6 text-2xl font-semibold tracking-tight">
-        Prueba
-      </h1>
-      {probe ? (
-        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          {probe.sessionsRemaining}/{GUEST_MAX_SESSIONS} restantes
-        </p>
-      ) : null}
+      <div className="contents md:col-start-1 md:row-start-2 md:flex md:flex-col">
+        <Mascot
+          pose="rocket"
+          size="lg"
+          float
+          className="mt-8 md:h-[min(18rem,40dvh)] md:w-full md:max-w-sm [@media(max-height:500px)]:md:mt-3 [@media(max-height:500px)]:md:h-[38dvh]"
+        />
+        <h1 className="font-display mt-6 text-2xl font-semibold tracking-tight lg:text-3xl [@media(max-height:500px)]:md:mt-3">
+          Prueba
+        </h1>
+        {probe ? (
+          <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+            {probe.sessionsRemaining}/{GUEST_MAX_SESSIONS} restantes
+          </p>
+        ) : null}
+      </div>
 
       {phase === "loading" ? (
-        <p className="mt-10 text-sm text-[var(--foreground-muted)]">…</p>
+        <p className={cn("mt-10 text-sm text-[var(--foreground-muted)]", PHASE_SLOT)}>…</p>
       ) : null}
 
       {phase === "error" ? (
-        <div className="mt-10 space-y-4">
+        <div className={cn("mt-10 space-y-4", PHASE_SLOT)}>
           <p className="text-sm text-red-600 dark:text-red-400" role="alert">
             {error}
           </p>
@@ -194,7 +204,7 @@ export function GuestTrial() {
       ) : null}
 
       {phase === "capped" ? (
-        <div className="mt-10 flex flex-wrap gap-3">
+        <div className={cn("mt-10 flex flex-wrap gap-3", PHASE_SLOT)}>
           <Link href={registerHref} className={cn(buttonVariants({ size: "lg" }))}>
             Crear cuenta
           </Link>
@@ -208,7 +218,7 @@ export function GuestTrial() {
       ) : null}
 
       {phase === "intro" ? (
-        <div className="mt-10 flex flex-wrap gap-3">
+        <div className={cn("mt-10 flex flex-wrap gap-3", PHASE_SLOT)}>
           <button
             type="button"
             className={cn(buttonVariants({ size: "lg" }))}
@@ -226,7 +236,7 @@ export function GuestTrial() {
       ) : null}
 
       {phase === "quiz" && samples[index] ? (
-        <div className="mt-10 space-y-5">
+        <div className={cn("mt-10 space-y-5 [@media(max-height:500px)]:md:space-y-3", PHASE_SLOT)}>
           <p className="text-sm text-[var(--foreground-muted)]">
             Pregunta {index + 1} de {samples.length}
           </p>
@@ -244,13 +254,15 @@ export function GuestTrial() {
                     disabled={revealed}
                     onClick={() => onSelect(i)}
                     className={cn(
-                      "w-full rounded-md border px-4 py-3 text-left text-sm transition-colors",
-                      "border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
-                      revealed && isCorrect && "border-emerald-500 bg-emerald-500/10",
+                      "w-full rounded-md px-4 py-3 text-left text-sm transition-colors [@media(max-height:500px)]:md:py-2",
+                      "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
+                      revealed &&
+                        isCorrect &&
+                        "bg-[var(--success)] text-[var(--success-fg)] hover:bg-[var(--success)]",
                       revealed &&
                         isSelected &&
                         !isCorrect &&
-                        "border-red-500 bg-red-500/10",
+                        "bg-[var(--danger)] text-[var(--danger-fg)] hover:bg-[var(--danger)]",
                     )}
                   >
                     {choice}
@@ -277,7 +289,7 @@ export function GuestTrial() {
       ) : null}
 
       {phase === "done" ? (
-        <div className="mt-10 space-y-4">
+        <div className={cn("mt-10 space-y-4", PHASE_SLOT)}>
           <p className="font-display text-xl font-semibold">
             {correctCount}/{samples.length}
           </p>

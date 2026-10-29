@@ -66,7 +66,7 @@ export function OnboardingTour({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="animate-fade-up relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_20px_48px_-28px_rgba(0,0,0,0.65)] outline-none"
+        className="animate-fade-up relative z-10 w-full max-w-lg overflow-hidden rounded-xl bg-[var(--surface-elevated)] shadow-[0_20px_48px_-28px_rgba(0,0,0,0.65)] outline-none"
       >
         <div
           aria-hidden

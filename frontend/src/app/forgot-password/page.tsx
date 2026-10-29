@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PASSWORD_MIN } from '@aps/shared';
+import { AuthAside } from '@/components/shell/auth-aside';
 import { forgotPassword, resetPassword } from '../../lib/api';
 import { Suspense } from 'react';
 
@@ -61,103 +62,110 @@ function ForgotPasswordForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
-      <div>
-        <p className="text-sm text-zinc-500">AWS Practitioner Study Lab</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-          {mode === 'reset' ? 'Nueva contraseña' : 'Recuperar contraseña'}
-        </h1>
-        <p className="mt-2 text-zinc-600 dark:text-zinc-300">
-          {mode === 'reset'
-            ? 'Escribe el token y tu nueva contraseña.'
-            : 'Te enviaremos un enlace de un solo uso al correo con el que te registraste.'}
-        </p>
-      </div>
+    <div className="md:grid md:min-h-dvh md:grid-cols-2">
+      <AuthAside
+        pose="security"
+        title="Recupera el acceso a tu cuenta."
+        text="Tu progreso y tus rachas siguen guardados."
+      />
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16 md:w-full md:max-w-sm md:px-8 md:py-12 lg:max-w-md [@media(max-height:500px)]:md:py-6">
+        <div>
+          <p className="text-sm text-zinc-500 md:hidden">AWS Study Lab</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight md:mt-0">
+            {mode === 'reset' ? 'Nueva contraseña' : 'Recuperar contraseña'}
+          </h1>
+          <p className="mt-2 text-zinc-600 dark:text-zinc-300">
+            {mode === 'reset'
+              ? 'Escribe el token y tu nueva contraseña.'
+              : 'Te enviaremos un enlace de un solo uso al correo con el que te registraste.'}
+          </p>
+        </div>
 
-      {mode === 'request' ? (
-        <form onSubmit={onRequest} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm">
-            Correo
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            {pending ? 'Enviando…' : 'Enviar enlace'}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={onReset} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm">
-            Token
-            <input
-              type="text"
-              required
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 font-mono text-xs dark:border-zinc-700"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Nueva contraseña
-            <input
-              type="password"
-              required
-              minLength={PASSWORD_MIN}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Confirmar contraseña
-            <input
-              type="password"
-              required
-              minLength={PASSWORD_MIN}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            {pending ? 'Guardando…' : 'Restablecer'}
-          </button>
-        </form>
-      )}
+        {mode === 'request' ? (
+          <form onSubmit={onRequest} className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1 text-sm">
+              Correo
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded-md bg-[var(--surface-elevated)] px-3 py-2"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+            >
+              {pending ? 'Enviando…' : 'Enviar enlace'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={onReset} className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1 text-sm">
+              Token
+              <input
+                type="text"
+                required
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="rounded-md bg-[var(--surface-elevated)] px-3 py-2 font-mono text-xs"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Nueva contraseña
+              <input
+                type="password"
+                required
+                minLength={PASSWORD_MIN}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="rounded-md bg-[var(--surface-elevated)] px-3 py-2"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Confirmar contraseña
+              <input
+                type="password"
+                required
+                minLength={PASSWORD_MIN}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="rounded-md bg-[var(--surface-elevated)] px-3 py-2"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+            >
+              {pending ? 'Guardando…' : 'Restablecer'}
+            </button>
+          </form>
+        )}
 
-      {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
-          {message}
-        </p>
-      ) : null}
+        {error ? (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {message ? (
+          <p className="rounded-md bg-emerald-500/15 p-3 text-sm">
+            {message}
+          </p>
+        ) : null}
 
-      <p className="text-sm text-zinc-500">
-        <Link className="underline underline-offset-4" href="/login">
-          Volver a entrar
-        </Link>
-      </p>
-    </main>
+        <p className="text-sm text-zinc-500">
+          <Link className="underline underline-offset-4" href="/login">
+            Volver a entrar
+          </Link>
+        </p>
+      </main>
+    </div>
   );
 }
 

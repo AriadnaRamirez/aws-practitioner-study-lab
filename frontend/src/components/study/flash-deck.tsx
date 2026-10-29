@@ -19,9 +19,14 @@ type FlashDeckProps = {
   flipped?: boolean;
   /** Back-face content (result + explanation). */
   back?: ReactNode;
+  /** Landscape card on desktop and short landscape: question left, choices right. */
+  wide?: boolean;
   className?: string;
   children?: ReactNode;
 };
+
+const WIDE_GRID =
+  "lg:grid lg:grid-cols-2 [@media(max-height:500px)]:md:grid [@media(max-height:500px)]:md:grid-cols-2";
 
 /**
  * Mazo de cards apiladas con flip 3D a la cara de resultado.
@@ -34,6 +39,7 @@ export function FlashDeck({
   loading = false,
   flipped = false,
   back,
+  wide = false,
   className,
   children,
 }: FlashDeckProps) {
@@ -41,6 +47,7 @@ export function FlashDeck({
     <div
       className={cn(
         "relative mx-auto w-full max-w-md min-w-0 animate-deck-in lg:max-w-lg",
+        wide && "lg:max-w-4xl [@media(max-height:500px)]:md:max-w-none",
         className,
       )}
       style={{ minHeight: "17.5rem", perspective: "1400px" }}
@@ -48,7 +55,7 @@ export function FlashDeck({
       {depth >= 2 ? (
         <div
           aria-hidden
-          className="absolute inset-x-3 top-3 bottom-1 rounded-xl ring-1 ring-white/5"
+          className="absolute inset-x-3 top-3 bottom-1 rounded-xl"
           style={{
             background: "var(--deck-back)",
             transform: "translate(6px, 8px)",
@@ -61,7 +68,7 @@ export function FlashDeck({
       {depth >= 1 ? (
         <div
           aria-hidden
-          className="absolute inset-x-1.5 top-1.5 bottom-0.5 rounded-xl ring-1 ring-white/8"
+          className="absolute inset-x-1.5 top-1.5 bottom-0.5 rounded-xl"
           style={{
             background: "var(--deck-mid)",
             transform: "translate(3px, 4px)",
@@ -81,7 +88,8 @@ export function FlashDeck({
       >
         <article
           className={cn(
-            "col-start-1 row-start-1 overflow-hidden rounded-2xl ring-1 ring-black/20",
+            "col-start-1 row-start-1 overflow-hidden rounded-2xl",
+            wide && WIDE_GRID,
             flipped && "pointer-events-none",
           )}
           style={{
@@ -91,7 +99,11 @@ export function FlashDeck({
           }}
         >
           <div
-            className={cn("relative px-5 pb-6 pt-5", loading && "animate-shimmer")}
+            className={cn(
+              "relative px-5 pb-6 pt-5",
+              wide && "lg:px-7 lg:pb-7 lg:pt-6",
+              loading && "animate-shimmer",
+            )}
             style={{
               background: loading ? "var(--deck-mid)" : "var(--deck-face)",
               minHeight: "9.5rem",
@@ -103,7 +115,12 @@ export function FlashDeck({
               </p>
               <AwsMark height={22} />
             </div>
-            <h2 className="font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--foreground)] sm:text-2xl">
+            <h2
+              className={cn(
+                "font-display mt-4 text-xl font-bold leading-snug tracking-tight text-[var(--foreground)] [overflow-wrap:anywhere] sm:text-2xl",
+                wide && "[@media(max-height:500px)]:md:mt-3 [@media(max-height:500px)]:md:text-xl",
+              )}
+            >
               {loading ? (
                 <span className="inline-block h-7 w-4/5 rounded bg-[var(--surface-hover)]" />
               ) : (
@@ -113,7 +130,11 @@ export function FlashDeck({
           </div>
 
           <div
-            className="px-5 py-4"
+            className={cn(
+              "px-5 py-4",
+              wide &&
+                "lg:flex lg:flex-col lg:justify-center lg:px-6 lg:py-5 [@media(max-height:500px)]:md:flex [@media(max-height:500px)]:md:flex-col [@media(max-height:500px)]:md:justify-center",
+            )}
             style={{
               background: "var(--card-face)",
               color: "var(--card-face-fg)",
@@ -129,7 +150,7 @@ export function FlashDeck({
         <article
           aria-hidden={!flipped}
           className={cn(
-            "col-start-1 row-start-1 flex min-h-full flex-col overflow-hidden rounded-2xl ring-1 ring-black/20",
+            "col-start-1 row-start-1 flex min-h-full flex-col overflow-hidden rounded-2xl",
             flipped ? "pointer-events-auto" : "pointer-events-none",
           )}
           style={{
@@ -140,7 +161,14 @@ export function FlashDeck({
             background: "var(--deck-face)",
           }}
         >
-          <div className="relative flex flex-1 flex-col px-5 py-5">{back}</div>
+          <div
+            className={cn(
+              "relative flex flex-1 flex-col px-5 py-5",
+              wide && "lg:px-7 lg:py-6",
+            )}
+          >
+            {back}
+          </div>
         </article>
       </div>
     </div>
@@ -158,7 +186,7 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
       aria-hidden
     >
       <div
-        className="absolute left-6 top-8 h-44 w-40 rounded-2xl ring-1 ring-white/5"
+        className="absolute left-6 top-8 h-44 w-40 rounded-2xl"
         style={{
           background: "var(--deck-back)",
           transform: "rotate(-8deg)",
@@ -166,14 +194,14 @@ export function FlashDeckShowcase({ className }: { className?: string }) {
         }}
       />
       <div
-        className="absolute left-14 top-4 h-48 w-44 rounded-2xl ring-1 ring-white/8"
+        className="absolute left-14 top-4 h-48 w-44 rounded-2xl"
         style={{
           background: "var(--deck-mid)",
           transform: "rotate(3deg)",
         }}
       />
       <div
-        className="absolute left-10 top-0 flex h-52 w-48 flex-col overflow-hidden rounded-2xl ring-1 ring-black/15"
+        className="absolute left-10 top-0 flex h-52 w-48 flex-col overflow-hidden rounded-2xl"
         style={{
           background: "var(--deck-face)",
           boxShadow: "0 22px 40px -18px rgba(0, 0, 0, 0.55)",

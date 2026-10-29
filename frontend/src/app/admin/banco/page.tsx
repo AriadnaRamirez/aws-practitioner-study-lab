@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/admin/admin-ui";
 import { QuestionsCrud } from "@/components/admin/questions-crud";
 import type { ExamQuestion, Topic } from "@aps/shared";
 
@@ -28,14 +29,11 @@ export default async function AdminBancoPage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Banco</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Preguntas de examen de opción múltiple (4 opciones). Meta seed ≈200+
-          (CLF) + AIF con bandera.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="Banco de preguntas"
+        description="Preguntas de examen de opción múltiple con cuatro opciones. Las del track AIF dependen de su bandera de función."
+      />
       <QuestionsCrud initial={questions} topics={topics} />
     </div>
   );

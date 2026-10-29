@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { PodiumModule } from './podium/podium.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StudyModule } from './study/study.module';
+import { UserExamsModule } from './user-exams/user-exams.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { StudyModule } from './study/study.module';
     AdminModule,
     PodiumModule,
     FeatureFlagsModule,
+    UserExamsModule,
   ],
 })
 export class AppModule {}

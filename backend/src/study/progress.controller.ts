@@ -34,7 +34,10 @@ export class ProgressController {
     summary: 'Resumen de dominio, racha y sesiones activas (dashboard)',
   })
   overview(@Req() req: { user: User }) {
-    return this.studyService.getProgressOverview(req.user.id);
+    return this.studyService.getProgressOverview(
+      req.user.id,
+      req.user.timezone,
+    );
   }
 
   @Get('by-topic')

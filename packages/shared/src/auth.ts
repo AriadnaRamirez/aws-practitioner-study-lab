@@ -52,6 +52,8 @@ export interface ResetPasswordRequest {
 }
 
 export interface UpdateProfileRequest {
+  /** New public handle; same rules as registration. */
+  username?: string;
   timezone?: string;
   podiumHidden?: boolean;
   /** YYYY-MM-DD, or null to clear. */

@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/admin/admin-ui";
 import { KnowledgeCrud } from "@/components/admin/knowledge-crud";
 import type { KnowledgeItem, Topic } from "@aps/shared";
 
@@ -28,13 +29,11 @@ export default async function AdminFlashPage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Flash</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          CRUD de knowledge items (hechos flash). Incluye track AIF.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="Cartas flash"
+        description="Conceptos con definición, explicación y distractores. Solo las publicadas entran en las sesiones de estudio."
+      />
       <KnowledgeCrud initial={knowledge} topics={topics} />
     </div>
   );

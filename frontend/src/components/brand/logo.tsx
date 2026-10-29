@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { AwsMark } from "@/components/brand/aws-mark";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -7,11 +8,11 @@ type Props = {
   /** Raster mark from brand kit, or crisp SVG fallback. */
   variant?: "png" | "svg";
   priority?: boolean;
-  /** Show Study Lab wordmark beside the mark. */
+  /** Show AWS Study Lab wordmark beside the mark. */
   withWordmark?: boolean;
 };
 
-/** Study Lab logo — navy squircle, cyan eyes, orange arrow accent. */
+/** AWS Study Lab logo — navy squircle, cyan eyes, orange arrow accent. */
 export function Logo({
   className,
   size = 32,
@@ -28,7 +29,7 @@ export function Logo({
         height={size}
         fill="none"
         role="img"
-        aria-label="Study Lab"
+        aria-label="AWS Study Lab"
         className="shrink-0"
       >
         <rect width="128" height="128" rx="34" fill="#213146" />
@@ -49,7 +50,7 @@ export function Logo({
     ) : (
       <Image
         src="/brand/logo.png"
-        alt={withWordmark ? "" : "Study Lab"}
+        alt={withWordmark ? "" : "AWS Study Lab"}
         width={size}
         height={size}
         priority={priority}
@@ -63,11 +64,23 @@ export function Logo({
 
   return (
     <span
-      className={cn("inline-flex min-w-0 items-center gap-2.5", className)}
+      className={cn(
+        "inline-flex min-w-0 items-center gap-2 sm:gap-2.5",
+        className,
+      )}
     >
       {mark}
-      <span className="font-display truncate text-sm font-semibold tracking-tight">
-        Study Lab
+      <span className="inline-flex min-w-0 items-center gap-1.5">
+        <span className="sr-only">AWS </span>
+        <AwsMark
+          height={20}
+          tone="onDarkColor"
+          alt=""
+          className="shrink-0 translate-y-[3px]"
+        />
+        <span className="font-display min-w-0 truncate whitespace-nowrap text-sm font-semibold tracking-tight">
+          Study Lab
+        </span>
       </span>
     </span>
   );

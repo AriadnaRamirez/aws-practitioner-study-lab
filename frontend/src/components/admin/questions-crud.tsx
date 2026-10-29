@@ -1,16 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ExamChoices, ExamQuestion, Topic } from "@aps/shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   createQuestion,
   deleteQuestion,
   updateQuestion,
 } from "@/lib/admin-content-api";
+import {
+  ADMIN_BUTTON,
+  ADMIN_INPUT,
+  ADMIN_LABEL,
+  ADMIN_TABLE,
+  ADMIN_TEXTAREA,
+  AdminBadge,
+  AdminEmpty,
+  AdminNotice,
+  AdminSection,
+} from "./admin-ui";
+import {
+  ADMIN_SELECT,
+  AdminStat,
+  AdminStatGrid,
+  ContentStatusBadge,
+} from "./admin-metrics";
 
 type Props = { initial: ExamQuestion[]; topics: Topic[] };
+
+const ROW_BUTTON = "h-8 px-2.5 text-xs";
+const MAX_VISIBLE = 80;
 
 export function QuestionsCrud({ initial, topics }: Props) {
   const [rows, setRows] = useState(initial);
@@ -33,6 +52,27 @@ export function QuestionsCrud({ initial, topics }: Props) {
         q.stem.toLowerCase().includes(filter.toLowerCase()),
       )
     : rows;
+
+  const topicName = useMemo(
+    () => new Map(topics.map((t) => [t.id, t.name])),
+    [topics],
+  );
+
+  const stats = useMemo(
+    () => ({
+      published: rows.filter((r) => r.status === "published").length,
+      draft: rows.filter((r) => r.status === "draft").length,
+      aif: rows.filter((r) => r.trackId === "AIF").length,
+    }),
+    [rows],
+  );
+
+  const choiceFields: [string, (v: string) => void][] = [
+    [c0, setC0],
+    [c1, setC1],
+    [c2, setC2],
+    [c3, setC3],
+  ];
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -92,156 +132,187 @@ export function QuestionsCrud({ initial, topics }: Props) {
 
   return (
     <div className="space-y-6">
-      {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <AdminStatGrid>
+        <AdminStat label="Preguntas" value={rows.length} />
+        <AdminStat label="Publicadas" value={stats.published} tone="success" />
+        <AdminStat label="Borrador" value={stats.draft} />
+        <AdminStat label="Track AIF" value={stats.aif} tone="accent" />
+      </AdminStatGrid>
 
-      <form
-        onSubmit={onCreate}
-        className="grid gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
-      >
-        <h2 className="text-sm font-semibold">Nueva pregunta (opción múltiple)</h2>
-        <label className="text-sm">
-          Stem
-          <Input
-            className="mt-1"
-            value={stem}
-            onChange={(e) => setStem(e.target.value)}
-            required
-          />
-        </label>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {[
-            [c0, setC0, "Opción 0"],
-            [c1, setC1, "Opción 1"],
-            [c2, setC2, "Opción 2"],
-            [c3, setC3, "Opción 3"],
-          ].map(([val, set, label], i) => (
-            <label key={String(label)} className="text-sm">
-              {String(label)}
-              <Input
-                className="mt-1"
-                value={val as string}
-                onChange={(e) =>
-                  (set as (v: string) => void)(e.target.value)
-                }
+      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
+        <AdminSection title="Nueva pregunta" description="Opción múltiple: marca la respuesta correcta.">
+          <form onSubmit={onCreate} className="grid gap-4">
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Enunciado</span>
+              <textarea
+                className={cn(ADMIN_TEXTAREA, "min-h-20")}
+                value={stem}
+                onChange={(e) => setStem(e.target.value)}
                 required
               />
-              <span className="ml-2 text-xs text-zinc-500">
-                <input
-                  type="radio"
-                  name="correct"
-                  checked={correctIndex === i}
-                  onChange={() => setCorrectIndex(i)}
-                />{" "}
-                correcta
-              </span>
             </label>
-          ))}
-        </div>
-        <label className="text-sm">
-          Explicación
-          <Input
-            className="mt-1"
-            value={explanation}
-            onChange={(e) => setExplanation(e.target.value)}
-            required
-          />
-        </label>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            Tema
-            <select
-              className="mt-1 flex h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              value={topicId}
-              onChange={(e) => {
-                const id = e.target.value;
-                setTopicId(id);
-                const t = topics.find((x) => x.id === id);
-                if (t) setTrackId(t.trackId);
-              }}
-            >
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.trackId})
-                </option>
+            <fieldset className="grid gap-2">
+              <legend className={cn(ADMIN_LABEL, "mb-1.5")}>Opciones</legend>
+              {choiceFields.map(([val, set], i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="correct"
+                    checked={correctIndex === i}
+                    onChange={() => setCorrectIndex(i)}
+                    aria-label={`Opción ${String.fromCharCode(65 + i)} es la correcta`}
+                    className="size-4 shrink-0 accent-[var(--accent)]"
+                  />
+                  <input
+                    className={ADMIN_INPUT}
+                    value={val}
+                    onChange={(e) => set(e.target.value)}
+                    placeholder={`Opción ${String.fromCharCode(65 + i)}`}
+                    aria-label={`Opción ${String.fromCharCode(65 + i)}`}
+                    required
+                  />
+                </div>
               ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            Status
-            <select
-              className="mt-1 flex h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              value={status}
-              onChange={(e) =>
-                setStatus(e.target.value as ExamQuestion["status"])
-              }
-            >
-              <option value="published">published</option>
-              <option value="draft">draft</option>
-              <option value="archived">archived</option>
-            </select>
-          </label>
-        </div>
-        <Button type="submit" disabled={busy || !topicId}>
-          Crear pregunta
-        </Button>
-      </form>
-
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-zinc-500">
-          {rows.length} preguntas · mostrando {visible.length}
-        </p>
-        <Input
-          placeholder="Filtrar…"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="max-w-xs"
-        />
-      </div>
-
-      <ul className="max-h-[32rem] space-y-2 overflow-y-auto">
-        {visible.slice(0, 80).map((q) => (
-          <li
-            key={q.id}
-            className="rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-800"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="text-sm font-medium">
-                {q.stem}{" "}
-                <span className="text-xs font-normal text-zinc-500">
-                  {q.trackId} · {q.status}
-                </span>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Correcta: opción {String.fromCharCode(65 + correctIndex)}
               </p>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void onToggle(q)}
-                >
-                  {q.status === "published" ? "A draft" : "Publicar"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={busy}
-                  onClick={() => void onDelete(q.id)}
-                >
-                  Borrar
-                </Button>
-              </div>
+            </fieldset>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Explicación</span>
+              <textarea
+                className={cn(ADMIN_TEXTAREA, "min-h-20")}
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                required
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Tema</span>
+              <select
+                className={ADMIN_SELECT}
+                value={topicId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setTopicId(id);
+                  const t = topics.find((x) => x.id === id);
+                  if (t) setTrackId(t.trackId);
+                }}
+              >
+                {topics.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.trackId})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1.5">
+              <span className={ADMIN_LABEL}>Estado</span>
+              <select
+                className={ADMIN_SELECT}
+                value={status}
+                onChange={(e) =>
+                  setStatus(e.target.value as ExamQuestion["status"])
+                }
+              >
+                <option value="published">Publicada</option>
+                <option value="draft">Borrador</option>
+                <option value="archived">Archivada</option>
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={busy || !topicId}
+              className={ADMIN_BUTTON.primary}
+            >
+              Crear pregunta
+            </button>
+          </form>
+        </AdminSection>
+
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-[var(--foreground-muted)] tabular-nums">
+              {rows.length} preguntas · mostrando {Math.min(visible.length, MAX_VISIBLE)}
+            </p>
+            <input
+              type="search"
+              placeholder="Filtrar por enunciado…"
+              aria-label="Filtrar preguntas"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className={cn(ADMIN_INPUT, "sm:max-w-xs")}
+            />
+          </div>
+
+          {visible.length === 0 ? (
+            <AdminEmpty>
+              {rows.length === 0 ? "Todavía no hay preguntas." : "Ninguna pregunta coincide con el filtro."}
+            </AdminEmpty>
+          ) : (
+            <div className={cn(ADMIN_TABLE.wrap, "max-h-[40rem] overflow-y-auto")}>
+              <table className={ADMIN_TABLE.table}>
+                <thead className={cn(ADMIN_TABLE.thead, "sticky top-0 z-10")}>
+                  <tr>
+                    <th className={ADMIN_TABLE.th}>Pregunta</th>
+                    <th className={ADMIN_TABLE.th}>Tema</th>
+                    <th className={ADMIN_TABLE.th}>Estado</th>
+                    <th className={ADMIN_TABLE.th}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.slice(0, MAX_VISIBLE).map((q) => (
+                    <tr key={q.id} className={ADMIN_TABLE.tr}>
+                      <td className={cn(ADMIN_TABLE.td, "min-w-72 max-w-xl")}>
+                        <p className="line-clamp-2 font-medium">{q.stem}</p>
+                      </td>
+                      <td className={ADMIN_TABLE.td}>
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <AdminBadge tone={q.trackId === "AIF" ? "accent" : "neutral"}>
+                            {q.trackId}
+                          </AdminBadge>
+                          <span className="text-xs text-[var(--foreground-muted)]">
+                            {topicName.get(q.topicId) ?? "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className={ADMIN_TABLE.td}>
+                        <ContentStatusBadge status={q.status} />
+                      </td>
+                      <td className={ADMIN_TABLE.td}>
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            className={cn(ADMIN_BUTTON.secondary, ROW_BUTTON)}
+                            disabled={busy}
+                            onClick={() => void onToggle(q)}
+                          >
+                            {q.status === "published" ? "Pasar a borrador" : "Publicar"}
+                          </button>
+                          <button
+                            type="button"
+                            className={cn(ADMIN_BUTTON.danger, ROW_BUTTON)}
+                            disabled={busy}
+                            onClick={() => void onDelete(q.id)}
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </li>
-        ))}
-      </ul>
-      {visible.length > 80 ? (
-        <p className="text-xs text-zinc-500">
-          Mostrando 80 de {visible.length}. Usa el filtro para acotar.
-        </p>
-      ) : null}
+          )}
+          {visible.length > MAX_VISIBLE ? (
+            <p className="text-xs text-[var(--foreground-muted)] tabular-nums">
+              Mostrando {MAX_VISIBLE} de {visible.length}. Usa el filtro para acotar.
+            </p>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

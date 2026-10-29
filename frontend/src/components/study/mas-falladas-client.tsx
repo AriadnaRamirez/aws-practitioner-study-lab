@@ -13,6 +13,10 @@ import type {
 import { AwsMark } from "@/components/brand/aws-mark";
 import { CelebrateBurst } from "@/components/study/celebrate-burst";
 import { FlashDeck } from "@/components/study/flash-deck";
+import {
+  WeakListView,
+  WeakSignedOut,
+} from "@/components/study/mas-falladas/weak-list-view";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -21,7 +25,8 @@ import {
   startWeakReview,
 } from "@/lib/api";
 import { answerStudy, getStudySession } from "@/lib/study-api";
-import { cn } from "@/lib/utils";
+import { cn, hasTextSelection } from "@/lib/utils";
+import { SessionSummary } from "@/components/study/session-summary";
 
 type Phase = "list" | "play" | "feedback" | "done";
 
@@ -181,19 +186,7 @@ export function MasFalladasClient() {
   }
 
   if (authed === false) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:max-w-4xl lg:px-8">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">
-          Más falladas
-        </h1>
-        <Link
-          href="/login"
-          className={cn(buttonVariants({ size: "lg" }), "mt-8 inline-flex")}
-        >
-          Entrar
-        </Link>
-      </div>
-    );
+    return <WeakSignedOut />;
   }
 
   if ((phase === "play" || phase === "feedback") && prompt) {
@@ -296,7 +289,7 @@ export function MasFalladasClient() {
                     </p>
                   ) : null}
 
-                  <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
+                  <div className="mt-4 rounded-xl bg-[var(--surface-elevated)] px-3.5 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
                       Explicación
                     </p>
@@ -335,15 +328,18 @@ export function MasFalladasClient() {
                     <button
                       type="button"
                       disabled={pending || phase === "feedback"}
-                      onClick={() => void onAnswer(i)}
+                      onClick={() => {
+                        if (hasTextSelection()) return;
+                        void onAnswer(i);
+                      }}
                       className={cn(
-                        "keycap w-full justify-start px-3.5 py-3 text-left text-sm leading-snug normal-case disabled:cursor-wait",
+                        "keycap keycap-option w-full select-text px-4 py-3 text-sm leading-snug normal-case disabled:cursor-wait",
                         isCorrect && "keycap-correct",
                         isWrongPick && "keycap-wrong",
                         !showKey && isSelected && "keycap-accent",
                       )}
                     >
-                      <span className="mr-2 font-semibold opacity-45">
+                      <span className="mr-2 shrink-0 font-semibold opacity-45">
                         {String.fromCharCode(65 + i)}.
                       </span>
                       <span>{choice}</span>
@@ -360,6 +356,17 @@ export function MasFalladasClient() {
           </FlashDeck>
         </div>
       </section>
+    );
+  }
+
+  if (phase === "done" && summary) {
+    return (
+      <div className="px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <SessionSummary
+          summary={summary}
+          extraAction={{ label: "Volver a la lista", onClick: backToList }}
+        />
+      </div>
     );
   }
 
@@ -413,79 +420,15 @@ export function MasFalladasClient() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
-      <h1 className="font-display text-2xl font-semibold tracking-tight">
-        Más falladas
-      </h1>
-
-      {error ? (
-        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="mt-6">
-        <Button
-          type="button"
-          size="lg"
-          disabled={pending || !items?.length}
-          onClick={() => void onStudyWeak()}
-        >
-          {pending ? (
-            <span className="inline-flex items-center gap-2">
-              <Spinner /> …
-            </span>
-          ) : (
-            "Estudiar"
-          )}
-        </Button>
-      </div>
-
-      {items == null ? (
-        <p className="mt-8 text-sm text-[var(--foreground-muted)]">…</p>
-      ) : items.length === 0 ? (
-        <p className="mt-8 text-sm text-[var(--foreground-muted)]">
-          Nada por aquí.{" "}
-          <Link
-            href="/estudiar"
-            className="text-[var(--foreground)] hover:underline"
-          >
-            Ir a estudiar
-          </Link>
-        </p>
-      ) : (
-        <ol className="mt-10 space-y-3">
-          {items.map((item, index) => (
-            <li
-              key={`${item.itemType}:${item.itemId}`}
-              className="flex gap-3 border-b border-[var(--border)] pb-3 last:border-0"
-            >
-              <span className="font-mono text-sm tabular-nums text-[var(--foreground-muted)]">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                  {item.title}
-                </p>
-                {item.subtitle ? (
-                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--foreground-muted)]">
-                    {item.subtitle}
-                  </p>
-                ) : null}
-                <p className="mt-1 text-xs text-[var(--foreground-muted)]">
-                  {item.itemType === "KNOWLEDGE" ? "Flash" : "Examen"} ·{" "}
-                  <span className="font-medium text-[var(--foreground)]">
-                    {item.failCount} fallo{item.failCount === 1 ? "" : "s"}
-                  </span>
-                  {item.passCount > 0
-                    ? ` · ${item.passCount} acierto${item.passCount === 1 ? "" : "s"}`
-                    : null}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
+    <WeakListView
+      items={items}
+      error={error}
+      pending={pending}
+      onStudyWeak={() => void onStudyWeak()}
+      onRetry={() => {
+        setItems(null);
+        void load();
+      }}
+    />
   );
 }
