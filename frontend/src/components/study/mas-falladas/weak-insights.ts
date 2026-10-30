@@ -35,21 +35,6 @@ export function topicPracticeHref(topicId: string): string {
   return `/estudiar?topics=${encodeURIComponent(topicId)}&start=10`;
 }
 
-export function statusLine(item: WeakItem): string {
-  const fails = `La fallaste ${plural(item.failCount, "vez", "veces")}`;
-  const hits =
-    item.passCount > 0
-      ? ` y acertaste ${item.passCount}`
-      : " y aún no la aciertas";
-  const left = hitsToMastery(item);
-  if (left === 0) return `${fails}${hits}. Ya la dominas.`;
-  if (item.masteredAt) {
-    return `${fails}${hits}. La habías dominado, pero se te olvidó: te ${left === 1 ? "falta" : "faltan"} ${plural(left, "acierto seguido", "aciertos seguidos")}.`;
-  }
-  if (left === 1) return `${fails}${hits}. Ya casi: 1 acierto más y la dominas.`;
-  return `${fails}${hits}. Te faltan ${left} aciertos seguidos para dominarla.`;
-}
-
 /** Explanation without the part that repeats the answer; null if nothing is left. */
 export function extraExplanation(item: WeakItem): string | null {
   const explanation = item.explanation?.trim();

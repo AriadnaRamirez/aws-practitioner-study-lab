@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Dumbbell } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { MASTERY_STREAK, planWeakReview, type WeakItem } from "@aps/shared";
 import { Mascot } from "@/components/brand/mascot";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -11,74 +11,132 @@ import { WeakInsightsPanel } from "./weak-insights-panel";
 import {
   WeakItemCard,
   WeakItemCardSkeleton,
-  weakCardClass,
 } from "./weak-item-card";
 import { isMastered, plural } from "./weak-insights";
 
 const pageClass =
-  "mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:max-w-5xl lg:px-8 lg:py-12";
+  "mx-auto w-full min-w-0 max-w-xl px-6 py-8 sm:py-10 md:max-w-5xl lg:max-w-6xl lg:px-8 lg:py-12";
 
 const sectionTitleClass =
-  "font-sans text-lg font-bold tracking-tight text-[var(--foreground)]";
+  "font-display text-lg font-semibold tracking-tight text-[var(--foreground)]";
 
-function WeakHeader({ subtitle }: { subtitle?: string }) {
+const summaryClass =
+  "rounded-2xl bg-[var(--surface)] p-5 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.9)] sm:p-6";
+
+const DOT = {
+  danger: "bg-[var(--danger)]",
+  accent: "bg-[var(--accent)]",
+  success: "bg-[var(--success)]",
+} as const;
+
+type Tone = keyof typeof DOT;
+
+const RING_SIZE = 88;
+const RING_STROKE = 8;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+function WeakHeader({
+  subtitle,
+  mascot = false,
+}: {
+  subtitle?: string;
+  mascot?: boolean;
+}) {
   return (
-    <header>
-      <h1 className="font-sans text-3xl font-extrabold leading-none tracking-tight text-[var(--foreground)] sm:text-4xl">
-        Más falladas
-      </h1>
-      <p className="mt-2.5 text-sm text-[var(--foreground-muted)] sm:text-base">
-        {subtitle ??
-          "Las cartas que más se te resisten. Repásalas hasta dominarlas."}
-      </p>
+    <header className="flex items-center gap-4">
+      <div className="min-w-0">
+        <h1 className="font-sans text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
+          Más falladas
+        </h1>
+        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
+          {subtitle ?? "Repásalas hasta dominarlas."}
+        </p>
+      </div>
+      {mascot ? (
+        <Mascot
+          pose="study"
+          size="sm"
+          glow={false}
+          float
+          className="h-16 w-24 shrink-0 sm:h-24 sm:w-32"
+        />
+      ) : null}
     </header>
   );
 }
 
-function SummaryText({
-  total,
-  pending,
+function QuietStat({
+  label,
+  value,
+  tone,
 }: {
-  total: number;
-  pending: number;
+  label: string;
+  value: number;
+  tone: Tone;
 }) {
-  if (pending === 0) {
-    return (
-      <>
-        <strong>
-          Ya dominas {total === 1 ? "la carta" : `las ${total} cartas`}
-        </strong>{" "}
-        que habías fallado.
-      </>
-    );
-  }
-  const strong = <strong>{plural(pending, "carta", "cartas")} por dominar</strong>;
-  if (pending === total) {
-    return <>Tienes {strong}.</>;
-  }
   return (
-    <>
-      Te {pending === 1 ? "queda" : "quedan"} {strong} de las {total} que has
-      fallado.
-    </>
+    <div className="min-w-0">
+      <dd
+        className={cn(
+          "text-2xl font-extrabold leading-none tabular-nums tracking-tight",
+          value ? "text-[var(--foreground)]" : "text-[var(--foreground-muted)]",
+        )}
+      >
+        {value}
+      </dd>
+      <dt className="mt-1.5 flex items-start gap-1.5 text-xs leading-tight text-[var(--foreground-muted)]">
+        <span aria-hidden className={cn("mt-1 size-1.5 shrink-0 rounded-full", DOT[tone])} />
+        {label}
+      </dt>
+    </div>
   );
 }
 
-/** Mirrors the backend round (`planWeakReview`): pending first, mastered only to fill. */
-function ctaExplanation(items: WeakItem[]): string {
-  const { pending, refresh } = planWeakReview(items);
-  const again = "Si fallas una, te la volvemos a preguntar más adelante.";
-  if (pending === 0) {
-    return `Una ronda de repaso con ${plural(refresh, "carta que ya dominas", "cartas que ya dominas")}, para que no se te olviden. ${again}`;
-  }
-  const lead =
-    pending === 1
-      ? "Una ronda con tu carta por dominar."
-      : `Una ronda con tus ${pending} cartas por dominar, empezando por las que más fallas.`;
-  const fill = refresh
-    ? ` Como son pocas, la completamos con ${refresh} que ya dominas, para que no se te olviden.`
-    : "";
-  return `${lead}${fill} ${again}`;
+function MasteryRing({ mastered, total }: { mastered: number; total: number }) {
+  const ratio = total > 0 ? mastered / total : 0;
+  return (
+    <div
+      role="img"
+      aria-label={`${mastered} de ${total} dominadas`}
+      className="relative size-20 shrink-0 sm:size-24"
+    >
+      <svg
+        viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+        className="size-full -rotate-90"
+        aria-hidden
+      >
+        <circle
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          fill="none"
+          stroke="var(--surface-hover)"
+          strokeWidth={RING_STROKE}
+        />
+        <circle
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth={RING_STROKE}
+          strokeLinecap="round"
+          strokeDasharray={RING_LENGTH}
+          strokeDashoffset={RING_LENGTH * (1 - ratio)}
+          className="transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
+        />
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center" aria-hidden>
+        <span className="font-display text-xl font-semibold leading-none tabular-nums text-[var(--foreground)] sm:text-2xl">
+          {mastered}
+        </span>
+        <span className="mt-0.5 text-[11px] tabular-nums text-[var(--foreground-muted)]">
+          de {total}
+        </span>
+      </span>
+    </div>
+  );
 }
 
 function EmptyState() {
@@ -119,14 +177,20 @@ export function WeakSignedOut() {
 function LoadingState() {
   return (
     <div className={pageClass} aria-busy>
-      <WeakHeader />
+      <WeakHeader mascot />
       <p className="sr-only" role="status">
         Cargando tus cartas más falladas…
       </p>
-      <div aria-hidden className={cn(weakCardClass, "mt-8 gap-3 sm:p-6")}>
-        <span className="h-5 w-2/3 rounded-md bg-[var(--surface-hover)] motion-safe:animate-pulse" />
-        <span className="h-3 w-full rounded-md bg-[var(--surface-hover)] motion-safe:animate-pulse" />
-        <span className="mt-2 h-12 w-64 max-w-full rounded-full bg-[var(--surface-hover)] motion-safe:animate-pulse" />
+      <div aria-hidden className={cn(summaryClass, "mt-8 flex items-center gap-4 sm:gap-6")}>
+        <span className="size-20 shrink-0 rounded-full bg-[var(--surface-hover)] motion-safe:animate-pulse sm:size-24" />
+        <span className="grid min-w-0 grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className="flex flex-col gap-2">
+              <span className="h-7 w-8 rounded-md bg-[var(--surface-hover)] motion-safe:animate-pulse" />
+              <span className="h-3 w-14 max-w-full rounded-md bg-[var(--surface-hover)] motion-safe:animate-pulse" />
+            </span>
+          ))}
+        </span>
       </div>
       <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
@@ -179,45 +243,47 @@ export function WeakListView({
 
   const toMaster = items.filter((it) => !isMastered(it));
   const mastered = items.filter(isMastered);
+  const almost = toMaster.filter(
+    (it) => it.consecutiveCorrect === MASTERY_STREAK - 1,
+  ).length;
+  const round = planWeakReview(items).queue.length;
 
   return (
     <div className={pageClass}>
-      <WeakHeader />
+      <WeakHeader mascot />
 
-      <section
-        aria-label="Resumen"
-        className={cn(
-          weakCardClass,
-          "mt-8 gap-5 sm:p-6 md:flex-row md:items-center md:justify-between",
-        )}
-      >
-        <div className="min-w-0 md:max-w-xl">
-          <p className="text-lg leading-snug text-[var(--foreground)] sm:text-xl">
-            <SummaryText total={items.length} pending={toMaster.length} />
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-            {ctaExplanation(items)}
-          </p>
+      <section aria-label="Resumen" className={cn(summaryClass, "mt-8")}>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+          <div className="flex min-w-0 flex-col gap-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:gap-5 sm:gap-6">
+            <MasteryRing mastered={mastered.length} total={items.length} />
+            <dl className="grid min-w-0 grid-cols-3 gap-x-3 gap-y-1 sm:gap-x-6">
+              <QuietStat label="Por dominar" value={toMaster.length - almost} tone="danger" />
+              <QuietStat label="A 1 acierto" value={almost} tone="accent" />
+              <QuietStat label="Dominadas" value={mastered.length} tone="success" />
+            </dl>
+          </div>
+          <div className="flex shrink-0 flex-col items-stretch gap-1.5 sm:items-end">
+            <Button
+              type="button"
+              size="lg"
+              className="w-full sm:w-auto"
+              disabled={studyPending}
+              onClick={onStudyWeak}
+            >
+              {studyPending ? (
+                <>
+                  <Spinner label="Preparando el refuerzo" />
+                  Preparando…
+                </>
+              ) : (
+                "Reforzar"
+              )}
+            </Button>
+            <p className="text-center text-xs text-[var(--foreground-muted)] sm:text-right">
+              Ronda de {plural(round, "carta", "cartas")}
+            </p>
+          </div>
         </div>
-        <Button
-          type="button"
-          size="lg"
-          className="w-full shrink-0 md:w-auto"
-          disabled={studyPending}
-          onClick={onStudyWeak}
-        >
-          {studyPending ? (
-            <>
-              <Spinner label="Preparando el refuerzo" />
-              Preparando…
-            </>
-          ) : (
-            <>
-              <Dumbbell className="size-5" aria-hidden />
-              Reforzar las más falladas
-            </>
-          )}
-        </Button>
       </section>
 
       {error ? (
@@ -236,15 +302,12 @@ export function WeakListView({
       {toMaster.length ? (
         <section aria-labelledby="mas-falladas-por-dominar" className="mt-12">
           <h2 id="mas-falladas-por-dominar" className={sectionTitleClass}>
-            Por dominar{" "}
-            <span className="font-semibold text-[var(--foreground-muted)]">
-              · {toMaster.length}
+            Por dominar
+            <span className="ml-2 text-sm font-medium tabular-nums text-[var(--foreground-muted)]">
+              {toMaster.length}
             </span>
           </h2>
-          <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-            Léelas con calma: esto es lo que se te está resistiendo.
-          </p>
-          <ul className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             {toMaster.map((item) => (
               <li key={`${item.itemType}:${item.itemId}`} className="flex">
                 <WeakItemCard item={item} />
@@ -259,17 +322,12 @@ export function WeakListView({
           className="group mt-12"
           open={toMaster.length === 0 ? true : undefined}
         >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl bg-[var(--surface-elevated)] px-5 py-4 transition-colors hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] [&::-webkit-details-marker]:hidden">
-            <span className="min-w-0">
-              <span className={cn(sectionTitleClass, "block")}>
-                Ya las dominas{" "}
-                <span className="font-semibold text-[var(--foreground-muted)]">
-                  · {mastered.length}
-                </span>
-              </span>
-              <span className="mt-0.5 block text-sm text-[var(--foreground-muted)]">
-                Las fallaste antes, pero ya las acertaste{" "}
-                {plural(MASTERY_STREAK, "vez", "veces")} seguidas.
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-1 py-2 transition-colors hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] [&::-webkit-details-marker]:hidden">
+            <span className={cn(sectionTitleClass, "flex min-w-0 items-center gap-2")}>
+              <span aria-hidden className="size-2 shrink-0 rounded-full bg-[var(--success)]" />
+              Ya las dominas
+              <span className="text-sm font-medium tabular-nums text-[var(--foreground-muted)]">
+                {mastered.length}
               </span>
             </span>
             <ChevronDown
