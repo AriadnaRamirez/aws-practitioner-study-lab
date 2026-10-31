@@ -28,6 +28,12 @@ export interface PodiumResponse {
   /** Rolling 7×24h for `week`; null for all-time. */
   windowStartedAt: string | null;
   computedAt: string;
+  /**
+   * Admins get the full ranking. Students only get the top 3, the entry
+   * right above them and their own entry — look entries up by `rank`.
+   */
   entries: PodiumEntry[];
+  /** Size of the full visible ranking, regardless of trimming. */
+  totalRanked: number;
   me: PodiumMe;
 }

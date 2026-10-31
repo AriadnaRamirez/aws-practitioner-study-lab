@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { APP_NAME } from "@aps/shared";
 import { cn } from "@/lib/utils";
 
 export const MASCOT_POSES = {
@@ -7,26 +8,29 @@ export const MASCOT_POSES = {
   laptop: "/mascot/laptop.png",
   rocket: "/mascot/rocket.png",
   server: "/mascot/server.png",
-  s3: "/mascot/s3.png",
   security: "/mascot/security.png",
+  champion: "/mascot/champion.png",
+  silver: "/mascot/silver.png",
+  bronze: "/mascot/bronze.png",
 } as const;
 
 export type MascotPose = keyof typeof MASCOT_POSES;
 
 const ALT: Record<MascotPose, string> = {
-  study: "Mascot Study Lab con libro AWS",
-  wave: "Mascot Study Lab saludando",
-  laptop: "Mascot Study Lab en la laptop",
-  rocket: "Mascot Study Lab en cohete AWS",
-  server: "Mascot Study Lab con servidor",
-  s3: "Mascot Study Lab con bucket S3",
-  security: "Mascot Study Lab de seguridad",
+  study: `Mascota de ${APP_NAME} con libro AWS`,
+  wave: `Mascota de ${APP_NAME} saludando`,
+  laptop: `Mascota de ${APP_NAME} en la laptop`,
+  rocket: `Mascota de ${APP_NAME} en cohete AWS`,
+  server: `Mascota de ${APP_NAME} con servidor`,
+  security: `Mascota de ${APP_NAME} de seguridad`,
+  champion: `Mascota de ${APP_NAME} con trofeo de campeón`,
+  silver: `Mascota de ${APP_NAME} con medalla de plata`,
+  bronze: `Mascota de ${APP_NAME} con medalla de bronce`,
 };
 
 type Props = {
   pose?: MascotPose;
   className?: string;
-  float?: boolean;
   priority?: boolean;
   size?: "sm" | "md" | "lg" | "hero";
   /** Soft orange backlight behind the cutout (default on). */
@@ -43,7 +47,7 @@ const SIZE: Record<NonNullable<Props["size"]>, string> = {
 const SIZES_ATTR: Record<NonNullable<Props["size"]>, string> = {
   sm: "112px",
   md: "176px",
-  lg: "256px",
+  lg: "(min-width: 1024px) 384px, 256px",
   hero: "(max-width: 640px) 80vw, 320px",
 };
 
@@ -51,30 +55,22 @@ const SIZES_ATTR: Record<NonNullable<Props["size"]>, string> = {
 export function Mascot({
   pose = "study",
   className,
-  float = false,
   priority = false,
   size = "md",
   glow = true,
 }: Props) {
   return (
-    <div
-      className={cn(
-        "relative",
-        SIZE[size],
-        float && "animate-mascot-float",
-        className,
-      )}
-    >
+    <div className={cn("relative", SIZE[size], className)}>
       {glow ? (
         <>
           {/* Soft plate + warm orange halo behind the character */}
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-[8%] rounded-2xl bg-[radial-gradient(ellipse_70%_65%_at_50%_55%,rgba(232,80,2,0.38),rgba(232,80,2,0.12)_45%,transparent_72%)]"
+            className="pointer-events-none absolute inset-[8%] rounded-2xl bg-[radial-gradient(ellipse_70%_65%_at_50%_55%,rgba(210,101,47,0.36),rgba(210,101,47,0.12)_45%,transparent_72%)]"
           />
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(241,96,1,0.45),transparent_68%)] blur-[2px]"
+            className="pointer-events-none absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(223,120,67,0.42),transparent_68%)] blur-[2px]"
           />
         </>
       ) : null}
@@ -89,7 +85,7 @@ export function Mascot({
         className={cn(
           "relative z-[1] object-contain object-center",
           glow
-            ? "drop-shadow-[0_16px_36px_rgba(232,80,2,0.32)]"
+            ? "drop-shadow-[0_16px_36px_rgba(210,101,47,0.3)]"
             : "drop-shadow-[0_14px_32px_rgba(0,0,0,0.45)]",
         )}
       />

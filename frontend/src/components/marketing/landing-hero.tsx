@@ -6,18 +6,24 @@ import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
 import { SiteCredits } from "@/components/shell/site-credits";
+import { buttonVariants } from "@/components/ui/button";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { Notice } from "@/components/ui/notice";
 import { cn } from "@/lib/utils";
+
+const TEXT_LINK = cn(
+  "rounded-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline",
+  FOCUS_RING,
+);
 
 function ByeBanner() {
   const params = useSearchParams();
-  if (params.get("bye") !== "1") return null;
+  const deleted = params.get("deleted") === "1";
+  if (params.get("bye") !== "1" && !deleted) return null;
   return (
-    <p
-      role="status"
-      className="relative z-10 px-7 py-2 text-center text-sm text-[var(--foreground-muted)]"
-    >
-      Sesión cerrada
-    </p>
+    <Notice className="relative z-10 px-7 py-2 text-center">
+      {deleted ? "Tu cuenta se eliminó. ¡Gracias por estudiar con nosotros!" : "Sesión cerrada"}
+    </Notice>
   );
 }
 
@@ -27,94 +33,79 @@ function ByeBanner() {
  */
 export function LandingHero() {
   return (
-    <div className="relative flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-[var(--background)] text-[var(--foreground)]">
+    <div className="relative flex min-h-dvh w-full min-w-0 max-w-full flex-col overflow-x-hidden text-[var(--foreground)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_30%,rgba(255,255,255,0.04),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_30%,var(--hero-mesh-a),transparent_70%)]"
       />
 
       <Suspense fallback={null}>
         <ByeBanner />
       </Suspense>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-7 pt-6 sm:px-8 lg:max-w-3xl lg:px-10 lg:pt-7">
+      <header className="relative z-10 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-7 pt-6 sm:px-8 md:max-w-5xl md:px-10 lg:max-w-6xl lg:px-12 lg:pt-7 [@media(max-height:500px)]:md:pt-4">
         <Link
           href="/"
-          className="inline-flex min-w-0 items-center gap-2.5"
-          aria-label="Study Lab"
+          className={cn("inline-flex min-w-0 items-center rounded-lg", FOCUS_RING)}
+          aria-label="AWS Study Lab"
         >
-          <Logo size={32} priority />
-          <span className="font-display truncate text-sm font-semibold tracking-tight">
-            Study Lab
-          </span>
+          <Logo size={32} priority withWordmark />
         </Link>
         <Link
           href="/login"
           prefetch={false}
           className={cn(
-            "inline-flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold",
-            "border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]",
-            "transition-colors hover:border-[var(--border-strong)]",
+            buttonVariants({ variant: "secondary", size: "sm" }),
+            "shrink-0",
           )}
         >
           Entrar
         </Link>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col items-center px-7 pb-10 pt-10 text-center sm:max-w-lg sm:px-8 sm:pt-14">
-        <h1 className="font-display text-[clamp(2rem,8vw,2.75rem)] font-bold leading-tight tracking-tight text-[var(--brand-white)]">
-          Study Lab
+      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col items-center px-7 pb-10 pt-10 text-center sm:max-w-lg sm:px-8 sm:pt-14 md:grid md:max-w-5xl md:grid-cols-2 md:grid-rows-[1fr_auto_auto_auto_auto_1fr] md:justify-items-start md:gap-x-12 md:px-10 md:text-left lg:max-w-6xl lg:gap-x-16 lg:px-12 [@media(max-height:500px)]:md:pb-4 [@media(max-height:500px)]:md:pt-2">
+        <h1 className="text-[clamp(2rem,8vw,2.75rem)] font-extrabold leading-tight tracking-tight text-[var(--foreground)] md:col-start-1 md:row-start-2 md:text-5xl lg:text-6xl [@media(max-height:500px)]:md:text-4xl">
+          AWS Study Lab
         </h1>
 
-        <div className="relative mt-8 flex w-full max-w-sm items-center justify-center rounded-2xl bg-[var(--surface)] px-4 py-6 sm:mt-10 sm:py-8">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_55%,rgba(232,80,2,0.22),transparent_70%)]"
+        <div className="mt-8 flex w-full max-w-sm items-center justify-center py-2 sm:mt-10 md:col-start-2 md:row-span-6 md:row-start-1 md:mt-0 md:max-w-none md:self-center md:justify-self-stretch">
+          <Mascot
+            pose="study"
+            size="hero"
+            priority
+            className="mx-auto md:h-[min(28rem,60dvh)] md:max-w-md [@media(max-height:500px)]:md:h-[62dvh]"
           />
-          <Mascot pose="study" size="hero" priority className="relative mx-auto" />
         </div>
 
         <Link
           href="/login"
           prefetch={false}
           className={cn(
-            "mt-8 inline-flex h-12 w-full max-w-xs items-center justify-center rounded-full text-base font-semibold sm:mt-10",
-            "bg-[var(--accent)] text-[var(--brand-white)] transition-colors hover:bg-[var(--accent-hover)]",
+            buttonVariants({ size: "lg" }),
+            "mt-8 w-full max-w-xs sm:mt-10 md:col-start-1 md:row-start-4 md:mt-8 [@media(max-height:500px)]:md:mt-5",
           )}
         >
           Entrar
         </Link>
 
-        <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-          <Link
-            href="/register"
-            prefetch={false}
-            className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
-          >
+        <p className="mt-4 text-sm text-[var(--foreground-muted)] md:col-start-1 md:row-start-5 md:w-full md:max-w-xs md:text-center">
+          <Link href="/register" prefetch={false} className={TEXT_LINK}>
             Crear cuenta
           </Link>
           <span className="mx-2 opacity-40" aria-hidden>
             ·
           </span>
-          <Link
-            href="/guest"
-            prefetch={false}
-            className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
-          >
+          <Link href="/guest" prefetch={false} className={TEXT_LINK}>
             Probar
           </Link>
         </p>
 
-        <p className="mt-8 max-w-[18rem] text-sm leading-snug text-[var(--brand-light-gray)] sm:mt-10">
+        <p className="mt-8 max-w-[18rem] text-sm leading-snug text-[var(--foreground-muted)] sm:mt-10 md:col-start-1 md:row-start-3 md:mt-3 md:max-w-sm md:text-base lg:text-lg">
           Prepárate para la certificación AWS Cloud Practitioner
         </p>
       </main>
 
       <div className="relative z-10 mt-auto">
-        <div
-          aria-hidden
-          className="mx-auto h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-[var(--border)] to-transparent"
-        />
         <SiteCredits className="bg-[var(--background)]/40 px-7 sm:px-8" />
       </div>
     </div>

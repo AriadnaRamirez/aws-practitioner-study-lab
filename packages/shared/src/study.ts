@@ -72,11 +72,25 @@ export interface StartStudySessionRequest {
   topicIds?: string[];
   /** Snapshot timezone for EXAM_TIMED / daily streak. */
   timezone?: string;
+  /**
+   * FLASH_STUDY "partida rápida": spread cards evenly across `topicIds`
+   * (round-robin). Requires `topicIds`.
+   */
+  balanced?: boolean;
+}
+
+/** Topics a session draws from (empty = whole bank). */
+export interface StudySessionScope {
+  topicIds: string[];
+  /** Partida rápida: cards spread evenly across `topicIds`. */
+  balanced: boolean;
 }
 
 export interface StudySessionView {
   sessionId: string;
   mode: StudyMode;
+  /** FLASH_STUDY only — lets a resumed session show what it covers. */
+  scope?: StudySessionScope;
   /** Requested size (may exceed bank; actual unique count is `uniqueItems`). */
   size: number;
   uniqueItems: number;

@@ -1,50 +1,85 @@
+import { cn } from "@/lib/utils";
 import { getAdminGuests } from "@/lib/usage-api";
+import { ADMIN_TABLE, AdminEmpty, AdminPage } from "@/components/admin/admin-ui";
+import {
+  AdminStat,
+  AdminStatGrid,
+  formatAdminDateTime,
+  formatPercent,
+  formatRelative,
+} from "@/components/admin/admin-metrics";
+import { Badge } from "@/components/ui/badge";
+import { Notice } from "@/components/ui/notice";
 
 export default async function AdminGuestsPage() {
   const { data, source } = await getAdminGuests();
 
+  const converted = data.filter((g) => g.converted).length;
+  const sessions = data.reduce((sum, g) => sum + g.sessionsCount, 0);
+  const rate = data.length > 0 ? converted / data.length : 0;
+  const avgSessions = data.length > 0 ? sessions / data.length : 0;
+  const now = Date.now();
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Invitados / marketing
-        </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          GuestProbes: sesiones de prueba y conversión a cuenta. Fuente:{" "}
-          {source === "api" ? "API" : "API no disponible"}.
-        </p>
-      </div>
+    <AdminPage
+      title="Invitados"
+      description="Pruebas sin cuenta desde la landing: sesiones usadas y conversión a registro."
+    >
+      {source === "unavailable" ? (
+        <Notice tone="warning" boxed>
+          La API no respondió; no se pudieron cargar los invitados.
+        </Notice>
+      ) : null}
+
+      <AdminStatGrid>
+        <AdminStat label="Invitados" value={data.length} hint={`${sessions} sesiones en total`} />
+        <AdminStat label="Convertidos" value={converted} tone="success" />
+        <AdminStat
+          label="Tasa de conversión"
+          value={formatPercent(rate)}
+          tone="accent"
+          hint={`${converted} de ${data.length}`}
+        />
+        <AdminStat label="Sesiones promedio" value={avgSessions.toFixed(1)} hint="Por invitado" />
+      </AdminStatGrid>
 
       {data.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700">
-          Aún no hay guests, o la API no responde.
-        </div>
+        <AdminEmpty>Aún no hay invitados, o la API no responde.</AdminEmpty>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-zinc-500 dark:bg-zinc-900">
+        <div className={ADMIN_TABLE.wrap}>
+          <table className={ADMIN_TABLE.table}>
+            <thead className={ADMIN_TABLE.thead}>
               <tr>
-                <th className="px-3 py-2 font-medium">Probe</th>
-                <th className="px-3 py-2 font-medium">Sesiones</th>
-                <th className="px-3 py-2 font-medium">Convertido</th>
-                <th className="px-3 py-2 font-medium">User id</th>
-                <th className="px-3 py-2 font-medium">Creado</th>
+                <th className={ADMIN_TABLE.th}>Invitado</th>
+                <th className={cn(ADMIN_TABLE.th, "text-right")}>Sesiones</th>
+                <th className={ADMIN_TABLE.th}>Estado</th>
+                <th className={ADMIN_TABLE.th}>Cuenta creada</th>
+                <th className={ADMIN_TABLE.th}>Primera visita</th>
               </tr>
             </thead>
             <tbody>
               {data.map((g) => (
-                <tr
-                  key={g.id}
-                  className="border-t border-zinc-200 dark:border-zinc-800"
-                >
-                  <td className="px-3 py-2 font-mono text-xs">{g.id}</td>
-                  <td className="px-3 py-2">{g.sessionsCount}</td>
-                  <td className="px-3 py-2">{g.converted ? "Sí" : "No"}</td>
-                  <td className="px-3 py-2 font-mono text-xs">
+                <tr key={g.id} className={ADMIN_TABLE.tr}>
+                  <td className={cn(ADMIN_TABLE.td, "font-mono text-xs text-[var(--foreground-muted)]")}>
+                    {g.id}
+                  </td>
+                  <td className={cn(ADMIN_TABLE.td, "text-right font-semibold")}>
+                    {g.sessionsCount}
+                  </td>
+                  <td className={ADMIN_TABLE.td}>
+                    {g.converted ? (
+                      <Badge tone="success">Convertido</Badge>
+                    ) : (
+                      <Badge>Sin cuenta</Badge>
+                    )}
+                  </td>
+                  <td className={cn(ADMIN_TABLE.td, "font-mono text-xs text-[var(--foreground-muted)]")}>
                     {g.convertedUserId ?? "—"}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {new Date(g.createdAt).toLocaleString()}
+                  <td className={cn(ADMIN_TABLE.td, "whitespace-nowrap")}>
+                    <span title={formatAdminDateTime(g.createdAt)}>
+                      {formatRelative(g.createdAt, now)}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -52,6 +87,6 @@ export default async function AdminGuestsPage() {
           </table>
         </div>
       )}
-    </div>
+    </AdminPage>
   );
 }

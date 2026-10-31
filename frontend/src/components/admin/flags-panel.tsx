@@ -1,16 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import {
+  FEATURE_FLAG_EXAM_MODES,
   FEATURE_FLAG_EXAM_TRACK_AI,
   type FeatureFlagDto,
 } from "@aps/shared";
+import { cn } from "@/lib/utils";
+import { fetchFeatureFlags, updateFeatureFlag } from "@/lib/flags-api";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { Notice } from "@/components/ui/notice";
+import { AdminEmpty, AdminSkeleton } from "./admin-ui";
 import {
-  fetchFeatureFlags,
-  getAdminToken,
-  setAdminToken,
-  updateFeatureFlag,
-} from "@/lib/flags-api";
+  AdminStat,
+  AdminStatGrid,
+  formatAdminDateTime,
+  formatRelative,
+} from "./admin-metrics";
 
 const FLAG_COPY: Record<string, { title: string; description: string }> = {
   [FEATURE_FLAG_EXAM_TRACK_AI]: {
@@ -18,11 +26,15 @@ const FLAG_COPY: Record<string, { title: string; description: string }> = {
     description:
       "Cuando está apagado, los listados públicos ocultan temas, flash y banco con trackId=AIF.",
   },
+  [FEATURE_FLAG_EXAM_MODES]: {
+    title: "Modos Estudio y Examen",
+    description:
+      "Apagado = solo Cartas. Oculta las pestañas Estudio y Examen y la API rechaza esas sesiones.",
+  },
 };
 
 export function FlagsPanel() {
   const [flags, setFlags] = useState<FeatureFlagDto[]>([]);
-  const [token, setToken] = useState("dev-admin-token");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
@@ -42,17 +54,11 @@ export function FlagsPanel() {
   }, []);
 
   useEffect(() => {
-    setToken(getAdminToken());
     reload();
   }, [reload]);
 
-  function onTokenBlur() {
-    setAdminToken(token.trim() || "dev-admin-token");
-  }
-
   async function toggle(flag: FeatureFlagDto) {
     setError(null);
-    setAdminToken(token.trim() || "dev-admin-token");
     try {
       const updated = await updateFeatureFlag(
         flag.key,
@@ -67,83 +73,114 @@ export function FlagsPanel() {
     }
   }
 
+  const stats = useMemo(() => {
+    const enabled = flags.filter((f) => f.enabled).length;
+    const latest = flags.reduce<FeatureFlagDto | null>(
+      (acc, f) => (!acc || f.updatedAt > acc.updatedAt ? f : acc),
+      null,
+    );
+    return { enabled, latest };
+  }, [flags]);
+
   if (loading && flags.length === 0) {
-    return <p className="text-sm text-zinc-500">Cargando flags…</p>;
+    return <AdminSkeleton rows={4} message="Cargando las banderas de funciones…" />;
   }
 
   return (
     <div className="space-y-6">
-      <label className="block max-w-md space-y-1 text-sm">
-        <span className="font-medium text-zinc-700 dark:text-zinc-300">
-          Token admin (`x-admin-token`)
-        </span>
-        <input
-          type="password"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          onBlur={onTokenBlur}
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          autoComplete="off"
+      <AdminStatGrid>
+        <AdminStat
+          label="Activas"
+          value={`${stats.enabled} / ${flags.length}`}
+          tone={stats.enabled > 0 ? "success" : undefined}
         />
-        <span className="text-xs text-zinc-500">
-          Default local: <code>dev-admin-token</code>
-        </span>
-      </label>
+        <AdminStat label="Apagadas" value={flags.length - stats.enabled} />
+        <AdminStat
+          label="Último cambio"
+          value={stats.latest ? formatRelative(stats.latest.updatedAt) : "—"}
+          hint={
+            stats.latest
+              ? (FLAG_COPY[stats.latest.key]?.title ?? stats.latest.key)
+              : undefined
+          }
+        />
+        <AdminStat
+          label="Modificado por"
+          value={stats.latest?.updatedBy ?? "—"}
+        />
+      </AdminStatGrid>
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+        <Notice tone="danger" boxed>
           {error}
-        </p>
+        </Notice>
       ) : null}
-
-      <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-        {flags.map((flag) => {
-          const copy = FLAG_COPY[flag.key] ?? {
-            title: flag.key,
-            description: "Feature flag",
-          };
-          return (
-            <li
-              key={flag.key}
-              className="flex flex-wrap items-center justify-between gap-4 bg-white px-4 py-4 dark:bg-zinc-900"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{copy.title}</p>
-                <p className="mt-0.5 font-mono text-xs text-zinc-500">
-                  {flag.key}
-                </p>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                  {copy.description}
-                </p>
-                <p className="mt-1 text-xs text-zinc-500">
-                  Actualizado: {new Date(flag.updatedAt).toLocaleString()}
-                  {flag.updatedBy ? ` · ${flag.updatedBy}` : ""}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void toggle(flag)}
-                disabled={pending}
-                aria-pressed={flag.enabled}
-                className={
-                  flag.enabled
-                    ? "rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
-                    : "rounded-md bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 disabled:opacity-60"
-                }
-              >
-                {flag.enabled ? "ON" : "OFF"}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
 
       {flags.length === 0 ? (
-        <p className="text-sm text-zinc-500">
-          No hay flags. Ejecuta <code>npm run db:migrate</code> y{" "}
-          <code>npm run db:seed</code>.
-        </p>
-      ) : null}
+        <AdminEmpty>
+          No hay banderas. Ejecuta <code className="font-mono">npm run db:migrate</code> y{" "}
+          <code className="font-mono">npm run db:seed</code>.
+        </AdminEmpty>
+      ) : (
+        <ul className="grid gap-3 lg:grid-cols-2">
+          {flags.map((flag) => {
+            const copy = FLAG_COPY[flag.key] ?? {
+              title: flag.key,
+              description: "Bandera de función",
+            };
+            return (
+              <Card
+                as="li"
+                key={flag.key}
+                className="flex items-start justify-between gap-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-base font-semibold">{copy.title}</p>
+                    {flag.enabled ? (
+                      <Badge tone="success">Activa</Badge>
+                    ) : (
+                      <Badge>Apagada</Badge>
+                    )}
+                  </div>
+                  <p className="mt-0.5 font-mono text-xs text-[var(--foreground-muted)]">
+                    {flag.key}
+                  </p>
+                  <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+                    {copy.description}
+                  </p>
+                  <p className="mt-3 text-xs text-[var(--foreground-muted)] tabular-nums">
+                    Actualizada {formatAdminDateTime(flag.updatedAt)}
+                    {flag.updatedBy ? ` · ${flag.updatedBy}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void toggle(flag)}
+                  disabled={pending}
+                  aria-pressed={flag.enabled}
+                  aria-label={`${flag.enabled ? "Apagar" : "Activar"} ${copy.title}`}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50",
+                    FOCUS_RING,
+                    flag.enabled
+                      ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)]"
+                      : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "inline-block size-4 rounded-full bg-[var(--foreground)] shadow transition-transform",
+                      flag.enabled ? "translate-x-6" : "translate-x-1",
+                    )}
+                  />
+                </button>
+              </Card>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

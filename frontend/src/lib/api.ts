@@ -1,7 +1,8 @@
 import type {
-  AdminGuestRow,
-  AdminUserRow,
   AuthResponse,
+  ChangePasswordRequest,
+  CreateUserExamRequest,
+  DeleteUserExamResponse,
   ForgotPasswordRequest,
   GuestProbe,
   LoginRequest,
@@ -13,7 +14,10 @@ import type {
   StartWeakReviewRequest,
   StartWeakReviewResponse,
   StudyHistoryResponse,
-  UsageSummary,
+  UpdateProfileRequest,
+  UpdateUserExamRequest,
+  UserExam,
+  UserExamsResponse,
   WeakItemsResponse,
 } from '@aps/shared';
 import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
@@ -22,13 +26,10 @@ import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
 // (Next rewrites /api/v1 → Nest). Override with NEXT_PUBLIC_API_URL if needed.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
-export const AUTH_TOKEN_KEY = 'aps_access_token';
-export const AUTH_USER_KEY = 'aps_user';
-/** Cookie mirror so previews / hard navigations keep the session. */
+const AUTH_TOKEN_KEY = 'aps_access_token';
+const AUTH_USER_KEY = 'aps_user';
+/** Cookie mirror so previews / hard navigations keep the session (admin server pages read it). */
 export const AUTH_COOKIE = 'aps_access_token';
-
-const ADMIN_TOKEN =
-  process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? 'dev-admin-token';
 
 export function getApiUrl() {
   return API_URL;
@@ -185,11 +186,7 @@ export function fetchMe() {
   return apiFetch<PublicUser>('/auth/me', { auth: true });
 }
 
-export function updateProfile(body: {
-  timezone?: string;
-  podiumHidden?: boolean;
-  examDate?: string | null;
-}) {
+export function updateProfile(body: UpdateProfileRequest) {
   return apiFetch<PublicUser>('/auth/me', {
     method: 'PATCH',
     auth: true,
@@ -197,11 +194,42 @@ export function updateProfile(body: {
   });
 }
 
-export function changePassword(body: {
-  currentPassword: string;
-  password: string;
-  confirmPassword: string;
-}) {
+export function deleteAccount(body: { password: string }) {
+  return apiFetch<{ message: string }>('/auth/me', {
+    method: 'DELETE',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function fetchMyExams() {
+  return apiFetch<UserExamsResponse>('/me/exams', { auth: true });
+}
+
+export function createMyExam(body: CreateUserExamRequest) {
+  return apiFetch<UserExam>('/me/exams', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateMyExam(id: string, body: UpdateUserExamRequest) {
+  return apiFetch<UserExam>(`/me/exams/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteMyExam(id: string) {
+  return apiFetch<DeleteUserExamResponse>(
+    `/me/exams/${encodeURIComponent(id)}`,
+    { method: 'DELETE', auth: true },
+  );
+}
+
+export function changePassword(body: ChangePasswordRequest) {
   return apiFetch<{ message: string }>('/auth/change-password', {
     method: 'POST',
     auth: true,
@@ -232,10 +260,6 @@ export function storeGuestProbeId(id: string) {
   window.localStorage.setItem(GUEST_PROBE_STORAGE_KEY, id);
 }
 
-export function clearGuestProbeId() {
-  window.localStorage.removeItem(GUEST_PROBE_STORAGE_KEY);
-}
-
 export function createGuestProbe() {
   return apiFetch<GuestProbe>('/guest/probes', { method: 'POST' });
 }
@@ -248,24 +272,6 @@ export function recordGuestSession(id: string) {
   return apiFetch<GuestProbe>(`/guest/probes/${id}/sessions`, {
     method: 'POST',
   });
-}
-
-async function adminFetch<T>(path: string): Promise<T> {
-  return apiFetch<T>(path, {
-    headers: { 'x-admin-token': ADMIN_TOKEN },
-  });
-}
-
-export function fetchUsageSummary() {
-  return adminFetch<UsageSummary>('/admin/usage');
-}
-
-export function fetchAdminUsers() {
-  return adminFetch<AdminUserRow[]>('/admin/users');
-}
-
-export function fetchAdminGuests() {
-  return adminFetch<AdminGuestRow[]>('/admin/guests');
 }
 
 export function fetchPodium(window: PodiumWindow = 'all') {

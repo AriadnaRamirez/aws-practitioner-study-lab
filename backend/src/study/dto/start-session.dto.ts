@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayUnique,
   IsArray,
+  IsBoolean,
   IsIn,
   IsOptional,
   IsString,
@@ -26,4 +27,11 @@ export class StartFlashSessionDto {
   @ArrayUnique()
   @IsString({ each: true })
   topicIds?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Reparte las cartas por igual entre topicIds (partida rápida)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  balanced?: boolean;
 }

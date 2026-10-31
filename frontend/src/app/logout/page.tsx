@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ScreenLoader } from "@/components/ui/screen-loader";
 import { clearAuth } from "@/lib/api";
 
 /** Client logout: clears JWT storage and returns to landing (CCST `?bye=1`). */
@@ -15,8 +16,8 @@ export default function LogoutPage() {
   }, [router]);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6">
-      <p className="text-sm text-[var(--foreground-muted)]">Cerrando sesión…</p>
+    <main className="flex min-h-dvh items-center justify-center">
+      <ScreenLoader pose="wave" message="Cerrando sesión… ¡hasta pronto!" />
     </main>
   );
 }

@@ -9,9 +9,12 @@ import {
   type ExamTimedSummary,
   type SessionSize,
 } from "@aps/shared";
-import { Button } from "@/components/ui/button";
 import { ExamSummary } from "@/components/exam/exam-summary";
 import { ExamTimer } from "@/components/exam/exam-timer";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { Notice } from "@/components/ui/notice";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { getStoredToken } from "@/lib/api";
 import {
   answerExamTimed,
@@ -35,6 +38,7 @@ export function ExamRunner() {
   const [index, setIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -43,6 +47,7 @@ export function ExamRunner() {
 
   const finish = useCallback(async (sess: ExamTimedSessionView) => {
     setBusy(true);
+    setSubmitting(true);
     setError(null);
     try {
       const result = await submitExamTimed(sess.id);
@@ -52,6 +57,7 @@ export function ExamRunner() {
       setError(e instanceof Error ? e.message : "No se pudo enviar el examen");
     } finally {
       setBusy(false);
+      setSubmitting(false);
     }
   }, []);
 
@@ -131,17 +137,16 @@ export function ExamRunner() {
 
   if (authed === false) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
-        <h1 className="font-display text-2xl font-semibold text-[var(--foreground)]">
-          Examen
-        </h1>
-        <Link
-          href="/login"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent)] px-5 text-sm font-semibold text-[var(--accent-foreground)]"
-        >
-          Entrar
-        </Link>
-      </div>
+      <PageContainer width="narrow">
+        <PageHeader
+          title="Examen"
+          actions={
+            <Link href="/login" className={buttonVariants()}>
+              Entrar
+            </Link>
+          }
+        />
+      </PageContainer>
     );
   }
 
@@ -156,10 +161,10 @@ export function ExamRunner() {
     const total = session.questions.length;
 
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-10">
+      <PageContainer className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
+            <p className="text-xs font-semibold text-[var(--foreground-muted)]">
               Examen
             </p>
             <p className="mt-1 text-sm text-[var(--foreground)]">
@@ -184,14 +189,16 @@ export function ExamRunner() {
                 key={item.id}
                 type="button"
                 onClick={() => setIndex(i)}
+                aria-current={i === index ? "step" : undefined}
                 className={cn(
-                  "h-8 min-w-8 rounded-md px-2 text-xs font-medium transition-colors",
+                  "h-8 min-w-8 rounded-full px-2 text-xs font-semibold tabular-nums transition-colors",
+                  FOCUS_RING,
                   i === index
-                    ? "bg-[var(--foreground)] text-[var(--accent-foreground)]"
+                    ? "bg-[var(--foreground)] text-[var(--background)]"
                     : ans !== null
                       ? "bg-[var(--surface-hover)] text-[var(--foreground)]"
-                      : "bg-[var(--surface-hover)] text-[var(--foreground-muted)]",
-                  marked && "ring-2 ring-amber-500/70",
+                      : "bg-[var(--surface-elevated)] text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
+                  marked && "ring-2 ring-[var(--warning)]",
                 )}
                 aria-label={`Ir a pregunta ${i + 1}${marked ? ", marcada" : ""}`}
               >
@@ -201,7 +208,7 @@ export function ExamRunner() {
           })}
         </div>
 
-        <article className="space-y-5 animate-[fade-up_0.35s_ease-out]">
+        <article className="animate-fade-up space-y-5">
           <h2 className="font-display text-xl font-semibold leading-snug text-[var(--foreground)] sm:text-2xl">
             {q.stem}
           </h2>
@@ -213,14 +220,16 @@ export function ExamRunner() {
                   <button
                     type="button"
                     disabled={busy}
+                    aria-pressed={active}
                     onClick={() =>
                       void selectChoice(i as 0 | 1 | 2 | 3)
                     }
                     className={cn(
-                      "flex w-full items-start gap-3 rounded-md border px-4 py-3 text-left text-sm transition-colors",
+                      "flex w-full items-start gap-3 rounded-xl px-4 py-3 text-left text-sm transition-colors",
+                      FOCUS_RING,
                       active
-                        ? "border-[var(--border-strong)] bg-[var(--surface-hover)] text-[var(--foreground)]"
-                        : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]",
+                        ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))] text-[var(--foreground)]"
+                        : "bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]",
                     )}
                   >
                     <span className="font-mono text-[var(--foreground-muted)]">
@@ -234,11 +243,7 @@ export function ExamRunner() {
           </ul>
         </article>
 
-        {error ? (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <Notice tone="danger">{error}</Notice> : null}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
           <Button
@@ -259,7 +264,8 @@ export function ExamRunner() {
           </Button>
           <Button
             type="button"
-            variant={isMarked ? "default" : "outline"}
+            variant={isMarked ? "soft" : "secondary"}
+            aria-pressed={isMarked}
             onClick={() => void toggleMark()}
             disabled={busy}
           >
@@ -270,71 +276,69 @@ export function ExamRunner() {
             type="button"
             onClick={() => void finish(session)}
             disabled={busy}
+            pending={submitting}
           >
-            Enviar examen
+            {submitting ? "Enviando examen…" : "Enviar examen"}
           </Button>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--foreground)] lg:text-3xl">
-        Examen
-      </h1>
+    <PageContainer>
+      <PageHeader title="Examen" />
 
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold text-[var(--foreground)]">
-          Tamaño
-        </legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {EXAM_TIMED_SIZES.map((n) => {
-            const limit = EXAM_TIMED_LIMIT_SEC[n];
-            const label =
-              n === 65
-                ? `Mock completo · ${n} preguntas · ${formatMinutes(limit)}`
-                : `${n} preguntas · ${formatMinutes(limit)}`;
-            return (
-              <label
-                key={n}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
-                  size === n
-                    ? "border-[var(--border-strong)] bg-[var(--surface-hover)]"
-                    : "border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="exam-size"
-                  className="accent-[var(--foreground)]"
-                  checked={size === n}
-                  onChange={() => setSize(n)}
-                />
-                <span className="font-medium text-[var(--foreground)]">
-                  {label}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
+      <div className="mt-8 flex flex-col gap-6">
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-semibold text-[var(--foreground)]">
+            Tamaño
+          </legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {EXAM_TIMED_SIZES.map((n) => {
+              const limit = EXAM_TIMED_LIMIT_SEC[n];
+              const label =
+                n === 65
+                  ? `Mock completo · ${n} preguntas · ${formatMinutes(limit)}`
+                  : `${n} preguntas · ${formatMinutes(limit)}`;
+              return (
+                <label
+                  key={n}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--ring)]",
+                    size === n
+                      ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))]"
+                      : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="exam-size"
+                    className="accent-[var(--foreground)]"
+                    checked={size === n}
+                    onChange={() => setSize(n)}
+                  />
+                  <span className="font-medium text-[var(--foreground)]">
+                    {label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
 
-      {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {error}
-        </p>
-      ) : null}
+        {error ? <Notice tone="danger">{error}</Notice> : null}
 
-      <Button
-        type="button"
-        size="lg"
-        disabled={busy || authed === null}
-        onClick={() => void handleStart()}
-      >
-        {busy ? "Preparando…" : "Empezar examen"}
-      </Button>
-    </div>
+        <Button
+          type="button"
+          size="lg"
+          disabled={authed === null}
+          pending={busy}
+          onClick={() => void handleStart()}
+        >
+          {busy ? "Preparando tu examen…" : "Empezar examen"}
+        </Button>
+      </div>
+    </PageContainer>
   );
 }

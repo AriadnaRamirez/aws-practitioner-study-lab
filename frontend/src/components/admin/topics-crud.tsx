@@ -2,15 +2,31 @@
 
 import { useMemo, useState } from "react";
 import type { Topic } from "@aps/shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   createTopic,
   deleteTopic,
   updateTopic,
 } from "@/lib/admin-content-api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
+import {
+  ADMIN_SELECT,
+  ADMIN_TABLE,
+  AdminEmpty,
+  AdminSection,
+  FIELD_LABEL,
+} from "./admin-ui";
+import { AdminStat, AdminStatGrid } from "./admin-metrics";
 
 type Props = { initial: Topic[] };
+
+const TYPE_LABEL: Record<Topic["type"], string> = {
+  SERVICE: "Servicio",
+  CONCEPT: "Concepto",
+};
 
 export function TopicsCrud({ initial }: Props) {
   const [rows, setRows] = useState(initial);
@@ -25,6 +41,15 @@ export function TopicsCrud({ initial }: Props) {
 
   const sorted = useMemo(
     () => [...rows].sort((a, b) => a.sortOrder - b.sortOrder),
+    [rows],
+  );
+
+  const stats = useMemo(
+    () => ({
+      clf: rows.filter((t) => t.trackId === "CLF").length,
+      aif: rows.filter((t) => t.trackId === "AIF").length,
+      services: rows.filter((t) => t.type === "SERVICE").length,
+    }),
     [rows],
   );
 
@@ -78,130 +103,162 @@ export function TopicsCrud({ initial }: Props) {
 
   return (
     <div className="space-y-6">
+      <AdminStatGrid>
+        <AdminStat label="Temas" value={rows.length} />
+        <AdminStat label="Track CLF" value={stats.clf} />
+        <AdminStat label="Track AIF" value={stats.aif} tone="accent" />
+        <AdminStat
+          label="Servicios / conceptos"
+          value={`${stats.services} / ${rows.length - stats.services}`}
+        />
+      </AdminStatGrid>
+
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <Notice tone="danger" boxed>
           {error}
-        </p>
+        </Notice>
       ) : null}
 
-      <form
-        onSubmit={onCreate}
-        className="grid gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800 sm:grid-cols-2"
-      >
-        <h2 className="sm:col-span-2 text-sm font-semibold">Nuevo tema</h2>
-        <label className="text-sm">
-          Nombre
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="mt-1"
-          />
-        </label>
-        <label className="text-sm">
-          Track
-          <select
-            className="mt-1 flex h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            value={trackId}
-            onChange={(e) => setTrackId(e.target.value)}
-          >
-            <option value="CLF">CLF</option>
-            <option value="AIF">AIF</option>
-          </select>
-        </label>
-        <label className="text-sm">
-          Tipo
-          <select
-            className="mt-1 flex h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-            value={type}
-            onChange={(e) => setType(e.target.value as Topic["type"])}
-          >
-            <option value="SERVICE">SERVICE</option>
-            <option value="CONCEPT">CONCEPT</option>
-          </select>
-        </label>
-        <label className="text-sm">
-          Orden
-          <Input
-            type="number"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(Number(e.target.value))}
-            className="mt-1"
-          />
-        </label>
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={busy}>
-            Crear tema
-          </Button>
-        </div>
-      </form>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
+        <AdminSection title="Nuevo tema" description="Se agrega al final del orden indicado.">
+          <form onSubmit={onCreate} className="grid gap-4">
+            <label className="grid gap-1.5">
+              <span className={FIELD_LABEL}>Nombre</span>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="grid gap-1.5">
+                <span className={FIELD_LABEL}>Track</span>
+                <select
+                  className={ADMIN_SELECT}
+                  value={trackId}
+                  onChange={(e) => setTrackId(e.target.value)}
+                >
+                  <option value="CLF">CLF</option>
+                  <option value="AIF">AIF</option>
+                </select>
+              </label>
+              <label className="grid gap-1.5">
+                <span className={FIELD_LABEL}>Tipo</span>
+                <select
+                  className={ADMIN_SELECT}
+                  value={type}
+                  onChange={(e) => setType(e.target.value as Topic["type"])}
+                >
+                  <option value="SERVICE">Servicio</option>
+                  <option value="CONCEPT">Concepto</option>
+                </select>
+              </label>
+            </div>
+            <label className="grid gap-1.5">
+              <span className={FIELD_LABEL}>Orden</span>
+              <Input
+                type="number"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                className="tabular-nums"
+              />
+            </label>
+            <Button type="submit" disabled={busy}>
+              Crear tema
+            </Button>
+          </form>
+        </AdminSection>
 
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
-            <tr>
-              <th className="px-3 py-2">Nombre</th>
-              <th className="px-3 py-2">Track</th>
-              <th className="px-3 py-2">Tipo</th>
-              <th className="px-3 py-2">Orden</th>
-              <th className="px-3 py-2">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((t) => (
-              <tr
-                key={t.id}
-                className="border-t border-zinc-200 dark:border-zinc-800"
-              >
-                <td className="px-3 py-2">
-                  {editId === t.id ? (
-                    <Input
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                    />
-                  ) : (
-                    <span className="font-medium">{t.name}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2">{t.trackId}</td>
-                <td className="px-3 py-2">{t.type}</td>
-                <td className="px-3 py-2">{t.sortOrder}</td>
-                <td className="px-3 py-2">
-                  <div className="flex flex-wrap gap-2">
-                    {editId === t.id ? (
-                      <Button
-                        size="sm"
-                        disabled={busy}
-                        onClick={() => void onSaveEdit(t.id)}
-                      >
-                        Guardar
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          setEditId(t.id);
-                          setEditName(t.name);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void onDelete(t.id)}
-                    >
-                      Borrar
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {sorted.length === 0 ? (
+          <AdminEmpty>Todavía no hay temas.</AdminEmpty>
+        ) : (
+          <div className={ADMIN_TABLE.wrap}>
+            <table className={ADMIN_TABLE.table}>
+              <thead className={ADMIN_TABLE.thead}>
+                <tr>
+                  <th className={ADMIN_TABLE.th}>Nombre</th>
+                  <th className={ADMIN_TABLE.th}>Track</th>
+                  <th className={ADMIN_TABLE.th}>Tipo</th>
+                  <th className={cn(ADMIN_TABLE.th, "text-right")}>Orden</th>
+                  <th className={ADMIN_TABLE.th}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((t) => (
+                  <tr key={t.id} className={ADMIN_TABLE.tr}>
+                    <td className={cn(ADMIN_TABLE.td, "min-w-48")}>
+                      {editId === t.id ? (
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          aria-label="Nombre del tema"
+                          className="h-8 px-3"
+                        />
+                      ) : (
+                        <span className="font-semibold">{t.name}</span>
+                      )}
+                    </td>
+                    <td className={ADMIN_TABLE.td}>
+                      <Badge tone={t.trackId === "AIF" ? "accent" : "neutral"}>
+                        {t.trackId}
+                      </Badge>
+                    </td>
+                    <td className={cn(ADMIN_TABLE.td, "text-[var(--foreground-muted)]")}>
+                      {TYPE_LABEL[t.type] ?? t.type}
+                    </td>
+                    <td className={cn(ADMIN_TABLE.td, "text-right")}>{t.sortOrder}</td>
+                    <td className={ADMIN_TABLE.td}>
+                      <div className="flex gap-1.5">
+                        {editId === t.id ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="soft"
+                              size="xs"
+                              disabled={busy}
+                              onClick={() => void onSaveEdit(t.id)}
+                            >
+                              Guardar
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              onClick={() => setEditId(null)}
+                            >
+                              Cancelar
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="xs"
+                            onClick={() => {
+                              setEditId(t.id);
+                              setEditName(t.name);
+                            }}
+                          >
+                            Editar
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="xs"
+                          disabled={busy}
+                          onClick={() => void onDelete(t.id)}
+                        >
+                          Borrar
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

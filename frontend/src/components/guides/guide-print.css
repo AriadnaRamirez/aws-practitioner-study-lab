@@ -1,0 +1,159 @@
+/*
+  Print layout for /guias/[id]. Unlayered on purpose so it beats Tailwind
+  utilities; every rule is scoped to pages that render [data-guide-doc].
+*/
+@media print {
+  @page {
+    margin: 16mm 15mm 18mm;
+  }
+
+  html:has([data-guide-doc]) {
+    --background: #fff;
+    --foreground: #000;
+    --foreground-muted: #333;
+    --surface: transparent;
+    --surface-elevated: transparent;
+    --surface-hover: transparent;
+    color-scheme: light;
+    background: #fff !important;
+  }
+
+  html:has([data-guide-doc]) body {
+    background: #fff !important;
+    color: #000 !important;
+    min-height: 0 !important;
+  }
+
+  html:has([data-guide-doc]) body header,
+  html:has([data-guide-doc]) body footer,
+  html:has([data-guide-doc]) #contenido ~ *,
+  html:has([data-guide-doc]) nextjs-portal,
+  [data-guide-noprint] {
+    display: none !important;
+  }
+
+  html:has([data-guide-doc]) *,
+  html:has([data-guide-doc]) *::before,
+  html:has([data-guide-doc]) *::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html:has([data-guide-doc]) body > div,
+  html:has([data-guide-doc]) #contenido {
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  [data-guide-page] {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  [data-guide-doc] {
+    margin: 0 !important;
+    color: #000;
+    font-family: var(--font-figtree), ui-sans-serif, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  [data-guide-doc] a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  [data-guide-doc] .guide-doc-head {
+    margin-bottom: 14pt;
+  }
+
+  [data-guide-doc] .guide-doc-title {
+    margin-top: 0 !important;
+    font-size: 19pt !important;
+    line-height: 1.2 !important;
+  }
+
+  [data-guide-doc] .guide-doc-meta {
+    margin-top: 4pt !important;
+    font-size: 9.5pt !important;
+  }
+
+  [data-guide-doc] .guide-toc {
+    margin-top: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    break-inside: avoid;
+  }
+
+  [data-guide-doc] .guide-toc a {
+    padding: 1pt 0 !important;
+    font-size: 10pt !important;
+  }
+
+  [data-guide-doc] .guide-topic {
+    margin-top: 16pt !important;
+  }
+
+  [data-guide-doc] .guide-topic-head {
+    margin-bottom: 6pt !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  [data-guide-doc] .guide-topic-head h2 {
+    font-size: 14pt !important;
+  }
+
+  [data-guide-doc] .guide-topic-meta {
+    font-size: 9pt !important;
+  }
+
+  [data-guide-doc] .guide-keep,
+  [data-guide-doc] .guide-concept {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  [data-guide-doc] .guide-topic > div {
+    background: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  [data-guide-doc] .guide-concepts {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  [data-guide-doc] .guide-concept {
+    display: grid !important;
+    grid-template-columns: 32mm minmax(0, 1fr);
+    gap: 4mm;
+    margin: 0 !important;
+    padding: 5pt 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
+    border-bottom: 0.3pt solid #ccc;
+  }
+
+  [data-guide-doc] .guide-concept-name {
+    font-size: 11pt !important;
+  }
+
+  [data-guide-doc] .guide-concept-label {
+    font-size: 8.5pt !important;
+  }
+
+  [data-guide-doc] .guide-concept-def {
+    margin-top: 0 !important;
+    font-size: 10.5pt !important;
+  }
+
+  [data-guide-doc] .guide-concept-note {
+    margin-top: 1pt !important;
+    font-size: 9.5pt !important;
+  }
+}

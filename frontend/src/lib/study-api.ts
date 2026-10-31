@@ -7,7 +7,6 @@ import type {
   MarkReviewRequest,
   SessionSize,
   StartStudySessionRequest,
-  StudySessionSummary,
   StudySessionView,
 } from "@aps/shared";
 import { getApiUrl, getStoredToken } from "@/lib/api";
@@ -77,12 +76,6 @@ export function answerStudy(sessionId: string, body: AnswerStudyRequest) {
   );
 }
 
-export function fetchStudySummary(sessionId: string) {
-  return studyFetch<StudySessionSummary>(
-    `/study/sessions/${sessionId}/summary`,
-  );
-}
-
 export function startExamTimed(size: SessionSize, timezone?: string) {
   return studyFetch<ExamTimedSessionView>("/study/sessions", {
     method: "POST",
@@ -92,10 +85,6 @@ export function startExamTimed(size: SessionSize, timezone?: string) {
       timezone,
     }),
   });
-}
-
-export function getExamSession(sessionId: string) {
-  return studyFetch<ExamTimedSessionView>(`/study/sessions/${sessionId}`);
 }
 
 export function answerExamTimed(
@@ -119,10 +108,4 @@ export function submitExamTimed(sessionId: string) {
   return studyFetch<ExamTimedSummary>(`/study/sessions/${sessionId}/submit`, {
     method: "POST",
   });
-}
-
-export function getExamSummary(sessionId: string) {
-  return studyFetch<ExamTimedSummary>(
-    `/study/sessions/${sessionId}/summary`,
-  );
 }

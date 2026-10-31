@@ -13,16 +13,15 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {
-  AdminGuard,
-  ApiAdminTokenHeader,
-} from '../common/guards/admin.guard';
+import { AdminGuard, ApiAdminTokenHeader } from '../common/guards/admin.guard';
 import { AdminUsageService } from './admin-usage.service';
 import { UpdateAdminUserDto } from './dto/admin-user.dto';
 
 @ApiTags('admin-usage')
 @ApiAdminTokenHeader()
-@ApiUnauthorizedResponse({ description: 'Missing/invalid x-admin-token' })
+@ApiUnauthorizedResponse({
+  description: 'Missing/invalid admin session (Bearer JWT, role ADMIN)',
+})
 @UseGuards(AdminGuard)
 @Controller('admin')
 export class AdminUsageController {
@@ -36,6 +35,16 @@ export class AdminUsageController {
   @ApiOkResponse({ description: 'UsageSummary' })
   usageSummary() {
     return this.usage.getUsageSummary();
+  }
+
+  @Get('metrics')
+  @ApiOperation({
+    summary:
+      'Métricas owner: series diarias (28 días), KPIs 7d vs 7d previos, embudo, conceptos más fallados, actividad reciente',
+  })
+  @ApiOkResponse({ description: 'AdminMetrics' })
+  metrics() {
+    return this.usage.getMetrics();
   }
 
   @Get('users')

@@ -10,6 +10,7 @@ import {
   buildSeedQuestions,
   buildSeedTopics,
 } from '../src/content/content.seed';
+import { syncLegacyExamFromUser } from '../src/user-exams/exam-date.util';
 
 const prisma = new PrismaClient();
 
@@ -135,9 +136,27 @@ async function seedContent() {
     });
   }
 
+  // Seed-owned rows (ki-/eq- ids) that left the bank are archived, not deleted,
+  // so attempts and progress keep pointing at real items.
+  const archivedKnowledge = await prisma.knowledgeItem.updateMany({
+    where: {
+      id: { startsWith: 'ki-', notIn: knowledge.map((k) => k.id) },
+      status: { not: ContentStatus.archived },
+    },
+    data: { status: ContentStatus.archived },
+  });
+  const archivedQuestions = await prisma.examQuestion.updateMany({
+    where: {
+      id: { startsWith: 'eq-', notIn: questions.map((q) => q.id) },
+      status: { not: ContentStatus.archived },
+    },
+    data: { status: ContentStatus.archived },
+  });
+
   // eslint-disable-next-line no-console
   console.log(
-    `Content seed OK: ${topics.length} topics, ${knowledge.length} knowledge, ${questions.length} questions`,
+    `Content seed OK: ${topics.length} topics, ${knowledge.length} knowledge, ${questions.length} questions` +
+      ` (archived ${archivedKnowledge.count} knowledge, ${archivedQuestions.count} questions)`,
   );
 }
 
@@ -162,14 +181,14 @@ async function seedDemoStudents() {
   ];
 
   for (const d of demos) {
-    await prisma.user.upsert({
+    // Existing exam dates are user data: only new demo users get one.
+    const user = await prisma.user.upsert({
       where: { email: d.email },
       update: {
         username: d.username,
         passwordHash,
         role: Role.STUDENT,
         timezone,
-        examDate,
         bannedAt: null,
       },
       create: {
@@ -181,6 +200,7 @@ async function seedDemoStudents() {
         examDate,
       },
     });
+    await syncLegacyExamFromUser(prisma, user.id, user.examDate);
   }
 
   // eslint-disable-next-line no-console
@@ -200,9 +220,19 @@ async function seedFeatureFlags() {
     },
   });
 
+  const examModes = await prisma.featureFlag.upsert({
+    where: { key: 'exam_modes' },
+    update: {},
+    create: {
+      key: 'exam_modes',
+      enabled: false,
+      updatedBy: 'seed',
+    },
+  });
+
   // eslint-disable-next-line no-console
   console.log(
-    `FeatureFlag seed OK: ${examTrackAi.key}=${examTrackAi.enabled}`,
+    `FeatureFlag seed OK: ${examTrackAi.key}=${examTrackAi.enabled}, ${examModes.key}=${examModes.enabled}`,
   );
 }
 

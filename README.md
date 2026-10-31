@@ -68,7 +68,7 @@ npm run build -w @aps/shared
 | Tipos | `packages/shared` |
 | Persistencia | Prisma en `backend/prisma` |
 | API pública | `GET /api/v1/topics`, `/knowledge-items`, `/exam-questions` |
-| Admin CRUD | `/api/v1/admin/...` + `x-admin-token` |
+| Admin CRUD | `/api/v1/admin/...` + `Authorization: Bearer <JWT>` de un usuario `ADMIN` (`x-admin-token` solo si `ADMIN_TOKEN` está definido, para scripts) |
 | UI admin | `/admin` en el frontend |
 | Seed | `npm run db:seed` ← `backend/src/content/content.seed.ts` |
 
@@ -93,7 +93,7 @@ npm run build -w @aps/shared
 - Auth JWT, shell/tema, content Prisma, flash + modos examen, guest analytics
 - Podio, más falladas, import/export, feature flags (Wave 2)
 
-**Fuera de alcance aún:** Google OAuth, AdminGuard JWT (sigue `x-admin-token`).
+**Fuera de alcance aún:** Google OAuth.
 
 ## Scripts raíz
 

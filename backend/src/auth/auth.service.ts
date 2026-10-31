@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -10,6 +11,8 @@ import { createHash, randomBytes } from 'crypto';
 import type { AuthResponse, PublicUser } from '@aps/shared';
 import { GuestService } from '../guest/guest.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { syncLegacyExamFromUser } from '../user-exams/exam-date.util';
+import { normalizeTimezone } from './timezone.util';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -77,7 +80,7 @@ export class AuthService {
         username,
         passwordHash,
         role: Role.STUDENT,
-        timezone: dto.timezone?.trim() || 'UTC',
+        timezone: normalizeTimezone(dto.timezone),
       },
     });
 
@@ -161,7 +164,7 @@ export class AuthService {
         await transporter.sendMail({
           from: mailFrom,
           to: email,
-          subject: 'Restablecer contraseña — AWS Practitioner Study Lab',
+          subject: 'Restablecer contraseña — AWS Study Lab',
           text: `Usa este enlace (un solo uso) para restablecer tu contraseña:\n\n${resetUrl}\n`,
         });
       } catch (err) {
@@ -270,12 +273,14 @@ export class AuthService {
   async updateProfile(
     user: User,
     dto: {
+      username?: string;
       timezone?: string;
       podiumHidden?: boolean;
       examDate?: string | null;
     },
   ): Promise<PublicUser> {
     if (
+      dto.username === undefined &&
       dto.timezone === undefined &&
       dto.podiumHidden === undefined &&
       dto.examDate === undefined
@@ -300,17 +305,47 @@ export class AuthService {
       }
     }
 
-    const updated = await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        ...(dto.timezone !== undefined
-          ? { timezone: dto.timezone.trim() || 'UTC' }
-          : {}),
-        ...(dto.podiumHidden !== undefined
-          ? { podiumHidden: dto.podiumHidden }
-          : {}),
-        ...(examDateValue !== undefined ? { examDate: examDateValue } : {}),
-      },
+    let username: string | undefined = undefined;
+    if (dto.username !== undefined) {
+      username = dto.username.trim();
+      if (username.toLowerCase() !== user.username.toLowerCase()) {
+        const taken = await this.prisma.user.findFirst({
+          where: {
+            username: { equals: username, mode: 'insensitive' },
+            NOT: { id: user.id },
+          },
+          select: { id: true },
+        });
+        if (taken) {
+          throw new ConflictException('Ese usuario ya está en uso');
+        }
+      }
+    }
+
+    const data = {
+      ...(username !== undefined ? { username } : {}),
+      ...(dto.timezone !== undefined
+        ? { timezone: normalizeTimezone(dto.timezone, user.timezone) }
+        : {}),
+      ...(dto.podiumHidden !== undefined
+        ? { podiumHidden: dto.podiumHidden }
+        : {}),
+      ...(examDateValue !== undefined ? { examDate: examDateValue } : {}),
+    };
+
+    if (examDateValue === undefined) {
+      const updated = await this.prisma.user.update({
+        where: { id: user.id },
+        data,
+      });
+      return this.toPublicUser(updated);
+    }
+
+    const nextExamDate = examDateValue;
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.user.update({ where: { id: user.id }, data });
+      await syncLegacyExamFromUser(tx, user.id, nextExamDate);
+      return row;
     });
     return this.toPublicUser(updated);
   }
@@ -342,6 +377,30 @@ export class AuthService {
       data: { passwordHash: await hashPassword(dto.password) },
     });
     return { message: 'Contraseña actualizada' };
+  }
+
+  /** Study data (sessions, attempts, progress, streak, exams) cascades in the DB. */
+  async deleteAccount(
+    user: User,
+    dto: { password: string },
+  ): Promise<{ message: string }> {
+    if (user.role === Role.ADMIN) {
+      throw new ForbiddenException(
+        'La cuenta de administración no se puede eliminar desde aquí',
+      );
+    }
+    const valid = await verifyPassword(dto.password, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedException('Contraseña incorrecta');
+    }
+    await this.prisma.$transaction([
+      this.prisma.guestProbe.updateMany({
+        where: { convertedUserId: user.id },
+        data: { convertedUserId: null },
+      }),
+      this.prisma.user.delete({ where: { id: user.id } }),
+    ]);
+    return { message: 'Tu cuenta se eliminó' };
   }
 
   toPublicUser(user: User): PublicUser {

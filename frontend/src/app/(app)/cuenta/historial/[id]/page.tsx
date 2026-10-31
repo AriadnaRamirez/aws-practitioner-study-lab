@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { HistoryDetailClient } from "@/components/study/history-detail-client";
+import { HistoryDetailClient } from "@/components/cuenta/history-detail-client";
+import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {
   title: "Detalle de sesión",
@@ -11,5 +12,9 @@ export default async function HistoryDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <HistoryDetailClient sessionId={id} />;
+  return (
+    <RequireAuth>
+      <HistoryDetailClient sessionId={id} />
+    </RequireAuth>
+  );
 }

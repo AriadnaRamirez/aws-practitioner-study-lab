@@ -1,11 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PASSWORD_MIN } from '@aps/shared';
-import { forgotPassword, resetPassword } from '../../lib/api';
-import { Suspense } from 'react';
+import { Mascot } from '@/components/brand/mascot';
+import { AuthAside } from '@/components/shell/auth-aside';
+import { Button } from '@/components/ui/button';
+import { FOCUS_RING } from '@/components/ui/focus';
+import { Input } from '@/components/ui/input';
+import { Notice } from '@/components/ui/notice';
+import { PAGE_TITLE, PageContainer } from '@/components/ui/page';
+import { ScreenLoader } from '@/components/ui/screen-loader';
+import { cn } from '@/lib/utils';
+import { forgotPassword, resetPassword } from '@/lib/api';
+
+const LINK = cn(
+  'rounded-sm font-semibold text-[var(--foreground)] underline-offset-4 hover:underline',
+  FOCUS_RING,
+);
 
 function ForgotPasswordForm() {
   const search = useSearchParams();
@@ -60,110 +73,136 @@ function ForgotPasswordForm() {
     }
   }
 
+  const errorNotice = error ? <Notice tone="danger">{error}</Notice> : null;
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
-      <div>
-        <p className="text-sm text-zinc-500">AWS Practitioner Study Lab</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-          {mode === 'reset' ? 'Nueva contraseña' : 'Recuperar contraseña'}
-        </h1>
-        <p className="mt-2 text-zinc-600 dark:text-zinc-300">
-          {mode === 'reset'
-            ? 'Escribe el token y tu nueva contraseña.'
-            : 'Te enviaremos un enlace de un solo uso al correo con el que te registraste.'}
-        </p>
-      </div>
-
-      {mode === 'request' ? (
-        <form onSubmit={onRequest} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm">
-            Correo
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+    <div className="md:grid md:min-h-dvh md:grid-cols-2">
+      <AuthAside
+        pose="security"
+        title="Recupera el acceso a tu cuenta."
+        text="Tu progreso y tus rachas siguen guardados."
+      />
+      <main className="flex min-h-dvh flex-col">
+        <PageContainer
+          width="narrow"
+          className="flex flex-1 flex-col md:justify-center [@media(max-height:500px)]:md:py-5"
+        >
+          <Link
+            href="/"
+            className={cn(
+              'font-display self-start rounded-sm text-sm font-semibold tracking-tight text-[var(--foreground)] md:hidden',
+              FOCUS_RING,
+            )}
           >
-            {pending ? 'Enviando…' : 'Enviar enlace'}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={onReset} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1 text-sm">
-            Token
-            <input
-              type="text"
-              required
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 font-mono text-xs dark:border-zinc-700"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Nueva contraseña
-            <input
-              type="password"
-              required
-              minLength={PASSWORD_MIN}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Confirmar contraseña
-            <input
-              type="password"
-              required
-              minLength={PASSWORD_MIN}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-3 py-2 dark:border-zinc-700"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            {pending ? 'Guardando…' : 'Restablecer'}
-          </button>
-        </form>
-      )}
+            AWS Study Lab
+          </Link>
 
-      {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p className="rounded border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
-          {message}
-        </p>
-      ) : null}
+          <div className="flex flex-1 flex-col items-center justify-center py-6 text-center md:mb-8 md:flex-none md:items-start md:py-0 md:text-left [@media(max-height:640px)]:py-3 [@media(max-height:500px)]:md:mb-4">
+            <Mascot
+              pose="security"
+              size="hero"
+              glow={false}
+              priority
+              className="!h-[clamp(7rem,30dvh,15rem)] !w-full !max-w-[18rem] md:hidden [@media(max-height:640px)]:!h-24"
+            />
+            <h1 className={cn(PAGE_TITLE, 'mt-4 md:mt-0')}>
+              {mode === 'reset' ? 'Nueva contraseña' : 'Recuperar contraseña'}
+            </h1>
+            <p className="mt-2 max-w-prose text-base text-[var(--foreground-muted)]">
+              {mode === 'reset'
+                ? 'Escribe el token y tu nueva contraseña.'
+                : 'Te enviaremos un enlace de un solo uso al correo con el que te registraste.'}
+            </p>
+          </div>
 
-      <p className="text-sm text-zinc-500">
-        <Link className="underline underline-offset-4" href="/login">
-          Volver a entrar
-        </Link>
-      </p>
-    </main>
+          {mode === 'request' ? (
+            <form onSubmit={onRequest} className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
+                Correo
+                <Input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+
+              {errorNotice}
+
+              <Button type="submit" size="lg" pending={pending} className="mt-1 w-full">
+                {pending ? 'Enviando…' : 'Enviar enlace'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={onReset} className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
+                Token
+                <Input
+                  type="text"
+                  required
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  className="font-mono text-xs"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
+                Nueva contraseña
+                <Input
+                  type="password"
+                  required
+                  minLength={PASSWORD_MIN}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
+                Confirmar contraseña
+                <Input
+                  type="password"
+                  required
+                  minLength={PASSWORD_MIN}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </label>
+
+              {errorNotice}
+
+              <Button type="submit" size="lg" pending={pending} className="mt-1 w-full">
+                {pending ? 'Guardando…' : 'Restablecer'}
+              </Button>
+            </form>
+          )}
+
+          {message ? (
+            <Notice tone="success" boxed className="mt-6">
+              {message}
+            </Notice>
+          ) : null}
+
+          <p className="mt-8 text-center text-sm text-[var(--foreground-muted)]">
+            <Link href="/login" className={LINK}>
+              Volver a entrar
+            </Link>
+          </p>
+        </PageContainer>
+      </main>
+    </div>
   );
 }
 
 export default function ForgotPasswordPage() {
   return (
-    <Suspense fallback={<main className="p-8 text-sm">Cargando…</main>}>
+    <Suspense
+      fallback={
+        <main className="flex min-h-dvh items-center justify-center">
+          <ScreenLoader pose="security" message="Preparando la recuperación de tu cuenta…" />
+        </main>
+      }
+    >
       <ForgotPasswordForm />
     </Suspense>
   );

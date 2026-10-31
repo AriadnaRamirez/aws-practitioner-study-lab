@@ -1,3 +1,4 @@
+import { FOCUS_RING } from "@/components/ui/focus";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -32,7 +33,10 @@ export function SiteCredits({ className, compact = false }: Props) {
             href="https://mexico.generation.org/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-5 w-[6.5rem] items-center justify-center opacity-[0.38] transition-opacity duration-300 hover:opacity-60"
+            className={cn(
+              "inline-flex h-5 w-[6.5rem] items-center justify-center rounded-sm opacity-[0.38] transition-opacity duration-300 hover:opacity-60 focus-visible:opacity-60",
+              FOCUS_RING,
+            )}
             title="Generation México"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -45,27 +49,6 @@ export function SiteCredits({ className, compact = false }: Props) {
             />
           </a>
 
-          <span
-            aria-hidden
-            className="h-3.5 w-px shrink-0 bg-[var(--foreground)]/15"
-          />
-
-          <a
-            href="https://aws.amazon.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-5 w-11 items-center justify-center opacity-[0.38] transition-opacity duration-300 hover:opacity-60"
-            title="Amazon Web Services"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/partners/aws-logo-white.png"
-              alt="AWS"
-              className="!h-full !w-full object-contain"
-              loading="lazy"
-              decoding="async"
-            />
-          </a>
         </div>
 
         <p className="mt-3.5 text-xs text-[var(--foreground-muted)]/45">
@@ -74,7 +57,10 @@ export function SiteCredits({ className, compact = false }: Props) {
             href="https://www.linkedin.com/in/ariadnaramirez"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:underline"
+            className={cn(
+              "rounded-sm underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:underline",
+              FOCUS_RING,
+            )}
           >
             Ariadna Ramírez
           </a>

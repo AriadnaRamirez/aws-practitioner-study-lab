@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DashboardClient } from "@/components/study/dashboard-client";
+import { DashboardClient } from "@/components/dashboard/dashboard-client";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {

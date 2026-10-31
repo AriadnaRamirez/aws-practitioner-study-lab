@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  FEATURE_FLAG_EXAM_MODES,
   FEATURE_FLAG_EXAM_TRACK_AI,
   type FeatureFlagDto,
 } from '@aps/shared';
@@ -46,6 +47,10 @@ export class FeatureFlagsService {
 
   async isExamTrackAiEnabled(): Promise<boolean> {
     return this.isEnabled(FEATURE_FLAG_EXAM_TRACK_AI);
+  }
+
+  async isExamModesEnabled(): Promise<boolean> {
+    return this.isEnabled(FEATURE_FLAG_EXAM_MODES);
   }
 
   async setEnabled(

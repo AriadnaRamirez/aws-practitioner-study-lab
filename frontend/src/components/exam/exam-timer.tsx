@@ -47,10 +47,8 @@ export function ExamTimer({ endsAt, onExpire }: Props) {
       aria-label={`Tiempo restante ${formatRemaining(remaining)}`}
       className={cn(
         "font-mono text-lg font-semibold tracking-tight tabular-nums sm:text-xl",
-        urgent
-          ? "text-amber-700 dark:text-amber-300"
-          : "text-[var(--foreground)]",
-        remaining === 0 && "text-red-600 dark:text-red-400",
+        urgent ? "text-[var(--warning-text)]" : "text-[var(--foreground)]",
+        remaining === 0 && "text-[var(--danger-text)]",
       )}
     >
       {formatRemaining(remaining)}
