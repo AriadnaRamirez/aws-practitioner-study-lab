@@ -36,7 +36,7 @@ export type StudyCategory = {
   glyph: "cloud" | "linux" | "network" | "book";
 };
 
-export type StudyGroup = {
+type StudyGroup = {
   id: StudyCategoryGroup;
   title: string;
   shortTitle: string;
@@ -182,7 +182,7 @@ export const AWS_SERVICES_CATEGORY: StudyCategory = {
 };
 
 /** Todos los conceptos: los 4 módulos de estudio juntos. */
-export const CONCEPTS_CATEGORY: StudyCategory = {
+const CONCEPTS_CATEGORY: StudyCategory = {
   id: "concepts",
   group: "module",
   title: "Conceptos por módulo de estudio",
@@ -231,7 +231,7 @@ function sameSet(a: readonly string[], b: readonly string[]): boolean {
   return sa.size === sb.size && [...sa].every((x) => sb.has(x));
 }
 
-export type StudyScope =
+type StudyScope =
   | { kind: "all" }
   | { kind: "category"; category: StudyCategory }
   | { kind: "mixed"; categories: StudyCategory[] };

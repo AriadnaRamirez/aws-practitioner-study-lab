@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { getStoredToken } from "@/lib/api";
 import {
@@ -8,58 +9,36 @@ import {
 } from "@/lib/onboarding";
 import { OnboardingTour } from "./onboarding-tour";
 
-export type OpenOnboardingDetail = { stepIndex?: number };
+const OPEN_EVENT = "aps:open-onboarding";
 
-declare global {
-  interface WindowEventMap {
-    "aps:open-onboarding": CustomEvent<OpenOnboardingDetail>;
-  }
-}
+/** Where the tour may open by itself (never in the middle of a game). */
+const AUTO_SHOW_PATHS = new Set(["/dashboard", "/estudiar"]);
 
-export function openOnboardingTour(detail?: OpenOnboardingDetail) {
+export function openOnboardingTour() {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(
-    new CustomEvent<OpenOnboardingDetail>("aps:open-onboarding", {
-      detail: detail ?? {},
-    }),
-  );
+  window.dispatchEvent(new Event(OPEN_EVENT));
 }
 
 export function OnboardingHost() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const hasAuth = Boolean(getStoredToken());
-    if (shouldShowOnboarding(hasAuth)) {
-      setOpen(true);
-      setStepIndex(0);
-    }
-    setReady(true);
-
-    function onOpen(e: CustomEvent<OpenOnboardingDetail>) {
-      setStepIndex(e.detail?.stepIndex ?? 0);
-      setOpen(true);
-    }
-    window.addEventListener("aps:open-onboarding", onOpen);
-    return () => window.removeEventListener("aps:open-onboarding", onOpen);
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen);
   }, []);
+
+  useEffect(() => {
+    if (open || !AUTO_SHOW_PATHS.has(pathname)) return;
+    if (new URLSearchParams(window.location.search).has("session")) return;
+    if (shouldShowOnboarding(Boolean(getStoredToken()))) setOpen(true);
+  }, [pathname, open]);
 
   const finish = useCallback(() => {
     markOnboardingCompleted();
     setOpen(false);
   }, []);
 
-  if (!ready) return null;
-
-  return (
-    <OnboardingTour
-      open={open}
-      stepIndex={stepIndex}
-      onStepChange={setStepIndex}
-      onClose={finish}
-      onComplete={finish}
-    />
-  );
+  return open ? <OnboardingTour onFinish={finish} /> : null;
 }

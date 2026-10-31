@@ -3,21 +3,14 @@ import type {
   AdminUpdateUserRequest,
   AdminUserRow,
 } from "@aps/shared";
-import { getApiUrl } from "@/lib/api";
+import { getApiUrl, getStoredToken } from "@/lib/api";
 
-export const ADMIN_TOKEN_KEY = "aps_admin_token";
-
-export function getAdminToken(): string {
-  if (typeof window === "undefined") return "dev-admin-token";
-  return (
-    window.localStorage.getItem(ADMIN_TOKEN_KEY) ??
-    process.env.NEXT_PUBLIC_ADMIN_TOKEN ??
-    "dev-admin-token"
-  );
-}
-
-export function setAdminToken(token: string) {
-  window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+/** Admin calls authenticate as the signed-in user; the API requires role ADMIN. */
+export function adminAuthHeaders(init?: HeadersInit): Headers {
+  const headers = new Headers(init);
+  const jwt = getStoredToken();
+  if (jwt) headers.set("Authorization", `Bearer ${jwt}`);
+  return headers;
 }
 
 async function parseError(res: Response): Promise<string> {
@@ -32,12 +25,7 @@ async function parseError(res: Response): Promise<string> {
 }
 
 async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers);
-  headers.set("x-admin-token", getAdminToken());
-  if (typeof window !== "undefined") {
-    const jwt = window.localStorage.getItem("aps_access_token");
-    if (jwt) headers.set("Authorization", `Bearer ${jwt}`);
-  }
+  const headers = adminAuthHeaders(init?.headers);
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }

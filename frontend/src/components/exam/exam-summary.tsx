@@ -2,6 +2,10 @@
 
 import type { ExamTimedSummary } from "@aps/shared";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
+import { PAGE_TITLE, PageContainer, SectionTitle } from "@/components/ui/page";
+import { cn } from "@/lib/utils";
 
 function formatDuration(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -21,57 +25,52 @@ type Props = {
 
 export function ExamSummary({ summary, onAgain }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-10 sm:px-6 lg:max-w-4xl lg:px-8 lg:py-12">
-      <header className="space-y-3 animate-[fade-up_0.5s_ease-out]">
-        <p className="text-sm font-medium text-[var(--foreground)]">
-          Resultado
-        </p>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+    <PageContainer>
+      <header className="animate-fade-up">
+        <p className="text-sm text-[var(--foreground-muted)]">Resultado</p>
+        <h1 className={cn(PAGE_TITLE, "mt-1 tabular-nums")}>
           {summary.scorePercent}%
         </h1>
-        <p className="text-[var(--foreground-muted)]">
+        <p className="mt-3 text-[var(--foreground-muted)]">
           {summary.correctCount} de {summary.totalCount} correctas
           {summary.unansweredCount > 0
             ? ` · ${summary.unansweredCount} sin responder`
             : ""}
           {summary.status === "EXPIRED" ? " · tiempo agotado" : ""}
         </p>
-        <p className="text-sm text-[var(--foreground-muted)]">
+        <p className="mt-1 text-sm text-[var(--foreground-muted)]">
           Tiempo usado: {formatDuration(summary.timeUsedSec)} de{" "}
           {formatDuration(summary.timeLimitSec)}
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap gap-3">
         <Button type="button" onClick={onAgain}>
           Nuevo examen
         </Button>
       </div>
 
-      <section className="space-y-4" aria-labelledby="fallos-heading">
-        <h2
+      <section className="mt-12" aria-labelledby="fallos-heading">
+        <SectionTitle
           id="fallos-heading"
-          className="font-display text-xl font-semibold text-[var(--foreground)]"
+          count={summary.mistakes.length || undefined}
         >
           {summary.mistakes.length === 0
             ? "Sin fallos"
-            : `Fallos y sin responder (${summary.mistakes.length})`}
-        </h2>
+            : "Fallos y sin responder"}
+        </SectionTitle>
         {summary.mistakes.length === 0 ? (
-          <p className="text-[var(--foreground-muted)]">
+          <p className="mt-4 text-[var(--foreground-muted)]">
             Excelente — todas las respuestas fueron correctas.
           </p>
         ) : (
-          <ul className="space-y-6">
+          <ul className="mt-4 space-y-3">
             {summary.mistakes.map((m, idx) => (
-              <li
-                key={m.questionId}
-                className="border-t border-[var(--border)] pt-5"
-              >
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--foreground-muted)]">
+              <Card as="li" key={m.questionId} variant="flat">
+                <p className="mb-2 text-xs text-[var(--foreground-muted)]">
                   Pregunta {idx + 1}
                 </p>
-                <p className="mb-3 font-medium text-[var(--foreground)]">
+                <p className="mb-3 font-semibold text-[var(--foreground)]">
                   {m.stem}
                 </p>
                 <ul className="mb-3 space-y-1.5 text-sm">
@@ -83,9 +82,9 @@ export function ExamSummary({ summary, onAgain }: Props) {
                         key={i}
                         className={
                           isCorrect
-                            ? "text-emerald-700 dark:text-emerald-300"
+                            ? "text-[var(--success-text)]"
                             : isSelected
-                              ? "text-red-700 dark:text-red-300"
+                              ? "text-[var(--danger-text)]"
                               : "text-[var(--foreground-muted)]"
                         }
                       >
@@ -97,18 +96,18 @@ export function ExamSummary({ summary, onAgain }: Props) {
                   })}
                 </ul>
                 {m.selectedIndex === null ? (
-                  <p className="mb-2 text-sm text-amber-800 dark:text-amber-200">
+                  <Notice tone="warning" className="mb-2">
                     No respondiste esta pregunta.
-                  </p>
+                  </Notice>
                 ) : null}
                 <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
                   {m.explanation}
                 </p>
-              </li>
+              </Card>
             ))}
           </ul>
         )}
       </section>
-    </div>
+    </PageContainer>
   );
 }

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { APP_NAME } from "@aps/shared";
 import { cn } from "@/lib/utils";
 
 export const MASCOT_POSES = {
@@ -7,7 +8,6 @@ export const MASCOT_POSES = {
   laptop: "/mascot/laptop.png",
   rocket: "/mascot/rocket.png",
   server: "/mascot/server.png",
-  s3: "/mascot/s3.png",
   security: "/mascot/security.png",
   champion: "/mascot/champion.png",
   silver: "/mascot/silver.png",
@@ -17,22 +17,20 @@ export const MASCOT_POSES = {
 export type MascotPose = keyof typeof MASCOT_POSES;
 
 const ALT: Record<MascotPose, string> = {
-  study: "Mascota de AWS Study Lab con libro AWS",
-  wave: "Mascota de AWS Study Lab saludando",
-  laptop: "Mascota de AWS Study Lab en la laptop",
-  rocket: "Mascota de AWS Study Lab en cohete AWS",
-  server: "Mascota de AWS Study Lab con servidor",
-  s3: "Mascota de AWS Study Lab con bucket S3",
-  security: "Mascota de AWS Study Lab de seguridad",
-  champion: "Mascota de AWS Study Lab con trofeo de campeón",
-  silver: "Mascota de AWS Study Lab con medalla de plata",
-  bronze: "Mascota de AWS Study Lab con medalla de bronce",
+  study: `Mascota de ${APP_NAME} con libro AWS`,
+  wave: `Mascota de ${APP_NAME} saludando`,
+  laptop: `Mascota de ${APP_NAME} en la laptop`,
+  rocket: `Mascota de ${APP_NAME} en cohete AWS`,
+  server: `Mascota de ${APP_NAME} con servidor`,
+  security: `Mascota de ${APP_NAME} de seguridad`,
+  champion: `Mascota de ${APP_NAME} con trofeo de campeón`,
+  silver: `Mascota de ${APP_NAME} con medalla de plata`,
+  bronze: `Mascota de ${APP_NAME} con medalla de bronce`,
 };
 
 type Props = {
   pose?: MascotPose;
   className?: string;
-  float?: boolean;
   priority?: boolean;
   size?: "sm" | "md" | "lg" | "hero";
   /** Soft orange backlight behind the cutout (default on). */
@@ -57,20 +55,12 @@ const SIZES_ATTR: Record<NonNullable<Props["size"]>, string> = {
 export function Mascot({
   pose = "study",
   className,
-  float = false,
   priority = false,
   size = "md",
   glow = true,
 }: Props) {
   return (
-    <div
-      className={cn(
-        "relative",
-        SIZE[size],
-        float && "animate-mascot-float",
-        className,
-      )}
-    >
+    <div className={cn("relative", SIZE[size], className)}>
       {glow ? (
         <>
           {/* Soft plate + warm orange halo behind the character */}

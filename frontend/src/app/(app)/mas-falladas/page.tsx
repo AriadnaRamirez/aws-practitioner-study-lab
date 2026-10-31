@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MasFalladasClient } from "@/components/study/mas-falladas-client";
+import { MasFalladasClient } from "@/components/mas-falladas/mas-falladas-client";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {

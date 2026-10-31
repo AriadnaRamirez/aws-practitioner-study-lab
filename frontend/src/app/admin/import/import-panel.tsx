@@ -12,28 +12,25 @@ import { cn } from "@/lib/utils";
 import {
   detectFormat,
   downloadExport,
-  getAdminToken,
   listImportJobs,
   runImport,
-  setAdminToken,
 } from "@/lib/import-api";
 import {
-  ADMIN_BUTTON,
-  ADMIN_LABEL,
+  ADMIN_SELECT,
   ADMIN_TABLE,
   ADMIN_TEXTAREA,
-  AdminBadge,
-  AdminNotice,
   AdminSection,
 } from "@/components/admin/admin-ui";
 import {
-  ADMIN_SELECT,
   AdminStat,
   AdminStatGrid,
-  AdminTokenDetails,
   formatAdminDateTime,
   formatRelative,
 } from "@/components/admin/admin-metrics";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
+import { Stat } from "@/components/ui/stat";
 
 const STATUS_BADGE: Record<
   ImportJobStatus,
@@ -61,7 +58,6 @@ const KIND_LABEL: Record<ImportEntityKind, string> = {
 };
 
 export function ImportPanel() {
-  const [token, setToken] = useState("dev-admin-token");
   const [format, setFormat] = useState<ImportFormat>("json");
   const [filename, setFilename] = useState<string>("");
   const [content, setContent] = useState("");
@@ -81,7 +77,6 @@ export function ImportPanel() {
   }, []);
 
   useEffect(() => {
-    setToken(getAdminToken());
     void refreshJobs();
   }, [refreshJobs]);
 
@@ -107,7 +102,6 @@ export function ImportPanel() {
   async function onSubmit(forceDryRun?: boolean) {
     setBusy(true);
     setError(null);
-    setAdminToken(token);
     try {
       const job = await runImport({
         format,
@@ -127,7 +121,6 @@ export function ImportPanel() {
   async function onExport(fmt: ImportFormat) {
     setBusy(true);
     setError(null);
-    setAdminToken(token);
     try {
       await downloadExport(fmt);
     } catch (err) {
@@ -146,21 +139,32 @@ export function ImportPanel() {
         <AdminStat
           label="Trabajos fallidos"
           value={stats.failed}
-          tone={stats.failed > 0 ? "danger" : "default"}
+          tone={stats.failed > 0 ? "danger" : undefined}
         />
       </AdminStatGrid>
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {error ? (
+        <Notice tone="danger" boxed>
+          {error}
+        </Notice>
+      ) : null}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,20rem)]">
+      <div className="grid gap-6 lg:grid-cols-12">
         <AdminSection
           title="Importar"
           description="Pega el contenido o elige un archivo. El formato se detecta al cargarlo."
+          className="lg:col-span-8"
         >
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <label className="cursor-pointer">
-                <span className={ADMIN_BUTTON.secondary}>Elegir archivo</span>
+              <label
+                className={buttonVariants({
+                  variant: "secondary",
+                  className:
+                    "cursor-pointer focus-within:ring-2 focus-within:ring-[var(--ring)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--background)]",
+                })}
+              >
+                Elegir archivo
                 <input
                   type="file"
                   accept=".json,.csv,application/json,text/csv"
@@ -172,7 +176,7 @@ export function ImportPanel() {
                 value={format}
                 onChange={(e) => setFormat(e.target.value as ImportFormat)}
                 aria-label="Formato"
-                className={cn(ADMIN_SELECT, "h-9 w-auto")}
+                className={cn(ADMIN_SELECT, "h-11 w-auto")}
               >
                 <option value="json">JSON</option>
                 <option value="csv">CSV</option>
@@ -203,22 +207,21 @@ export function ImportPanel() {
             />
 
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 type="button"
-                className={ADMIN_BUTTON.secondary}
+                variant="secondary"
                 disabled={busy || !content.trim()}
                 onClick={() => void onSubmit(true)}
               >
                 Simular
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className={ADMIN_BUTTON.primary}
                 disabled={busy || !content.trim()}
                 onClick={() => void onSubmit(false)}
               >
                 Importar y guardar
-              </button>
+              </Button>
             </div>
           </div>
         </AdminSection>
@@ -226,24 +229,25 @@ export function ImportPanel() {
         <AdminSection
           title="Exportar"
           description="Descarga temas, cartas y preguntas actuales."
+          className="lg:col-span-4"
         >
-          <div className="grid gap-2">
-            <button
+          <div className="mt-auto grid gap-2">
+            <Button
               type="button"
-              className={ADMIN_BUTTON.secondary}
+              variant="secondary"
               disabled={busy}
               onClick={() => void onExport("json")}
             >
               Descargar JSON
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={ADMIN_BUTTON.secondary}
+              variant="secondary"
               disabled={busy}
               onClick={() => void onExport("csv")}
             >
               Descargar CSV
-            </button>
+            </Button>
           </div>
         </AdminSection>
       </div>
@@ -254,19 +258,20 @@ export function ImportPanel() {
         title="Historial"
         description="Trabajos de importación recientes, incluidas las simulaciones."
         actions={
-          <button
+          <Button
             type="button"
-            className={cn(ADMIN_BUTTON.ghost, "h-8 px-2.5 text-xs")}
+            variant="ghost"
+            size="xs"
             onClick={() => void refreshJobs()}
           >
             Actualizar
-          </button>
+          </Button>
         }
       >
         {jobs.length === 0 ? (
           <p className="text-sm text-[var(--foreground-muted)]">Sin trabajos todavía.</p>
         ) : (
-          <div className={ADMIN_TABLE.wrap}>
+          <div className="-mx-1 overflow-x-auto rounded-xl">
             <table className={ADMIN_TABLE.table}>
               <thead className={ADMIN_TABLE.thead}>
                 <tr>
@@ -301,7 +306,7 @@ export function ImportPanel() {
                       className={cn(
                         ADMIN_TABLE.td,
                         "text-right",
-                        job.summary.errors > 0 && "font-semibold text-red-300",
+                        job.summary.errors > 0 && "font-semibold text-[var(--danger-text)]",
                       )}
                     >
                       {job.summary.errors}
@@ -313,26 +318,24 @@ export function ImportPanel() {
           </div>
         )}
       </AdminSection>
-
-      <AdminTokenDetails value={token} onChange={setToken} />
     </div>
   );
 }
 
 function JobStatusBadge({ job }: { job: ImportJob }) {
   const status = STATUS_BADGE[job.status] ?? { label: job.status, tone: "neutral" as const };
-  return <AdminBadge tone={status.tone}>{status.label}</AdminBadge>;
+  return <Badge tone={status.tone}>{status.label}</Badge>;
 }
 
 function JobResult({ job }: { job: ImportJob }) {
-  const counts: { label: string; value: number; className?: string }[] = [
-    { label: "Creados", value: job.summary.created, className: "text-emerald-300" },
+  const counts: { label: string; value: number; tone?: "success" | "danger" }[] = [
+    { label: "Creados", value: job.summary.created, tone: "success" },
     { label: "Actualizados", value: job.summary.updated },
     { label: "Omitidos", value: job.summary.skipped },
     {
       label: "Errores",
       value: job.summary.errors,
-      className: job.summary.errors > 0 ? "text-red-300" : undefined,
+      tone: job.summary.errors > 0 ? "danger" : undefined,
     },
   ];
 
@@ -347,17 +350,14 @@ function JobResult({ job }: { job: ImportJob }) {
       }
       actions={<JobStatusBadge job={job} />}
     >
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {counts.map((c) => (
-          <div key={c.label} className="rounded-xl bg-[var(--surface-elevated)] px-4 py-3">
-            <p className={ADMIN_LABEL}>{c.label}</p>
-            <p className={cn("mt-1 text-xl font-bold tabular-nums", c.className)}>{c.value}</p>
-          </div>
+          <Stat key={c.label} label={c.label} value={c.value} tone={c.tone} />
         ))}
-      </div>
+      </dl>
 
       {job.results.length > 0 ? (
-        <div className={cn(ADMIN_TABLE.wrap, "mt-4 max-h-72 overflow-y-auto")}>
+        <div className="mt-4 max-h-72 overflow-auto rounded-xl">
           <table className={cn(ADMIN_TABLE.table, "text-xs")}>
             <thead className={cn(ADMIN_TABLE.thead, "sticky top-0")}>
               <tr>
@@ -375,7 +375,7 @@ function JobResult({ job }: { job: ImportJob }) {
                     <td className={cn(ADMIN_TABLE.td, "py-1.5")}>{KIND_LABEL[r.kind] ?? r.kind}</td>
                     <td className={cn(ADMIN_TABLE.td, "py-1.5 font-mono")}>{r.externalKey ?? "—"}</td>
                     <td className={cn(ADMIN_TABLE.td, "py-1.5")}>
-                      <AdminBadge tone={action.tone}>{action.label}</AdminBadge>
+                      <Badge tone={action.tone}>{action.label}</Badge>
                     </td>
                     <td className={cn(ADMIN_TABLE.td, "py-1.5 text-[var(--foreground-muted)]")}>
                       {r.message}

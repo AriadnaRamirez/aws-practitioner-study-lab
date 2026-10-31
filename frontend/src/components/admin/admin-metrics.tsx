@@ -1,47 +1,47 @@
 import type { ReactNode } from "react";
 import type { ContentStatus } from "@aps/shared";
-import { cn } from "@/lib/utils";
-import { ADMIN_CARD, ADMIN_INPUT, ADMIN_LABEL, AdminBadge } from "./admin-ui";
-
-/** Native selects render their popup with the OS scheme unless told otherwise. */
-export const ADMIN_SELECT = cn(ADMIN_INPUT, "[color-scheme:dark]");
-
-const VALUE_TONES = {
-  default: "text-[var(--foreground)]",
-  accent: "text-[var(--accent)]",
-  success: "text-emerald-300",
-  danger: "text-red-300",
-} as const;
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Stat } from "@/components/ui/stat";
 
 export function AdminStat({
   label,
   value,
   hint,
-  tone = "default",
+  tone,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
-  tone?: keyof typeof VALUE_TONES;
+  tone?: "accent" | "success" | "danger" | "warning";
 }) {
   return (
-    <div className={cn(ADMIN_CARD, "p-4")}>
-      <p className={ADMIN_LABEL}>{label}</p>
-      <p className={cn("mt-2 text-2xl font-bold tabular-nums", VALUE_TONES[tone])}>
-        {value}
-      </p>
-      {hint ? (
-        <p className="mt-1 truncate text-xs text-[var(--foreground-muted)]">{hint}</p>
-      ) : null}
-    </div>
+    <Stat
+      value={value}
+      tone={tone}
+      label={
+        hint ? (
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span>{label}</span>
+            <span className="truncate opacity-80">{hint}</span>
+          </span>
+        ) : (
+          label
+        )
+      }
+    />
   );
 }
 
 export function AdminStatGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{children}</div>;
+  return (
+    <Card padding="sm">
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">{children}</dl>
+    </Card>
+  );
 }
 
-export const CONTENT_STATUS_LABEL: Record<ContentStatus, string> = {
+const CONTENT_STATUS_LABEL: Record<ContentStatus, string> = {
   published: "Publicada",
   draft: "Borrador",
   archived: "Archivada",
@@ -49,43 +49,7 @@ export const CONTENT_STATUS_LABEL: Record<ContentStatus, string> = {
 
 export function ContentStatusBadge({ status }: { status: ContentStatus }) {
   const tone = status === "published" ? "success" : status === "draft" ? "warning" : "neutral";
-  return <AdminBadge tone={tone}>{CONTENT_STATUS_LABEL[status] ?? status}</AdminBadge>;
-}
-
-/** Collapsible `x-admin-token` field shared by panels that call token-guarded endpoints. */
-export function AdminTokenDetails({
-  value,
-  onChange,
-  onBlur,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-}) {
-  return (
-    <details className="group rounded-2xl bg-[var(--surface)] px-5 py-3">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)] [&::-webkit-details-marker]:hidden">
-        Token de administración
-        <span aria-hidden className="text-xs transition-transform group-open:rotate-180">
-          ▾
-        </span>
-      </summary>
-      <label className="mt-3 block max-w-md space-y-1.5">
-        <span className={ADMIN_LABEL}>Encabezado x-admin-token</span>
-        <input
-          type="password"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
-          className={cn(ADMIN_INPUT, "font-mono")}
-          autoComplete="off"
-        />
-        <span className="block text-xs text-[var(--foreground-muted)]">
-          Valor local por defecto: <code className="font-mono">dev-admin-token</code>
-        </span>
-      </label>
-    </details>
-  );
+  return <Badge tone={tone}>{CONTENT_STATUS_LABEL[status] ?? status}</Badge>;
 }
 
 const DATE_FMT = new Intl.DateTimeFormat("es-MX", {

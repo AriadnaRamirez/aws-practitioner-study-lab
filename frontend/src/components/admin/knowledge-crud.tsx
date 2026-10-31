@@ -8,27 +8,21 @@ import {
   deleteKnowledge,
   updateKnowledge,
 } from "@/lib/admin-content-api";
-import {
-  ADMIN_BUTTON,
-  ADMIN_INPUT,
-  ADMIN_LABEL,
-  ADMIN_TABLE,
-  ADMIN_TEXTAREA,
-  AdminBadge,
-  AdminEmpty,
-  AdminNotice,
-  AdminSection,
-} from "./admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
 import {
   ADMIN_SELECT,
-  AdminStat,
-  AdminStatGrid,
-  ContentStatusBadge,
-} from "./admin-metrics";
+  ADMIN_TABLE,
+  ADMIN_TEXTAREA,
+  AdminEmpty,
+  AdminSection,
+  FIELD_LABEL,
+} from "./admin-ui";
+import { AdminStat, AdminStatGrid, ContentStatusBadge } from "./admin-metrics";
 
 type Props = { initial: KnowledgeItem[]; topics: Topic[] };
-
-const ROW_BUTTON = "h-8 px-2.5 text-xs";
 
 export function KnowledgeCrud({ initial, topics }: Props) {
   const [rows, setRows] = useState(initial);
@@ -138,22 +132,25 @@ export function KnowledgeCrud({ initial, topics }: Props) {
         <AdminStat label="Track AIF" value={stats.aif} tone="accent" />
       </AdminStatGrid>
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {error ? (
+        <Notice tone="danger" boxed>
+          {error}
+        </Notice>
+      ) : null}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
         <AdminSection title="Nueva carta" description="Se usan las tres variantes de pregunta.">
           <form onSubmit={onCreate} className="grid gap-4">
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Nombre</span>
-              <input
-                className={ADMIN_INPUT}
+              <span className={FIELD_LABEL}>Nombre</span>
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Definición</span>
+              <span className={FIELD_LABEL}>Definición</span>
               <textarea
                 className={cn(ADMIN_TEXTAREA, "min-h-20")}
                 value={definition}
@@ -162,7 +159,7 @@ export function KnowledgeCrud({ initial, topics }: Props) {
               />
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Explicación</span>
+              <span className={FIELD_LABEL}>Explicación</span>
               <textarea
                 className={cn(ADMIN_TEXTAREA, "min-h-20")}
                 value={explanation}
@@ -171,16 +168,15 @@ export function KnowledgeCrud({ initial, topics }: Props) {
               />
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Distractores (separados por coma)</span>
-              <input
-                className={ADMIN_INPUT}
+              <span className={FIELD_LABEL}>Distractores (separados por coma)</span>
+              <Input
                 value={distractors}
                 onChange={(e) => setDistractors(e.target.value)}
                 required
               />
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Tema</span>
+              <span className={FIELD_LABEL}>Tema</span>
               <select
                 className={ADMIN_SELECT}
                 value={topicId}
@@ -199,7 +195,7 @@ export function KnowledgeCrud({ initial, topics }: Props) {
               </select>
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Estado</span>
+              <span className={FIELD_LABEL}>Estado</span>
               <select
                 className={ADMIN_SELECT}
                 value={status}
@@ -212,13 +208,9 @@ export function KnowledgeCrud({ initial, topics }: Props) {
                 <option value="archived">Archivada</option>
               </select>
             </label>
-            <button
-              type="submit"
-              disabled={busy || !topicId}
-              className={ADMIN_BUTTON.primary}
-            >
+            <Button type="submit" disabled={busy || !topicId}>
               Crear carta
-            </button>
+            </Button>
           </form>
         </AdminSection>
 
@@ -227,13 +219,13 @@ export function KnowledgeCrud({ initial, topics }: Props) {
             <p className="text-sm text-[var(--foreground-muted)] tabular-nums">
               Mostrando {visible.length} de {rows.length}
             </p>
-            <input
+            <Input
               type="search"
               placeholder="Filtrar por nombre o definición…"
               aria-label="Filtrar cartas"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className={cn(ADMIN_INPUT, "sm:max-w-xs")}
+              className="sm:max-w-xs"
             />
           </div>
 
@@ -263,9 +255,9 @@ export function KnowledgeCrud({ initial, topics }: Props) {
                       </td>
                       <td className={ADMIN_TABLE.td}>
                         <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <AdminBadge tone={item.trackId === "AIF" ? "accent" : "neutral"}>
+                          <Badge tone={item.trackId === "AIF" ? "accent" : "neutral"}>
                             {item.trackId}
-                          </AdminBadge>
+                          </Badge>
                           <span className="text-xs text-[var(--foreground-muted)]">
                             {topicName.get(item.topicId) ?? "—"}
                           </span>
@@ -276,22 +268,24 @@ export function KnowledgeCrud({ initial, topics }: Props) {
                       </td>
                       <td className={ADMIN_TABLE.td}>
                         <div className="flex gap-1.5">
-                          <button
+                          <Button
                             type="button"
-                            className={cn(ADMIN_BUTTON.secondary, ROW_BUTTON)}
+                            variant="secondary"
+                            size="xs"
                             disabled={busy}
                             onClick={() => void onToggleStatus(item)}
                           >
                             {item.status === "published" ? "Pasar a borrador" : "Publicar"}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className={cn(ADMIN_BUTTON.danger, ROW_BUTTON)}
+                            variant="danger"
+                            size="xs"
                             disabled={busy}
                             onClick={() => void onDelete(item.id)}
                           >
                             Borrar
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>

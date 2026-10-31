@@ -2,16 +2,13 @@ import Link from "next/link";
 import type { AdminKpi, AdminMetrics } from "@aps/shared";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { DailyChart, ShareBar, Sparkline } from "@/components/admin/admin-charts";
-import {
-  ADMIN_BUTTON,
-  ADMIN_CARD,
-  ADMIN_LABEL,
-  ADMIN_TABLE,
-  AdminBadge,
-  AdminEmpty,
-  AdminPageHeader,
-  AdminSection,
-} from "@/components/admin/admin-ui";
+import { ADMIN_GRID, ADMIN_TABLE, AdminPage, AdminSection } from "@/components/admin/admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardLabel } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
+import { ProgressBar } from "@/components/ui/progress";
+import { Stat } from "@/components/ui/stat";
 import { getAdminMetrics } from "@/lib/usage-api";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +19,25 @@ const NUMBER = new Intl.NumberFormat("es-MX");
 function pct(rate: number, digits = 0): string {
   return `${(rate * 100).toFixed(digits)}%`;
 }
+
+/**
+ * Resumen on ADMIN_GRID, xl (12 tracks):
+ * ┌─────┬─────┬─────┬─────┐  8 KPI tiles, 3 tracks each
+ * ├─────┴─────┴─────┼─────┤
+ * │ partidas        │ est.│  chart 8 + panel 4
+ * ├─────────────────┼─────┤
+ * │ respuestas      │ cont│
+ * ├───────────┬─────┴─────┤
+ * │ fallados  │ actividad │  tables 6 + 6
+ * └───────────┴───────────┘
+ * Below xl: KPIs two per row, every panel full width.
+ */
+const TILE = {
+  kpi: "xl:col-span-3",
+  chart: "col-span-2 xl:col-span-8",
+  side: "col-span-2 xl:col-span-4",
+  half: "col-span-2 xl:col-span-6",
+} as const;
 
 type Delta = { text: string; tone: "up" | "down" | "flat" };
 
@@ -63,33 +79,29 @@ function KpiTile({
   const d = kpi ? delta(kpi, kind, baseline ?? kpi.previous) : null;
   const Icon = d?.tone === "up" ? ArrowUpRight : d?.tone === "down" ? ArrowDownRight : Minus;
   return (
-    <div className={cn(ADMIN_CARD, "flex min-w-0 flex-col gap-3 p-3.5 sm:p-4")}>
-      <p className={ADMIN_LABEL}>{label}</p>
+    <Card padding="sm" className={cn("flex flex-col gap-3", TILE.kpi)}>
+      <CardLabel as="p">{label}</CardLabel>
       <div className="flex items-end justify-between gap-3">
-        <p className="text-3xl font-bold leading-none tracking-tight tabular-nums text-[var(--foreground)]">
+        <p className="text-3xl font-extrabold leading-none tracking-tight tabular-nums text-[var(--foreground)]">
           {value}
         </p>
         {series ? <Sparkline values={series} className="hidden w-20 shrink-0 sm:block" /> : null}
       </div>
-      <p className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--foreground-muted)]">
+      <p className="mt-auto flex flex-wrap items-center gap-1.5 text-xs text-[var(--foreground-muted)]">
         {d ? (
-          <span
-            className={cn(
-              "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-semibold tabular-nums",
-              d.tone === "up" && "bg-emerald-500/15 text-emerald-300",
-              d.tone === "down" && "bg-red-500/15 text-red-300",
-              d.tone === "flat" && "bg-[var(--surface-elevated)]",
-            )}
+          <Badge
+            tone={d.tone === "up" ? "success" : d.tone === "down" ? "danger" : "neutral"}
+            className="tabular-nums"
           >
-            <Icon className="size-3" aria-hidden />
+            <Icon aria-hidden />
             {d.text}
-          </span>
+          </Badge>
         ) : null}
         <span>
           {hint ?? (d ? "vs. 7 días previos" : "Sin datos de la semana previa")}
         </span>
       </p>
-    </div>
+    </Card>
   );
 }
 
@@ -121,18 +133,12 @@ function Overview({ m }: { m: AdminMetrics }) {
   }).format(now);
 
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        title="Resumen"
-        description={`Actividad de estudiantes en los últimos ${m.daily.length} días, en hora de Ciudad de México. Las cuentas de administración no cuentan.`}
-        actions={
-          <span className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs text-[var(--foreground-muted)]">
-            Actualizado a las {updated}
-          </span>
-        }
-      />
-
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+    <AdminPage
+      title="Resumen"
+      description={`Actividad de estudiantes en los últimos ${m.daily.length} días, en hora de Ciudad de México. Las cuentas de administración no cuentan.`}
+      actions={<Badge>Actualizado a las {updated}</Badge>}
+    >
+      <div className={ADMIN_GRID}>
         <KpiTile
           label="Estudiantes activos · 7 días"
           value={NUMBER.format(m.kpis.activeUsers.current)}
@@ -182,13 +188,11 @@ function Overview({ m }: { m: AdminMetrics }) {
           value={pct(m.guests.conversionRate)}
           hint={`${m.guests.converted} de ${m.guests.total} invitados crearon cuenta`}
         />
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
         <AdminSection
           title="Partidas y estudiantes activos"
           description="Por día. Pasa el cursor sobre una barra para ver el detalle."
-          className="xl:col-span-2"
+          className={TILE.chart}
         >
           <DailyChart
             points={m.daily.map((d) => ({ date: d.date, bar: d.sessions, line: d.activeUsers }))}
@@ -197,20 +201,21 @@ function Overview({ m }: { m: AdminMetrics }) {
           />
         </AdminSection>
 
-        <AdminSection title="Estudiantes" description="Cuántos avanzan en cada paso.">
+        <AdminSection
+          title="Estudiantes"
+          description="Cuántos avanzan en cada paso."
+          className={TILE.side}
+        >
           <dl className="grid grid-cols-3 gap-2">
             {[
               { label: "Registrados", value: m.totals.students },
               { label: "Activos hoy", value: m.activeToday },
               { label: "Suspendidos", value: m.totals.banned },
             ].map((s) => (
-              <div key={s.label} className="rounded-xl bg-[var(--surface-elevated)] px-3 py-2.5">
-                <dt className="text-[11px] text-[var(--foreground-muted)]">{s.label}</dt>
-                <dd className="mt-0.5 text-xl font-bold tabular-nums">{NUMBER.format(s.value)}</dd>
-              </div>
+              <Stat key={s.label} label={s.label} value={NUMBER.format(s.value)} />
             ))}
           </dl>
-          <div className="mt-5 space-y-4">
+          <div className="my-5 space-y-4">
             <ShareBar label="Registrados" value={m.funnel.registered} total={m.funnel.registered} />
             <ShareBar
               label="Empezaron a estudiar"
@@ -223,17 +228,18 @@ function Overview({ m }: { m: AdminMetrics }) {
               total={m.funnel.registered}
             />
           </div>
-          <Link href="/admin/usuarios" className={cn(ADMIN_BUTTON.secondary, "mt-5 w-full")}>
+          <Link
+            href="/admin/usuarios"
+            className={buttonVariants({ variant: "secondary", size: "sm", className: "mt-auto w-full" })}
+          >
             Ver usuarios
           </Link>
         </AdminSection>
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
         <AdminSection
           title="Respuestas y precisión"
           description="Respuestas por día y porcentaje de aciertos."
-          className="xl:col-span-2"
+          className={TILE.chart}
         >
           <DailyChart
             points={m.daily.map((d) => ({
@@ -251,6 +257,7 @@ function Overview({ m }: { m: AdminMetrics }) {
         <AdminSection
           title="Contenido"
           description={`${NUMBER.format(m.totals.publishedItems)} conceptos publicados.`}
+          className={TILE.side}
         >
           <dl className="space-y-3 text-sm">
             <div className="flex items-baseline justify-between gap-3">
@@ -270,26 +277,25 @@ function Overview({ m }: { m: AdminMetrics }) {
               <dd className="font-semibold tabular-nums">{NUMBER.format(m.guests.sessions)}</dd>
             </div>
           </dl>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link href="/admin/flash" className={ADMIN_BUTTON.secondary}>
+          <div className="mt-auto flex flex-wrap gap-2 pt-5">
+            <Link href="/admin/flash" className={buttonVariants({ variant: "secondary", size: "sm" })}>
               Cartas
             </Link>
-            <Link href="/admin/import" className={ADMIN_BUTTON.ghost}>
+            <Link href="/admin/import" className={buttonVariants({ variant: "ghost", size: "sm" })}>
               Importar
             </Link>
           </div>
         </AdminSection>
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
         <AdminSection
           title="Conceptos más fallados"
           description="Últimos 30 días, con al menos 3 intentos. Buenos candidatos para revisar el contenido."
+          className={TILE.half}
         >
           {m.mostMissed.length === 0 ? (
             <p className="text-sm text-[var(--foreground-muted)]">Aún no hay suficientes intentos.</p>
           ) : (
-            <div className={cn(ADMIN_TABLE.wrap, "-mx-1 bg-transparent")}>
+            <div className="-mx-1 overflow-x-auto rounded-xl">
               <table className={ADMIN_TABLE.table}>
                 <thead className={ADMIN_TABLE.thead}>
                   <tr>
@@ -310,12 +316,7 @@ function Overview({ m }: { m: AdminMetrics }) {
                       <td className={cn(ADMIN_TABLE.td, "text-right font-semibold")}>{item.misses}</td>
                       <td className={ADMIN_TABLE.td}>
                         <div className="flex items-center gap-2">
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                            <div
-                              className="h-full rounded-full bg-red-400/80"
-                              style={{ width: `${Math.round(item.missRate * 100)}%` }}
-                            />
-                          </div>
+                          <ProgressBar value={item.missRate} max={1} tone="danger" className="flex-1" />
                           <span className="w-9 text-right text-xs">{pct(item.missRate)}</span>
                         </div>
                       </td>
@@ -327,11 +328,15 @@ function Overview({ m }: { m: AdminMetrics }) {
           )}
         </AdminSection>
 
-        <AdminSection title="Actividad reciente" description="Últimas partidas de estudiantes.">
+        <AdminSection
+          title="Actividad reciente"
+          description="Últimas partidas de estudiantes."
+          className={TILE.half}
+        >
           {m.recentSessions.length === 0 ? (
             <p className="text-sm text-[var(--foreground-muted)]">Todavía no hay partidas.</p>
           ) : (
-            <div className={cn(ADMIN_TABLE.wrap, "-mx-1 bg-transparent")}>
+            <div className="-mx-1 overflow-x-auto rounded-xl">
               <table className={ADMIN_TABLE.table}>
                 <thead className={ADMIN_TABLE.thead}>
                   <tr>
@@ -356,9 +361,9 @@ function Overview({ m }: { m: AdminMetrics }) {
                       </td>
                       <td className={ADMIN_TABLE.td}>
                         {s.endedAt ? (
-                          <AdminBadge tone="success">Terminada</AdminBadge>
+                          <Badge tone="success">Terminada</Badge>
                         ) : (
-                          <AdminBadge tone="warning">Sin terminar</AdminBadge>
+                          <Badge tone="warning">Sin terminar</Badge>
                         )}
                       </td>
                       <td className={cn(ADMIN_TABLE.td, "whitespace-nowrap text-right text-[var(--foreground-muted)]")}>
@@ -372,7 +377,7 @@ function Overview({ m }: { m: AdminMetrics }) {
           )}
         </AdminSection>
       </div>
-    </div>
+    </AdminPage>
   );
 }
 
@@ -380,14 +385,12 @@ export default async function AdminResumenPage() {
   const metrics = await getAdminMetrics();
   if (!metrics) {
     return (
-      <div className="space-y-6">
-        <AdminPageHeader title="Resumen" />
-        <AdminEmpty>
-          No se pudieron cargar las métricas. Revisa que la API esté arriba y que el header{" "}
-          <code className="text-xs">x-admin-token</code> coincida con{" "}
-          <code className="text-xs">ADMIN_TOKEN</code>.
-        </AdminEmpty>
-      </div>
+      <AdminPage title="Resumen">
+        <Notice tone="warning" boxed>
+          No se pudieron cargar las métricas. Revisa que la API esté arriba y que tu sesión de
+          administración siga vigente.
+        </Notice>
+      </AdminPage>
     );
   }
   return <Overview m={metrics} />;

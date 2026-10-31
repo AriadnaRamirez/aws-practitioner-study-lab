@@ -1,12 +1,6 @@
 import { cn } from "@/lib/utils";
 import { getAdminGuests } from "@/lib/usage-api";
-import {
-  ADMIN_TABLE,
-  AdminBadge,
-  AdminEmpty,
-  AdminNotice,
-  AdminPageHeader,
-} from "@/components/admin/admin-ui";
+import { ADMIN_TABLE, AdminEmpty, AdminPage } from "@/components/admin/admin-ui";
 import {
   AdminStat,
   AdminStatGrid,
@@ -14,6 +8,8 @@ import {
   formatPercent,
   formatRelative,
 } from "@/components/admin/admin-metrics";
+import { Badge } from "@/components/ui/badge";
+import { Notice } from "@/components/ui/notice";
 
 export default async function AdminGuestsPage() {
   const { data, source } = await getAdminGuests();
@@ -25,16 +21,14 @@ export default async function AdminGuestsPage() {
   const now = Date.now();
 
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        title="Invitados"
-        description="Pruebas sin cuenta desde la landing: sesiones usadas y conversión a registro."
-      />
-
+    <AdminPage
+      title="Invitados"
+      description="Pruebas sin cuenta desde la landing: sesiones usadas y conversión a registro."
+    >
       {source === "unavailable" ? (
-        <AdminNotice tone="warning">
+        <Notice tone="warning" boxed>
           La API no respondió; no se pudieron cargar los invitados.
-        </AdminNotice>
+        </Notice>
       ) : null}
 
       <AdminStatGrid>
@@ -74,9 +68,9 @@ export default async function AdminGuestsPage() {
                   </td>
                   <td className={ADMIN_TABLE.td}>
                     {g.converted ? (
-                      <AdminBadge tone="success">Convertido</AdminBadge>
+                      <Badge tone="success">Convertido</Badge>
                     ) : (
-                      <AdminBadge>Sin cuenta</AdminBadge>
+                      <Badge>Sin cuenta</Badge>
                     )}
                   </td>
                   <td className={cn(ADMIN_TABLE.td, "font-mono text-xs text-[var(--foreground-muted)]")}>
@@ -93,6 +87,6 @@ export default async function AdminGuestsPage() {
           </table>
         </div>
       )}
-    </div>
+    </AdminPage>
   );
 }

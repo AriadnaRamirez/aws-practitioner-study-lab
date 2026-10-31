@@ -3,10 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Flame, LogOut } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { PublicUser } from "@aps/shared";
 import { Logo } from "@/components/brand/logo";
 import { PodiumTrophy } from "@/components/shell/podium-trophy";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useModal } from "@/components/ui/dialog";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { ProgressRing } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/spinner";
 import {
   fetchProgressOverview,
   getStoredToken,
@@ -21,6 +32,7 @@ const STUDENT_ITEMS: NavItem[] = [
   { href: "/estudiar", label: "Estudiar", match: ["/estudiar"] },
   { href: "/mas-falladas", label: "Más falladas" },
   { href: "/guias", label: "Guías" },
+  { href: "/minijuegos", label: "Minijuegos" },
   { href: "/cuenta", label: "Cuenta", match: ["/cuenta"] },
 ];
 
@@ -43,6 +55,7 @@ function StreakPill({ days }: { days: number }) {
       role="img"
       aria-label={label}
       title={label}
+      data-tour="header-stats"
       className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[var(--surface-elevated)] px-3 text-xs font-semibold tabular-nums text-[var(--foreground-muted)]"
     >
       <Flame
@@ -61,6 +74,28 @@ function StreakPill({ days }: { days: number }) {
   );
 }
 
+type Mastery = { pct: number; mastered: number; total: number };
+
+function MasteryPill({ pct, mastered, total }: Mastery) {
+  const label = `${pct}% de conceptos dominados (${mastered} de ${total}). Ver tu progreso`;
+  return (
+    <Link
+      href="/cuenta?tab=progreso"
+      aria-label={label}
+      title={label}
+      data-tour="header-stats"
+      className={cn(
+        "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[var(--surface-elevated)] pl-2 pr-3 text-xs font-semibold tabular-nums text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]",
+        FOCUS_RING,
+      )}
+    >
+      <ProgressRing value={pct} thickness={16} className="size-5" />
+      <span className="text-[var(--foreground)]">{pct}%</span>
+      <span className="hidden sm:inline">dominado</span>
+    </Link>
+  );
+}
+
 export function AppNav() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
@@ -71,6 +106,9 @@ export function AppNav() {
   const [ready, setReady] = useState(false);
   const [panelTop, setPanelTop] = useState(56);
   const [dailyStreak, setDailyStreak] = useState<number | null>(null);
+  const [mastery, setMastery] = useState<Mastery | null>(null);
+  const [statsFailed, setStatsFailed] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     const stored = getStoredUser();
@@ -80,14 +118,23 @@ export function AppNav() {
 
     if (!token) {
       setDailyStreak(null);
+      setMastery(null);
       return;
     }
     let cancelled = false;
     fetchProgressOverview()
       .then((overview) => {
-        if (!cancelled) setDailyStreak(overview.dailyStreak);
+        if (cancelled) return;
+        setDailyStreak(overview.dailyStreak);
+        setMastery({
+          pct: Math.round(Math.min(100, Math.max(0, overview.masteryPct))),
+          mastered: overview.masteredItems,
+          total: overview.totalTrackableItems,
+        });
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setStatsFailed(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -107,6 +154,8 @@ export function AppNav() {
     return () => window.removeEventListener("resize", measure);
   }, [menuOpen]);
 
+  useModal(menuOpen, closeMenu, panelRef);
+
   useEffect(() => {
     if (!menuOpen) return;
 
@@ -116,9 +165,6 @@ export function AppNav() {
       active = true;
     }, 50);
 
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setMenuOpen(false);
-    }
     function onPointer(e: Event) {
       if (!active) return;
       const target = e.target as Node;
@@ -131,16 +177,11 @@ export function AppNav() {
       setMenuOpen(false);
     }
 
-    document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onPointer);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
 
     return () => {
       window.clearTimeout(arm);
-      document.removeEventListener("keydown", onKey);
       document.removeEventListener("pointerdown", onPointer);
-      document.body.style.overflow = prev;
     };
   }, [menuOpen]);
 
@@ -165,7 +206,8 @@ export function AppNav() {
 
   const linkClass = (active: boolean) =>
     cn(
-      "shrink-0 py-1 text-sm transition-colors",
+      "shrink-0 rounded-md py-1 text-sm transition-colors",
+      FOCUS_RING,
       active
         ? "font-semibold text-[var(--foreground)]"
         : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
@@ -174,7 +216,7 @@ export function AppNav() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 bg-[var(--background)]/95 backdrop-blur-sm"
+      className="sticky top-0 z-50 bg-[var(--nav-bg)] backdrop-blur-sm"
     >
       <a
         href="#contenido"
@@ -182,14 +224,18 @@ export function AppNav() {
       >
         Saltar al contenido
       </a>
-      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-3 px-6 py-3 sm:px-6 lg:max-w-6xl lg:px-8">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-3 px-5 py-3 sm:px-6 lg:max-w-6xl lg:px-8">
         <div className="flex min-w-0 items-center gap-2.5 lg:gap-3">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="inline-flex min-w-0 items-center"
+            className={cn("inline-flex min-w-0 items-center rounded-lg", FOCUS_RING)}
             aria-label="AWS Study Lab"
           >
-            <Logo size={28} withWordmark />
+            <Logo
+              size={28}
+              withWordmark
+              className={cn(user && "[&>span]:max-sm:hidden")}
+            />
           </Link>
         </div>
 
@@ -202,6 +248,7 @@ export function AppNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                data-tour={`nav-${item.href.slice(1)}`}
                 className={linkClass(isActive(item))}
                 aria-current={isActive(item) ? "page" : undefined}
               >
@@ -215,31 +262,44 @@ export function AppNav() {
             )}
           </nav>
 
+          {user && mastery ? <MasteryPill {...mastery} /> : null}
           {user && dailyStreak !== null ? (
             <StreakPill days={dailyStreak} />
+          ) : null}
+          {user && !mastery && !statsFailed ? (
+            <>
+              <Skeleton className="h-9 w-16 shrink-0 rounded-full sm:w-28" />
+              <Skeleton className="h-9 w-16 shrink-0 rounded-full sm:w-32" />
+            </>
           ) : null}
           {user ? <PodiumTrophy /> : null}
           {user ? (
             <Link
               href="/logout"
-              className="hidden h-9 items-center gap-1.5 rounded-full bg-[var(--surface-elevated)] px-3.5 text-xs font-semibold text-[var(--foreground-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)] lg:inline-flex"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "hidden gap-1.5 lg:inline-flex",
+              )}
             >
               <LogOut className="size-4" aria-hidden />
               Salir
             </Link>
           ) : null}
 
-          <button
+          <Button
             ref={buttonRef}
             type="button"
-            className="inline-flex h-9 items-center rounded-full bg-[var(--surface-elevated)] px-4 text-xs font-semibold text-[var(--foreground)] lg:hidden"
+            variant="secondary"
+            size="sm"
+            className="lg:hidden"
+            data-tour="nav-menu"
             aria-expanded={menuOpen}
             aria-controls={MENU_ID}
             aria-haspopup="true"
             onClick={() => setMenuOpen((o) => !o)}
           >
             {menuOpen ? "Cerrar" : "Menú"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -249,15 +309,17 @@ export function AppNav() {
           <button
             type="button"
             aria-label="Cerrar menú"
-            className="fixed inset-0 z-[60] bg-black/55 lg:hidden"
+            tabIndex={-1}
+            className="fixed inset-0 z-[60] bg-[var(--scrim)] lg:hidden"
             style={{ top: panelTop }}
-            onClick={() => setMenuOpen(false)}
+            onClick={closeMenu}
           />
           <nav
             ref={panelRef}
             id={MENU_ID}
             aria-label="Móvil"
-            className="fixed inset-x-0 z-[70] bg-[var(--background)] px-6 py-3 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.75)] lg:hidden"
+            tabIndex={-1}
+            className="fixed inset-x-0 z-[70] bg-[var(--background)] px-5 py-3 shadow-[var(--shadow-overlay)] outline-none sm:px-6 lg:hidden"
             style={{ top: panelTop }}
           >
             <ul className="mx-auto flex w-full max-w-5xl flex-col lg:max-w-6xl">

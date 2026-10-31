@@ -8,27 +8,22 @@ import {
   deleteQuestion,
   updateQuestion,
 } from "@/lib/admin-content-api";
-import {
-  ADMIN_BUTTON,
-  ADMIN_INPUT,
-  ADMIN_LABEL,
-  ADMIN_TABLE,
-  ADMIN_TEXTAREA,
-  AdminBadge,
-  AdminEmpty,
-  AdminNotice,
-  AdminSection,
-} from "./admin-ui";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
 import {
   ADMIN_SELECT,
-  AdminStat,
-  AdminStatGrid,
-  ContentStatusBadge,
-} from "./admin-metrics";
+  ADMIN_TABLE,
+  ADMIN_TEXTAREA,
+  AdminEmpty,
+  AdminSection,
+  FIELD_LABEL,
+} from "./admin-ui";
+import { AdminStat, AdminStatGrid, ContentStatusBadge } from "./admin-metrics";
 
 type Props = { initial: ExamQuestion[]; topics: Topic[] };
 
-const ROW_BUTTON = "h-8 px-2.5 text-xs";
 const MAX_VISIBLE = 80;
 
 export function QuestionsCrud({ initial, topics }: Props) {
@@ -139,13 +134,17 @@ export function QuestionsCrud({ initial, topics }: Props) {
         <AdminStat label="Track AIF" value={stats.aif} tone="accent" />
       </AdminStatGrid>
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {error ? (
+        <Notice tone="danger" boxed>
+          {error}
+        </Notice>
+      ) : null}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
         <AdminSection title="Nueva pregunta" description="Opción múltiple: marca la respuesta correcta.">
           <form onSubmit={onCreate} className="grid gap-4">
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Enunciado</span>
+              <span className={FIELD_LABEL}>Enunciado</span>
               <textarea
                 className={cn(ADMIN_TEXTAREA, "min-h-20")}
                 value={stem}
@@ -154,7 +153,7 @@ export function QuestionsCrud({ initial, topics }: Props) {
               />
             </label>
             <fieldset className="grid gap-2">
-              <legend className={cn(ADMIN_LABEL, "mb-1.5")}>Opciones</legend>
+              <legend className={cn(FIELD_LABEL, "mb-1.5")}>Opciones</legend>
               {choiceFields.map(([val, set], i) => (
                 <div key={i} className="flex items-center gap-2">
                   <input
@@ -165,8 +164,7 @@ export function QuestionsCrud({ initial, topics }: Props) {
                     aria-label={`Opción ${String.fromCharCode(65 + i)} es la correcta`}
                     className="size-4 shrink-0 accent-[var(--accent)]"
                   />
-                  <input
-                    className={ADMIN_INPUT}
+                  <Input
                     value={val}
                     onChange={(e) => set(e.target.value)}
                     placeholder={`Opción ${String.fromCharCode(65 + i)}`}
@@ -180,7 +178,7 @@ export function QuestionsCrud({ initial, topics }: Props) {
               </p>
             </fieldset>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Explicación</span>
+              <span className={FIELD_LABEL}>Explicación</span>
               <textarea
                 className={cn(ADMIN_TEXTAREA, "min-h-20")}
                 value={explanation}
@@ -189,7 +187,7 @@ export function QuestionsCrud({ initial, topics }: Props) {
               />
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Tema</span>
+              <span className={FIELD_LABEL}>Tema</span>
               <select
                 className={ADMIN_SELECT}
                 value={topicId}
@@ -208,7 +206,7 @@ export function QuestionsCrud({ initial, topics }: Props) {
               </select>
             </label>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Estado</span>
+              <span className={FIELD_LABEL}>Estado</span>
               <select
                 className={ADMIN_SELECT}
                 value={status}
@@ -221,13 +219,9 @@ export function QuestionsCrud({ initial, topics }: Props) {
                 <option value="archived">Archivada</option>
               </select>
             </label>
-            <button
-              type="submit"
-              disabled={busy || !topicId}
-              className={ADMIN_BUTTON.primary}
-            >
+            <Button type="submit" disabled={busy || !topicId}>
               Crear pregunta
-            </button>
+            </Button>
           </form>
         </AdminSection>
 
@@ -236,13 +230,13 @@ export function QuestionsCrud({ initial, topics }: Props) {
             <p className="text-sm text-[var(--foreground-muted)] tabular-nums">
               {rows.length} preguntas · mostrando {Math.min(visible.length, MAX_VISIBLE)}
             </p>
-            <input
+            <Input
               type="search"
               placeholder="Filtrar por enunciado…"
               aria-label="Filtrar preguntas"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className={cn(ADMIN_INPUT, "sm:max-w-xs")}
+              className="sm:max-w-xs"
             />
           </div>
 
@@ -269,9 +263,9 @@ export function QuestionsCrud({ initial, topics }: Props) {
                       </td>
                       <td className={ADMIN_TABLE.td}>
                         <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <AdminBadge tone={q.trackId === "AIF" ? "accent" : "neutral"}>
+                          <Badge tone={q.trackId === "AIF" ? "accent" : "neutral"}>
                             {q.trackId}
-                          </AdminBadge>
+                          </Badge>
                           <span className="text-xs text-[var(--foreground-muted)]">
                             {topicName.get(q.topicId) ?? "—"}
                           </span>
@@ -282,22 +276,24 @@ export function QuestionsCrud({ initial, topics }: Props) {
                       </td>
                       <td className={ADMIN_TABLE.td}>
                         <div className="flex gap-1.5">
-                          <button
+                          <Button
                             type="button"
-                            className={cn(ADMIN_BUTTON.secondary, ROW_BUTTON)}
+                            variant="secondary"
+                            size="xs"
                             disabled={busy}
                             onClick={() => void onToggle(q)}
                           >
                             {q.status === "published" ? "Pasar a borrador" : "Publicar"}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className={cn(ADMIN_BUTTON.danger, ROW_BUTTON)}
+                            variant="danger"
+                            size="xs"
                             disabled={busy}
                             onClick={() => void onDelete(q.id)}
                           >
                             Borrar
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>

@@ -43,7 +43,7 @@ function moduleGuide(id: StudyGuideId, categoryId: StudyCategoryId): StudyGuide 
   };
 }
 
-export const STUDY_GUIDES: StudyGuide[] = [
+const STUDY_GUIDES: StudyGuide[] = [
   {
     id: "servicios-aws",
     group: "aws",
@@ -92,21 +92,81 @@ export function guideConceptCount(
   return guideSections(guide, items).reduce((n, s) => n + s.items.length, 0);
 }
 
+const MEANS_QUOTED = /significa\s+[“"']([^”"']+)[”"']/;
+const MEANS_PLAIN = /significa\s+([^.:\n]+)/;
+const TRADE_NAME = /es un nombre comercial, no una sigla/;
+
 /**
- * Nota breve del concepto. Muchas explicaciones repiten la definición tras
- * la pista del nombre ("S3 significa…. <definición>"); solo queda lo nuevo.
+ * Sigla o “Nombre comercial”, para mostrarla junto al nombre y no como párrafo.
+ */
+export function guideLabel(item: KnowledgeItem): string | null {
+  const note = item.explanation?.trim() ?? "";
+  const quoted = note.match(MEANS_QUOTED);
+  if (quoted) return quoted[1].trim();
+  const plain = note.match(MEANS_PLAIN);
+  if (plain) return plain[1].trim();
+  return null;
+}
+
+function stripNaming(note: string): string {
+  return note
+    .replace(/(?:^|\s)[^.!?]*significa\s+[“"'][^”"']+[”"']\.?\s*/g, " ")
+    .replace(/(?:^|\s)[^.!?]*significa\s+[^.:]+[.:]\s*/g, " ")
+    .replace(/(?:^|\s)[^.!?]*es un nombre comercial, no una sigla\.?\s*/g, " ");
+}
+
+function contentWords(text: string): string[] {
+  return text
+    .toLocaleLowerCase("es")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 3);
+}
+
+function sharedRatio(sentence: string, definition: string): number {
+  const words = contentWords(sentence);
+  const def = new Set(contentWords(definition));
+  if (words.length < 4 || def.size < 3) return 0;
+  let shared = 0;
+  for (const word of words) if (def.has(word)) shared += 1;
+  return shared / words.length;
+}
+
+/** Frases que solo reformulan la definición. */
+function restatesDefinition(sentence: string, definition: string): boolean {
+  const ratio = sharedRatio(sentence, definition);
+  if (ratio >= 0.45) return true;
+  const copula = /^\s*(?:el |la |los |las |un |una )?\S+\s+es\s+(?:un|una|el|la)\b/i.test(
+    sentence,
+  );
+  return copula && ratio >= 0.25;
+}
+
+/**
+ * Nota breve del concepto. Quita la definición repetida, la pista de la sigla
+ * y las frases que solo reformulan lo mismo.
  */
 export function guideNote(item: KnowledgeItem): string | null {
-  const note = item.explanation?.trim();
-  if (!note) return null;
+  const raw = item.explanation?.trim();
+  if (!raw) return null;
   const definition = item.definition.trim().replace(/[.\s]+$/, "");
-  if (!definition) return note;
-  const at = note.toLocaleLowerCase("es").indexOf(definition.toLocaleLowerCase("es"));
-  if (at === -1) return note;
-  const rest = `${note.slice(0, at)} ${note.slice(at + definition.length).replace(/^[.\s]+/, "")}`
-    .replace(/\s+/g, " ")
-    .trim();
-  return rest || null;
+  let note = raw;
+  if (definition) {
+    const at = note.toLocaleLowerCase("es").indexOf(definition.toLocaleLowerCase("es"));
+    if (at !== -1) {
+      note = `${note.slice(0, at)} ${note.slice(at + definition.length).replace(/^[.\s]+/, "")}`;
+    }
+  }
+  note = stripNaming(note).replace(/\s+/g, " ").trim().replace(/^[.\s]+/, "");
+
+  const kept = note
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence && !restatesDefinition(sentence, item.definition));
+  const text = kept.join(" ").trim();
+  if (!text) return null;
+  return text.charAt(0).toLocaleUpperCase("es") + text.slice(1);
 }
 
 export function guidePrintTitle(guide: StudyGuide): string {

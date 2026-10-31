@@ -1,4 +1,4 @@
-import type { ExamQuestion, KnowledgeItem, Topic } from "@aps/shared";
+import type { KnowledgeItem, Topic } from "@aps/shared";
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
@@ -20,7 +20,7 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 /** Fallback mocks if API is down — keeps /admin navigable offline. */
-export const MOCK_TOPICS: Topic[] = [
+const MOCK_TOPICS: Topic[] = [
   {
     id: "topic-compute",
     trackId: "CLF",
@@ -92,22 +92,6 @@ export const MOCK_KNOWLEDGE: KnowledgeItem[] = [
   },
 ];
 
-export const MOCK_QUESTIONS: ExamQuestion[] = [
-  {
-    id: "eq-ec2-use",
-    topicId: "topic-compute",
-    trackId: "CLF",
-    stem: "¿Qué servicio proporciona cómputo virtual redimensionable?",
-    choices: ["Amazon EC2", "Amazon S3", "Amazon Route 53", "Amazon SNS"],
-    correctIndex: 0,
-    explanation: "EC2 = Elastic Compute Cloud.",
-    status: "published",
-    externalKey: "clf.q.ec2-use",
-    createdAt: "2026-10-24T12:00:00.000Z",
-    updatedAt: "2026-10-24T12:00:00.000Z",
-  },
-];
-
 export async function getTopics(): Promise<{
   data: Topic[];
   source: "api" | "mock";
@@ -124,13 +108,4 @@ export async function getKnowledgeItems(): Promise<{
   const data = await fetchJson<KnowledgeItem[]>("/knowledge-items");
   if (data) return { data, source: "api" };
   return { data: MOCK_KNOWLEDGE, source: "mock" };
-}
-
-export async function getExamQuestions(): Promise<{
-  data: ExamQuestion[];
-  source: "api" | "mock";
-}> {
-  const data = await fetchJson<ExamQuestion[]>("/exam-questions");
-  if (data) return { data, source: "api" };
-  return { data: MOCK_QUESTIONS, source: "mock" };
 }

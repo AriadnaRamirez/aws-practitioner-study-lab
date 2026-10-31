@@ -19,7 +19,9 @@ import { UpdateAdminUserDto } from './dto/admin-user.dto';
 
 @ApiTags('admin-usage')
 @ApiAdminTokenHeader()
-@ApiUnauthorizedResponse({ description: 'Missing/invalid x-admin-token' })
+@ApiUnauthorizedResponse({
+  description: 'Missing/invalid admin session (Bearer JWT, role ADMIN)',
+})
 @UseGuards(AdminGuard)
 @Controller('admin')
 export class AdminUsageController {

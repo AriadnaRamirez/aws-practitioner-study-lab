@@ -5,6 +5,22 @@ import {
   type StudyCategory,
 } from "@/lib/study-categories";
 
+/**
+ * Builder layout, lg and up: 12 tracks with the page gap; the builder takes 8, "Tu partida" 4 (sticky).
+ * ┌──────────────────────────┬────────────┐
+ * │ Arma tu partida          │ Tu partida │
+ * ├─────────────┬────────────┤            │
+ * │ cuántas     │ reparto    │            │
+ * ├─────────────┴────────────┤            │
+ * │ temas (two columns)      │            │
+ * └──────────────────────────┴────────────┘
+ * Inner rows split in halves on the same gap, so they land on tracks 1-4 and 5-8.
+ * Shared with BuilderSkeleton so the loading state keeps the same lines.
+ */
+export const BUILDER_GRID = "min-w-0 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6";
+export const BUILDER_MAIN = "min-w-0 lg:col-span-8 [@media(max-height:500px)]:md:col-span-8";
+export const BUILDER_HALVES = "grid sm:grid-cols-2";
+
 export type Distribution = "balanced" | "random";
 
 export type BuilderPreset = "all" | "services" | "concepts" | "weakest";

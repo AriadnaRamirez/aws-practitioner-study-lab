@@ -6,8 +6,13 @@ import type { PodiumResponse, StudySessionSummary } from "@aps/shared";
 import { Mascot } from "@/components/brand/mascot";
 import { Medal } from "@/components/shell/podium-trophy";
 import { Button } from "@/components/ui/button";
+import { Card, CardLabel } from "@/components/ui/card";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { ProgressRing } from "@/components/ui/progress";
+import { Stat } from "@/components/ui/stat";
 import { fetchPodium } from "@/lib/api";
 import { ofPlayers } from "@/lib/podium-standing";
+import { cn } from "@/lib/utils";
 
 const HOME_HREF = "/dashboard";
 const AUTO_RETURN_SECONDS = 10;
@@ -27,47 +32,14 @@ function headline(pct: number): string {
   return "Cada error suma: sigue practicando";
 }
 
-function AccuracyRing({ pct }: { pct: number }) {
-  const radius = 52;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.min(100, Math.max(0, pct));
+/** Fills from zero on mount so the ring animates in. */
+function useFillIn(target: number): number {
   const [filled, setFilled] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setFilled(clamped), 50);
+    const t = setTimeout(() => setFilled(target), 50);
     return () => clearTimeout(t);
-  }, [clamped]);
-  return (
-    <div className="relative size-36 shrink-0 sm:size-40 [@media(max-height:500px)]:md:size-28">
-      <svg viewBox="0 0 120 120" className="size-full -rotate-90" aria-hidden>
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          fill="none"
-          stroke="var(--surface-hover)"
-          strokeWidth="10"
-        />
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          fill="none"
-          stroke="var(--accent)"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - filled / 100)}
-          className="transition-[stroke-dashoffset] duration-1000 ease-out"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-4xl font-bold tabular-nums tracking-tight">
-          {Math.round(clamped)}%
-        </span>
-        <span className="text-xs text-[var(--foreground-muted)]">correctas</span>
-      </div>
-    </div>
-  );
+  }, [target]);
+  return filled;
 }
 
 function PodiumStanding({ podium }: { podium: PodiumResponse | null | "error" }) {
@@ -107,9 +79,9 @@ function PodiumStanding({ podium }: { podium: PodiumResponse | null | "error" })
         <Medal rank={me.rank as 1 | 2 | 3} className="h-14 w-11" />
       ) : null}
       <div>
-        <p className="font-display text-3xl font-bold tabular-nums tracking-tight">
+        <p className="text-3xl font-extrabold tabular-nums tracking-tight text-[var(--foreground)]">
           #{me.rank}
-          <span className="ml-2 font-sans text-sm font-medium text-[var(--foreground-muted)]">
+          <span className="ml-2 text-sm font-medium tracking-normal text-[var(--foreground-muted)]">
             {ofPlayers(totalRanked)}
           </span>
         </p>
@@ -154,6 +126,8 @@ export function SessionSummary({ summary, playAgain, extraAction }: Props) {
     return () => clearTimeout(t);
   }, [autoReturn, router, secondsLeft]);
 
+  const accuracy = Math.min(100, Math.max(0, summary.accuracyPct));
+  const filled = useFillIn(accuracy);
   const dailyStreak = summary.dailyStreak ?? 0;
   const mastered = summary.masteredInSession ?? 0;
   const stats = [
@@ -180,18 +154,27 @@ export function SessionSummary({ summary, playAgain, extraAction }: Props) {
   return (
     <section
       data-session-summary
-      className="mx-auto max-w-xl py-6 animate-[fade-up_0.4s_ease-out] lg:grid lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-10 xl:gap-x-14 [@media(max-height:500px)]:md:grid [@media(max-height:500px)]:md:max-w-none [@media(max-height:500px)]:md:grid-cols-2 [@media(max-height:500px)]:md:grid-rows-[auto_auto_auto_1fr] [@media(max-height:500px)]:md:gap-x-6 [@media(max-height:500px)]:md:py-2"
+      className="animate-fade-up mx-auto max-w-xl py-6 lg:grid lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-10 xl:gap-x-14 [@media(max-height:500px)]:md:grid [@media(max-height:500px)]:md:max-w-none [@media(max-height:500px)]:md:grid-cols-2 [@media(max-height:500px)]:md:grid-rows-[auto_auto_auto_1fr] [@media(max-height:500px)]:md:gap-x-6 [@media(max-height:500px)]:md:py-2"
       aria-labelledby="resumen-sesion"
     >
       <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left lg:col-start-1 lg:row-start-1 [@media(max-height:500px)]:md:col-start-1 [@media(max-height:500px)]:md:row-start-1 [@media(max-height:500px)]:md:gap-4">
-        <AccuracyRing pct={summary.accuracyPct} />
+        <ProgressRing
+          value={filled}
+          label="Respuestas correctas"
+          className="size-36 sm:size-40 [@media(max-height:500px)]:md:size-28"
+        >
+          <span className="text-4xl font-extrabold tabular-nums tracking-tight text-[var(--foreground)]">
+            {Math.round(accuracy)}%
+          </span>
+          <span className="text-xs text-[var(--foreground-muted)]">correctas</span>
+        </ProgressRing>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
+          <p className="text-sm text-[var(--foreground-muted)]">
             Resumen de tu sesión
           </p>
           <h2
             id="resumen-sesion"
-            className="font-display mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl"
+            className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl"
           >
             {headline(summary.accuracyPct)}
           </h2>
@@ -205,7 +188,7 @@ export function SessionSummary({ summary, playAgain, extraAction }: Props) {
         <Mascot
           pose="wave"
           size="sm"
-          float
+          glow={false}
           className="hidden shrink-0 sm:block [@media(max-height:500px)]:md:hidden"
         />
       </div>
@@ -213,29 +196,26 @@ export function SessionSummary({ summary, playAgain, extraAction }: Props) {
       <div className="lg:col-start-2 lg:row-span-4 lg:row-start-1 [@media(max-height:500px)]:md:col-start-2 [@media(max-height:500px)]:md:row-span-4 [@media(max-height:500px)]:md:row-start-1">
         <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:mt-0 lg:grid-cols-2 [@media(max-height:500px)]:md:mt-0 [@media(max-height:500px)]:md:grid-cols-2">
           {stats.map((s) => (
-            <div
+            <Stat
               key={s.label}
-              className="flex flex-col-reverse rounded-2xl bg-[var(--surface-elevated)] px-4 py-3 [@media(max-height:500px)]:md:py-2"
-            >
-              <dt className="text-xs text-[var(--foreground-muted)]">{s.label}</dt>
-              <dd className="font-display text-2xl font-bold tabular-nums">
-                {s.value}
-                {s.hint ? (
-                  <span className="ml-1 font-sans text-xs font-medium text-[var(--foreground-muted)]">
-                    {s.hint}
-                  </span>
-                ) : null}
-              </dd>
-            </div>
+              label={s.label}
+              value={s.value}
+              hint={s.hint}
+              className="[@media(max-height:500px)]:md:py-2"
+            />
           ))}
         </dl>
 
-        <div className="mt-4 rounded-2xl bg-[var(--surface-elevated)] px-5 py-4 [@media(max-height:500px)]:md:mt-3 [@media(max-height:500px)]:md:py-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
+        <Card
+          variant="flat"
+          padding="sm"
+          className="mt-4 [@media(max-height:500px)]:md:mt-3 [@media(max-height:500px)]:md:py-3"
+        >
+          <CardLabel as="p" className="mb-2">
             Tu posición en el podio
-          </p>
+          </CardLabel>
           <PodiumStanding podium={podium} />
-        </div>
+        </Card>
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:col-start-1 lg:row-start-2 [@media(max-height:500px)]:md:col-start-1 [@media(max-height:500px)]:md:row-start-2 [@media(max-height:500px)]:md:mt-4">
@@ -293,7 +273,10 @@ export function SessionSummary({ summary, playAgain, extraAction }: Props) {
               <button
                 type="button"
                 onClick={() => setAutoReturn(false)}
-                className="font-semibold text-[var(--foreground)] underline-offset-4 hover:underline"
+                className={cn(
+                  "rounded-full font-semibold text-[var(--foreground)] underline-offset-4 hover:underline",
+                  FOCUS_RING,
+                )}
               >
                 Quedarme aquí
               </button>

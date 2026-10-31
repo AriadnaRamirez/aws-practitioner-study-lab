@@ -7,17 +7,15 @@ import {
   type FeatureFlagDto,
 } from "@aps/shared";
 import { cn } from "@/lib/utils";
-import {
-  fetchFeatureFlags,
-  getAdminToken,
-  setAdminToken,
-  updateFeatureFlag,
-} from "@/lib/flags-api";
-import { ADMIN_CARD, AdminBadge, AdminEmpty, AdminNotice } from "./admin-ui";
+import { fetchFeatureFlags, updateFeatureFlag } from "@/lib/flags-api";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { Notice } from "@/components/ui/notice";
+import { AdminEmpty, AdminSkeleton } from "./admin-ui";
 import {
   AdminStat,
   AdminStatGrid,
-  AdminTokenDetails,
   formatAdminDateTime,
   formatRelative,
 } from "./admin-metrics";
@@ -37,7 +35,6 @@ const FLAG_COPY: Record<string, { title: string; description: string }> = {
 
 export function FlagsPanel() {
   const [flags, setFlags] = useState<FeatureFlagDto[]>([]);
-  const [token, setToken] = useState("dev-admin-token");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
@@ -57,17 +54,11 @@ export function FlagsPanel() {
   }, []);
 
   useEffect(() => {
-    setToken(getAdminToken());
     reload();
   }, [reload]);
 
-  function onTokenBlur() {
-    setAdminToken(token.trim() || "dev-admin-token");
-  }
-
   async function toggle(flag: FeatureFlagDto) {
     setError(null);
-    setAdminToken(token.trim() || "dev-admin-token");
     try {
       const updated = await updateFeatureFlag(
         flag.key,
@@ -92,7 +83,7 @@ export function FlagsPanel() {
   }, [flags]);
 
   if (loading && flags.length === 0) {
-    return <AdminEmpty>Cargando banderas…</AdminEmpty>;
+    return <AdminSkeleton rows={4} message="Cargando las banderas de funciones…" />;
   }
 
   return (
@@ -101,7 +92,7 @@ export function FlagsPanel() {
         <AdminStat
           label="Activas"
           value={`${stats.enabled} / ${flags.length}`}
-          tone={stats.enabled > 0 ? "success" : "default"}
+          tone={stats.enabled > 0 ? "success" : undefined}
         />
         <AdminStat label="Apagadas" value={flags.length - stats.enabled} />
         <AdminStat
@@ -119,7 +110,11 @@ export function FlagsPanel() {
         />
       </AdminStatGrid>
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {error ? (
+        <Notice tone="danger" boxed>
+          {error}
+        </Notice>
+      ) : null}
 
       {flags.length === 0 ? (
         <AdminEmpty>
@@ -134,17 +129,18 @@ export function FlagsPanel() {
               description: "Bandera de función",
             };
             return (
-              <li
+              <Card
+                as="li"
                 key={flag.key}
-                className={cn(ADMIN_CARD, "flex items-start justify-between gap-4")}
+                className="flex items-start justify-between gap-4"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold">{copy.title}</p>
+                    <p className="text-base font-semibold">{copy.title}</p>
                     {flag.enabled ? (
-                      <AdminBadge tone="success">Activa</AdminBadge>
+                      <Badge tone="success">Activa</Badge>
                     ) : (
-                      <AdminBadge>Apagada</AdminBadge>
+                      <Badge>Apagada</Badge>
                     )}
                   </div>
                   <p className="mt-0.5 font-mono text-xs text-[var(--foreground-muted)]">
@@ -165,7 +161,8 @@ export function FlagsPanel() {
                   aria-pressed={flag.enabled}
                   aria-label={`${flag.enabled ? "Apagar" : "Activar"} ${copy.title}`}
                   className={cn(
-                    "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:opacity-50",
+                    "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50",
+                    FOCUS_RING,
                     flag.enabled
                       ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)]"
                       : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
@@ -179,13 +176,11 @@ export function FlagsPanel() {
                     )}
                   />
                 </button>
-              </li>
+              </Card>
             );
           })}
         </ul>
       )}
-
-      <AdminTokenDetails value={token} onChange={setToken} onBlur={onTokenBlur} />
     </div>
   );
 }

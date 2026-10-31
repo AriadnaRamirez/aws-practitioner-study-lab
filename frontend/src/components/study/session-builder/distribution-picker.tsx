@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, type KeyboardEvent } from "react";
+import { FOCUS_RING } from "@/components/ui/focus";
 import { cn } from "@/lib/utils";
 import type { Distribution } from "./builder-model";
 
@@ -8,22 +9,16 @@ const OPTIONS: {
   id: Distribution;
   title: string;
   description: string;
-  /** Alturas (%) de las barritas del dibujo. */
-  bars: number[];
 }[] = [
   {
     id: "balanced",
-    title: "Parejo entre temas",
-    description:
-      "La misma cantidad de cartas de cada tema. Si uno se queda sin cartas, los demás completan.",
-    bars: [70, 70, 70, 70],
+    title: "Parejo",
+    description: "La misma cantidad de cada tema.",
   },
   {
     id: "random",
     title: "Al azar",
-    description:
-      "Cartas sueltas de toda tu selección: los temas con más cartas salen más.",
-    bars: [95, 35, 65, 20],
+    description: "Salen más los temas con más cartas.",
   },
 ];
 
@@ -58,7 +53,7 @@ export function DistributionPicker({
       role="radiogroup"
       aria-labelledby={labelledBy}
       onKeyDown={onKeyDown}
-      className="grid gap-2 sm:grid-cols-2"
+      className="grid grid-cols-2 gap-2"
     >
       {OPTIONS.map((opt, i) => {
         const active = value === opt.id;
@@ -74,54 +69,31 @@ export function DistributionPicker({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(opt.id)}
             className={cn(
-              "group flex min-w-0 items-start gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-colors",
-              "shadow-[0_10px_24px_-18px_rgba(0,0,0,0.7)]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-              "[@media(max-height:500px)]:py-2.5",
+              "flex min-w-0 flex-col rounded-xl px-3 py-2.5 text-left transition-colors",
+              FOCUS_RING,
               active
                 ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))]"
                 : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-hover)]",
             )}
           >
-            <span
-              aria-hidden
-              className="mt-0.5 flex h-8 w-9 shrink-0 items-end justify-between gap-[3px]"
-            >
-              {opt.bars.map((h, k) => (
-                <span
-                  key={k}
-                  className={cn(
-                    "w-1.5 rounded-full transition-colors",
-                    active
-                      ? "bg-[var(--accent)]"
-                      : "bg-[color-mix(in_srgb,var(--foreground)_28%,var(--surface))]",
-                  )}
-                  style={{ height: `${h}%` }}
-                />
-              ))}
+            <span className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className={cn(
+                  "inline-flex size-3.5 shrink-0 items-center justify-center rounded-full",
+                  active
+                    ? "bg-[var(--accent)]"
+                    : "bg-[var(--surface-hover)]",
+                )}
+              >
+                {active ? (
+                  <span className="size-1.5 rounded-full bg-[var(--accent-foreground)]" />
+                ) : null}
+              </span>
+              <span className="font-semibold text-[var(--foreground)]">{opt.title}</span>
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className={cn(
-                    "inline-flex size-4 shrink-0 items-center justify-center rounded-full transition-colors",
-                    active
-                      ? "bg-[var(--accent)]"
-                      : "bg-[color-mix(in_srgb,var(--foreground)_14%,var(--surface))]",
-                  )}
-                >
-                  {active ? (
-                    <span className="size-1.5 rounded-full bg-[var(--accent-foreground)]" />
-                  ) : null}
-                </span>
-                <span className="font-semibold text-[var(--foreground)]">
-                  {opt.title}
-                </span>
-              </span>
-              <span className="mt-1 block text-xs leading-relaxed text-[var(--foreground-muted)]">
-                {opt.description}
-              </span>
+            <span className="mt-1 text-xs leading-snug text-[var(--foreground-muted)]">
+              {opt.description}
             </span>
           </button>
         );

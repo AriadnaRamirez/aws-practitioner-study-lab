@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getStoredToken } from "@/lib/api";
-import { Spinner } from "@/components/ui/spinner";
+import { ScreenLoader } from "@/components/ui/screen-loader";
 
 type Props = {
   children: React.ReactNode;
@@ -37,15 +37,19 @@ export function RequireAuth({ children, fallback = "login" }: Props) {
     router.replace(`/login?next=${encodeURIComponent(next)}`);
   }, [fallback, pathname, router]);
 
-  if (ok !== true) {
+  if (ok === null) {
+    return <ScreenLoader pose="security" message="Comprobando tu sesión…" />;
+  }
+  if (!ok) {
     return (
-      <div
-        className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-20 text-sm text-[var(--foreground-muted)]"
-        aria-busy="true"
-      >
-        <Spinner label="Comprobando sesión" />
-        <p>Redirigiendo…</p>
-      </div>
+      <ScreenLoader
+        pose="wave"
+        message={
+          fallback === "home"
+            ? "Te llevamos al inicio…"
+            : "Te llevamos a iniciar sesión…"
+        }
+      />
     );
   }
 

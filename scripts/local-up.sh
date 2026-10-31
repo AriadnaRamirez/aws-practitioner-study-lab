@@ -25,7 +25,6 @@ fi
 if [[ ! -f frontend/.env.local ]]; then
   cat > frontend/.env.local <<'EOF'
 NEXT_PUBLIC_API_URL=http://127.0.0.1:43124/api/v1
-NEXT_PUBLIC_ADMIN_TOKEN=dev-admin-token
 EOF
   echo "==> Creado frontend/.env.local"
 fi

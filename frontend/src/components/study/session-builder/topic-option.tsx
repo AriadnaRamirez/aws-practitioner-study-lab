@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { FOCUS_RING } from "@/components/ui/focus";
 import { cn } from "@/lib/utils";
 import { plural, type TopicOption } from "./builder-model";
 
@@ -23,7 +24,7 @@ export function TopicOptionRow({
       onClick={onToggle}
       className={cn(
         "group flex w-full min-w-0 items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+        FOCUS_RING,
         "[@media(max-height:500px)]:py-2",
         checked
           ? "bg-[color-mix(in_srgb,var(--accent)_24%,var(--surface-elevated))] hover:bg-[color-mix(in_srgb,var(--accent)_30%,var(--surface-elevated))]"

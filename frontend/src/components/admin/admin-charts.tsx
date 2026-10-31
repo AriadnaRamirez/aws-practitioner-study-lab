@@ -1,7 +1,8 @@
+import { ProgressBar } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 /** "2026-10-28" → "28 oct" (civil date, no timezone shift). */
-export function shortDate(iso: string): string {
+function shortDate(iso: string): string {
   const d = new Date(`${iso}T12:00:00Z`);
   return new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", timeZone: "UTC" })
     .format(d)
@@ -35,7 +36,7 @@ function linePath(values: (number | null)[], max: number): string {
   return d;
 }
 
-export type ChartPoint = {
+type ChartPoint = {
   date: string;
   bar: number;
   line?: number | null;
@@ -196,12 +197,10 @@ export function ShareBar({
   label,
   value,
   total,
-  hint,
 }: {
   label: string;
   value: number;
   total: number;
-  hint?: string;
 }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
@@ -213,10 +212,7 @@ export function ShareBar({
           <span className="ml-1.5 text-xs text-[var(--foreground-muted)]">{pct}%</span>
         </span>
       </div>
-      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-        <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
-      </div>
-      {hint ? <p className="mt-1 text-[11px] text-[var(--foreground-muted)]">{hint}</p> : null}
+      <ProgressBar value={value} max={total} size="md" className="mt-1.5" />
     </div>
   );
 }

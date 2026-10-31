@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Trophy } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { PodiumEntry, PodiumResponse } from "@aps/shared";
 import { Mascot } from "@/components/brand/mascot";
-import { tileLinkClass } from "@/components/study/dashboard/dashboard-tile";
+import { tileLinkClass } from "@/components/dashboard/dashboard-tile";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardLabel } from "@/components/ui/card";
+import { DialogHeader, useModal } from "@/components/ui/dialog";
+import { IconButton } from "@/components/ui/icon-button";
+import { Notice } from "@/components/ui/notice";
 import { fetchPodium } from "@/lib/api";
 import { conceptos, ofPlayers, standingLine } from "@/lib/podium-standing";
 import { cn } from "@/lib/utils";
@@ -94,7 +99,7 @@ function PodiumColumn({
       <span className="mt-2 flex w-full min-w-0 items-center justify-center gap-1">
         <span
           className={cn(
-            "truncate text-[13px] font-semibold tracking-tight",
+            "truncate text-sm font-semibold tracking-tight",
             entry ? "text-[var(--foreground)]" : "text-[var(--foreground-muted)]",
           )}
           title={entry ? `@${entry.username}` : undefined}
@@ -102,12 +107,12 @@ function PodiumColumn({
           {entry ? `@${entry.username}` : "Libre"}
         </span>
         {isMe ? (
-          <span className="shrink-0 rounded-full bg-[var(--accent-soft)] px-1.5 text-[10px] font-bold leading-4 text-[var(--accent)]">
+          <Badge tone="accent" className="px-1.5 py-0">
             Tú
-          </span>
+          </Badge>
         ) : null}
       </span>
-      <span className="mt-0.5 h-4 whitespace-nowrap text-[11px] tabular-nums text-[var(--foreground-muted)]">
+      <span className="mt-0.5 h-4 whitespace-nowrap text-xs tabular-nums text-[var(--foreground-muted)]">
         {entry ? conceptos(entry.score) : null}
       </span>
       <div
@@ -129,29 +134,21 @@ function medalPlace(rank: number | undefined, fallback: number): 1 | 2 | 3 {
   return Math.min(3, Math.max(1, place)) as 1 | 2 | 3;
 }
 
-const OPEN_EVENT = "aps:open-podium";
-
-/** Opens the navbar podium panel from anywhere in the app. */
-export function openPodiumPanel() {
-  window.dispatchEvent(new Event(OPEN_EVENT));
-}
-
 export function PodiumTrophy() {
   const pathname = usePathname();
+  const titleId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<PodiumResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const close = useCallback(() => setOpen(false), []);
+
+  useModal(open, close, panelRef);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    const onOpen = () => setOpen(true);
-    window.addEventListener(OPEN_EVENT, onOpen);
-    return () => window.removeEventListener(OPEN_EVENT, onOpen);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -169,17 +166,12 @@ export function PodiumTrophy() {
         }
       });
 
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
     function onPointer(e: Event) {
       if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onPointer);
     return () => {
       cancelled = true;
-      document.removeEventListener("keydown", onKey);
       document.removeEventListener("pointerdown", onPointer);
     };
   }, [open]);
@@ -188,47 +180,46 @@ export function PodiumTrophy() {
   const me = data?.me;
 
   return (
-    <div ref={wrapperRef} className="relative">
-      <button
-        type="button"
+    <div ref={wrapperRef} className="relative" data-tour="header-stats">
+      <IconButton
         aria-label="Podio"
         aria-expanded={open}
         aria-controls={PANEL_ID}
+        aria-haspopup="dialog"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-          open
-            ? "text-[var(--foreground)]"
-            : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
+          "size-9 [&_svg]:size-[18px]",
+          open && "text-[var(--foreground)]",
         )}
       >
-        <Trophy className="size-[18px]" aria-hidden />
-      </button>
+        <Trophy aria-hidden />
+      </IconButton>
 
       {open ? (
         <div
+          ref={panelRef}
           id={PANEL_ID}
           role="dialog"
-          aria-label="Podio rápido"
-          className="animate-fade-up fixed right-4 top-[4.25rem] z-[80] w-[min(21rem,calc(100vw-2rem))] rounded-2xl bg-[var(--surface-elevated)] p-5 shadow-[0_28px_60px_-24px_rgba(0,0,0,0.85)] sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[21rem] sm:p-6"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          className="animate-fade-up fixed right-4 top-[4.25rem] z-[80] w-[min(21rem,calc(100vw-2rem))] rounded-2xl bg-[var(--surface-elevated)] p-5 shadow-[var(--shadow-float)] outline-none sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[21rem] sm:p-6"
         >
-          <div className="flex items-center gap-3">
-            <div className="min-w-0">
-              <p className="text-xl font-extrabold tracking-tight text-[var(--foreground)]">
-                Podio
-              </p>
-              <p className="mt-0.5 text-sm leading-snug text-[var(--foreground-muted)]">
-                ¿Quién va ganando? Domina conceptos y sube de lugar.
-              </p>
-            </div>
-          </div>
+          <DialogHeader titleId={titleId} title="Podio" onClose={close}>
+            <p className="mt-0.5 text-sm leading-snug text-[var(--foreground-muted)]">
+              ¿Quién va ganando? Domina conceptos y sube de lugar.
+            </p>
+          </DialogHeader>
 
           {error ? (
-            <p className="mt-5 text-sm text-[var(--foreground-muted)]" role="alert">
+            <Notice tone="danger" className="mt-5">
               El podio no está disponible por ahora.
-            </p>
+            </Notice>
           ) : !data ? (
             <div className="mt-5 flex items-end gap-2" aria-busy="true">
+              <span className="sr-only" role="status">
+                Cargando el podio…
+              </span>
               {PODIUM_SLOTS.map((slot) => (
                 <div
                   key={slot.index}
@@ -258,11 +249,9 @@ export function PodiumTrophy() {
           )}
 
           {data && me ? (
-            <div className="mt-4 rounded-xl bg-[var(--surface)] px-4 py-3.5">
+            <Card variant="inset" padding="none" className="mt-4 px-4 py-3.5">
               <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm font-semibold text-[var(--foreground-muted)]">
-                  Tu lugar
-                </p>
+                <CardLabel as="p">Tu lugar</CardLabel>
                 <p className="text-lg font-extrabold tabular-nums tracking-tight text-[var(--foreground)]">
                   {me.podiumHidden ? (
                     "Oculto"
@@ -283,7 +272,7 @@ export function PodiumTrophy() {
                 {" · "}
                 {standingLine(data)}
               </p>
-            </div>
+            </Card>
           ) : null}
 
           {data && me ? (

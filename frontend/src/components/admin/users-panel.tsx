@@ -1,27 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { AdminUserRow } from "@aps/shared";
 import { cn } from "@/lib/utils";
+import { resetAdminUserPassword, updateAdminUser } from "@/lib/admin-users-api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
+import { ADMIN_SELECT, ADMIN_TABLE, AdminEmpty } from "./admin-ui";
 import {
-  getAdminToken,
-  resetAdminUserPassword,
-  setAdminToken,
-  updateAdminUser,
-} from "@/lib/admin-users-api";
-import {
-  ADMIN_BUTTON,
-  ADMIN_INPUT,
-  ADMIN_TABLE,
-  AdminBadge,
-  AdminEmpty,
-  AdminNotice,
-} from "./admin-ui";
-import {
-  ADMIN_SELECT,
   AdminStat,
   AdminStatGrid,
-  AdminTokenDetails,
   formatAdminDate,
   formatRelative,
 } from "./admin-metrics";
@@ -33,7 +23,6 @@ type Props = {
 type SortKey = "activity" | "mastered" | "created";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const ROW_BUTTON = "h-8 px-2.5 text-xs";
 
 function time(iso: string | null | undefined): number {
   return iso ? new Date(iso).getTime() : 0;
@@ -41,21 +30,12 @@ function time(iso: string | null | undefined): number {
 
 export function UsersPanel({ initialUsers }: Props) {
   const [users, setUsers] = useState(initialUsers);
-  const [token, setToken] = useState("dev-admin-token");
   const [error, setError] = useState<string | null>(null);
   const [tempPass, setTempPass] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("activity");
   const [now] = useState(() => Date.now());
-
-  useEffect(() => {
-    setToken(getAdminToken());
-  }, []);
-
-  const withToken = useCallback(() => {
-    setAdminToken(token.trim() || "dev-admin-token");
-  }, [token]);
 
   const stats = useMemo(() => {
     const studentRows = users.filter((u) => u.role === "STUDENT");
@@ -86,7 +66,6 @@ export function UsersPanel({ initialUsers }: Props) {
   async function toggleHidden(user: AdminUserRow) {
     setError(null);
     setBusyId(user.id);
-    withToken();
     try {
       const updated = await updateAdminUser(user.id, {
         podiumHidden: !user.podiumHidden,
@@ -102,7 +81,6 @@ export function UsersPanel({ initialUsers }: Props) {
   async function toggleBan(user: AdminUserRow) {
     setError(null);
     setBusyId(user.id);
-    withToken();
     try {
       const updated = await updateAdminUser(user.id, {
         banned: !user.bannedAt,
@@ -126,7 +104,6 @@ export function UsersPanel({ initialUsers }: Props) {
     setError(null);
     setTempPass(null);
     setBusyId(user.id);
-    withToken();
     try {
       const res = await resetAdminUserPassword(user.id);
       setTempPass(`@${res.username}: ${res.temporaryPassword}`);
@@ -159,26 +136,30 @@ export function UsersPanel({ initialUsers }: Props) {
         <AdminStat
           label="Suspendidos"
           value={stats.banned}
-          tone={stats.banned > 0 ? "danger" : "default"}
+          tone={stats.banned > 0 ? "danger" : undefined}
         />
       </AdminStatGrid>
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {error ? (
+        <Notice tone="danger" boxed>
+          {error}
+        </Notice>
+      ) : null}
       {tempPass ? (
-        <AdminNotice tone="warning">
+        <Notice tone="warning" boxed>
           Contraseña temporal (cópiala ahora):{" "}
           <span className="font-mono font-semibold">{tempPass}</span>
-        </AdminNotice>
+        </Notice>
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <input
+        <Input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar por usuario o correo…"
           aria-label="Buscar usuarios"
-          className={cn(ADMIN_INPUT, "sm:max-w-sm")}
+          className="sm:max-w-sm"
         />
         <label className="flex items-center gap-2 text-sm text-[var(--foreground-muted)] sm:ml-auto">
           Ordenar por
@@ -223,9 +204,9 @@ export function UsersPanel({ initialUsers }: Props) {
                   </td>
                   <td className={ADMIN_TABLE.td}>
                     {u.role === "ADMIN" ? (
-                      <AdminBadge tone="accent">Admin</AdminBadge>
+                      <Badge tone="accent">Admin</Badge>
                     ) : (
-                      <AdminBadge>Estudiante</AdminBadge>
+                      <Badge>Estudiante</Badge>
                     )}
                   </td>
                   <td className={cn(ADMIN_TABLE.td, "text-right")}>{u.sessionsTotal ?? 0}</td>
@@ -252,44 +233,44 @@ export function UsersPanel({ initialUsers }: Props) {
                   <td className={ADMIN_TABLE.td}>
                     <div className="flex gap-1 whitespace-nowrap">
                       {u.bannedAt ? (
-                        <AdminBadge tone="danger">Suspendido</AdminBadge>
+                        <Badge tone="danger">Suspendido</Badge>
                       ) : (
-                        <AdminBadge tone="success">Activo</AdminBadge>
+                        <Badge tone="success">Activo</Badge>
                       )}
                       {u.podiumHidden ? (
-                        <AdminBadge tone="warning">Oculto del podio</AdminBadge>
+                        <Badge tone="warning">Oculto del podio</Badge>
                       ) : null}
                     </div>
                   </td>
                   <td className={ADMIN_TABLE.td}>
                     <div className="flex gap-1.5">
-                      <button
+                      <Button
                         type="button"
-                        className={cn(ADMIN_BUTTON.secondary, ROW_BUTTON)}
+                        variant="secondary"
+                        size="xs"
                         disabled={busyId === u.id}
                         onClick={() => void toggleHidden(u)}
                       >
                         {u.podiumHidden ? "Mostrar en podio" : "Ocultar del podio"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className={cn(
-                          u.bannedAt ? ADMIN_BUTTON.secondary : ADMIN_BUTTON.danger,
-                          ROW_BUTTON,
-                        )}
+                        variant={u.bannedAt ? "secondary" : "danger"}
+                        size="xs"
                         disabled={busyId === u.id || u.role === "ADMIN"}
                         onClick={() => void toggleBan(u)}
                       >
                         {u.bannedAt ? "Reactivar" : "Suspender"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className={cn(ADMIN_BUTTON.ghost, ROW_BUTTON)}
+                        variant="ghost"
+                        size="xs"
                         disabled={busyId === u.id}
                         onClick={() => void onReset(u)}
                       >
                         Restablecer contraseña
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -298,8 +279,6 @@ export function UsersPanel({ initialUsers }: Props) {
           </table>
         </div>
       )}
-
-      <AdminTokenDetails value={token} onChange={setToken} onBlur={withToken} />
     </div>
   );
 }

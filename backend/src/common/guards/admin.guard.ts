@@ -1,12 +1,14 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ApiHeader } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { timingSafeEqual } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 type AuthedRequest = {
@@ -14,8 +16,35 @@ type AuthedRequest = {
   user?: unknown;
 };
 
+/** Placeholders shipped in old `.env.example` files: never valid secrets. */
+const KNOWN_PLACEHOLDER_TOKENS = new Set(['dev-admin-token']);
+export const MIN_STATIC_ADMIN_TOKEN_LENGTH = 24;
+
 /**
- * Admin gate: Bearer JWT with role ADMIN, or legacy `x-admin-token`.
+ * Static `x-admin-token` for non-browser tooling (scripts, CI). Disabled unless
+ * `ADMIN_TOKEN` is set to a non-placeholder secret of sufficient length.
+ */
+export function configuredStaticAdminToken(): string | null {
+  const raw = process.env.ADMIN_TOKEN?.trim();
+  if (!raw) return null;
+  if (KNOWN_PLACEHOLDER_TOKENS.has(raw)) return null;
+  if (raw.length < MIN_STATIC_ADMIN_TOKEN_LENGTH) return null;
+  return raw;
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+function firstHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+/**
+ * Admin gate: Bearer JWT of an active user with role ADMIN (401 without a valid
+ * session, 403 for non-admins), or the opt-in static `x-admin-token`.
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -27,53 +56,49 @@ export class AdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthedRequest>();
 
-    const rawHeader = request.headers['x-admin-token'];
-    const headerToken = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
-    const expected = process.env.ADMIN_TOKEN ?? 'dev-admin-token';
-    if (headerToken && headerToken === expected) {
+    const staticToken = configuredStaticAdminToken();
+    const headerToken = firstHeader(request.headers['x-admin-token']);
+    if (staticToken && headerToken && safeEqual(headerToken, staticToken)) {
       return true;
     }
 
-    const auth = request.headers.authorization;
-    const bearer = Array.isArray(auth) ? auth[0] : auth;
-    if (bearer?.startsWith('Bearer ')) {
-      const token = bearer.slice('Bearer '.length).trim();
-      try {
-        const payload = this.jwt.verify<{ sub?: string; role?: string }>(
-          token,
-          {
-            secret: process.env.JWT_SECRET ?? 'dev-only-insecure-jwt-secret',
-          },
-        );
-        if (payload.sub) {
-          const user = await this.prisma.user.findUnique({
-            where: { id: payload.sub },
-          });
-          if (
-            user &&
-            user.role === Role.ADMIN &&
-            user.bannedAt == null
-          ) {
-            request.user = user;
-            return true;
-          }
-        }
-      } catch {
-        /* fall through */
-      }
+    const bearer = firstHeader(request.headers.authorization);
+    if (!bearer?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Inicia sesión como administración.');
     }
 
-    throw new UnauthorizedException(
-      'Admin required. Use Bearer JWT (role ADMIN) or header x-admin-token.',
-    );
+    let sub: string | undefined;
+    try {
+      const payload = this.jwt.verify<{ sub?: string }>(
+        bearer.slice('Bearer '.length).trim(),
+        { secret: process.env.JWT_SECRET ?? 'dev-only-insecure-jwt-secret' },
+      );
+      sub = payload.sub;
+    } catch {
+      sub = undefined;
+    }
+    if (!sub) {
+      throw new UnauthorizedException('Sesión inválida o expirada.');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: sub } });
+    if (!user) {
+      throw new UnauthorizedException('Sesión inválida o expirada.');
+    }
+    if (user.role !== Role.ADMIN || user.bannedAt != null) {
+      throw new ForbiddenException('Se requiere una cuenta de administración.');
+    }
+
+    request.user = user;
+    return true;
   }
 }
 
-/** Swagger: document both admin auth styles. */
+/** Swagger: document the opt-in static header next to Bearer auth. */
 export const ApiAdminTokenHeader = () =>
   ApiHeader({
     name: 'x-admin-token',
     description:
-      'Legacy admin secret (ADMIN_TOKEN). Prefer Bearer JWT with role ADMIN.',
+      'Optional static secret for tooling (ADMIN_TOKEN, disabled when unset). Browsers use Bearer JWT with role ADMIN.',
     required: false,
   });

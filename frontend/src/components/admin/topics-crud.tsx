@@ -8,17 +8,18 @@ import {
   deleteTopic,
   updateTopic,
 } from "@/lib/admin-content-api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Notice } from "@/components/ui/notice";
 import {
-  ADMIN_BUTTON,
-  ADMIN_INPUT,
-  ADMIN_LABEL,
+  ADMIN_SELECT,
   ADMIN_TABLE,
-  AdminBadge,
   AdminEmpty,
-  AdminNotice,
   AdminSection,
+  FIELD_LABEL,
 } from "./admin-ui";
-import { ADMIN_SELECT, AdminStat, AdminStatGrid } from "./admin-metrics";
+import { AdminStat, AdminStatGrid } from "./admin-metrics";
 
 type Props = { initial: Topic[] };
 
@@ -26,8 +27,6 @@ const TYPE_LABEL: Record<Topic["type"], string> = {
   SERVICE: "Servicio",
   CONCEPT: "Concepto",
 };
-
-const ROW_BUTTON = "h-8 px-2.5 text-xs";
 
 export function TopicsCrud({ initial }: Props) {
   const [rows, setRows] = useState(initial);
@@ -114,23 +113,26 @@ export function TopicsCrud({ initial }: Props) {
         />
       </AdminStatGrid>
 
-      {error ? <AdminNotice tone="danger">{error}</AdminNotice> : null}
+      {error ? (
+        <Notice tone="danger" boxed>
+          {error}
+        </Notice>
+      ) : null}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
         <AdminSection title="Nuevo tema" description="Se agrega al final del orden indicado.">
           <form onSubmit={onCreate} className="grid gap-4">
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Nombre</span>
-              <input
+              <span className={FIELD_LABEL}>Nombre</span>
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className={ADMIN_INPUT}
               />
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="grid gap-1.5">
-                <span className={ADMIN_LABEL}>Track</span>
+                <span className={FIELD_LABEL}>Track</span>
                 <select
                   className={ADMIN_SELECT}
                   value={trackId}
@@ -141,7 +143,7 @@ export function TopicsCrud({ initial }: Props) {
                 </select>
               </label>
               <label className="grid gap-1.5">
-                <span className={ADMIN_LABEL}>Tipo</span>
+                <span className={FIELD_LABEL}>Tipo</span>
                 <select
                   className={ADMIN_SELECT}
                   value={type}
@@ -153,17 +155,17 @@ export function TopicsCrud({ initial }: Props) {
               </label>
             </div>
             <label className="grid gap-1.5">
-              <span className={ADMIN_LABEL}>Orden</span>
-              <input
+              <span className={FIELD_LABEL}>Orden</span>
+              <Input
                 type="number"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(Number(e.target.value))}
-                className={cn(ADMIN_INPUT, "tabular-nums")}
+                className="tabular-nums"
               />
             </label>
-            <button type="submit" disabled={busy} className={ADMIN_BUTTON.primary}>
+            <Button type="submit" disabled={busy}>
               Crear tema
-            </button>
+            </Button>
           </form>
         </AdminSection>
 
@@ -186,20 +188,20 @@ export function TopicsCrud({ initial }: Props) {
                   <tr key={t.id} className={ADMIN_TABLE.tr}>
                     <td className={cn(ADMIN_TABLE.td, "min-w-48")}>
                       {editId === t.id ? (
-                        <input
+                        <Input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           aria-label="Nombre del tema"
-                          className={cn(ADMIN_INPUT, "h-8")}
+                          className="h-8 px-3"
                         />
                       ) : (
                         <span className="font-semibold">{t.name}</span>
                       )}
                     </td>
                     <td className={ADMIN_TABLE.td}>
-                      <AdminBadge tone={t.trackId === "AIF" ? "accent" : "neutral"}>
+                      <Badge tone={t.trackId === "AIF" ? "accent" : "neutral"}>
                         {t.trackId}
-                      </AdminBadge>
+                      </Badge>
                     </td>
                     <td className={cn(ADMIN_TABLE.td, "text-[var(--foreground-muted)]")}>
                       {TYPE_LABEL[t.type] ?? t.type}
@@ -209,42 +211,46 @@ export function TopicsCrud({ initial }: Props) {
                       <div className="flex gap-1.5">
                         {editId === t.id ? (
                           <>
-                            <button
+                            <Button
                               type="button"
-                              className={cn(ADMIN_BUTTON.primary, ROW_BUTTON)}
+                              variant="soft"
+                              size="xs"
                               disabled={busy}
                               onClick={() => void onSaveEdit(t.id)}
                             >
                               Guardar
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
-                              className={cn(ADMIN_BUTTON.ghost, ROW_BUTTON)}
+                              variant="ghost"
+                              size="xs"
                               onClick={() => setEditId(null)}
                             >
                               Cancelar
-                            </button>
+                            </Button>
                           </>
                         ) : (
-                          <button
+                          <Button
                             type="button"
-                            className={cn(ADMIN_BUTTON.secondary, ROW_BUTTON)}
+                            variant="secondary"
+                            size="xs"
                             onClick={() => {
                               setEditId(t.id);
                               setEditName(t.name);
                             }}
                           >
                             Editar
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           type="button"
-                          className={cn(ADMIN_BUTTON.danger, ROW_BUTTON)}
+                          variant="danger"
+                          size="xs"
                           disabled={busy}
                           onClick={() => void onDelete(t.id)}
                         >
                           Borrar
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>

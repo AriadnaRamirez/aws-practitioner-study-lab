@@ -3,6 +3,7 @@
 import { useRef, type CSSProperties, type KeyboardEvent } from "react";
 import type { StudySize } from "@aps/shared";
 import { STUDY_SIZES } from "@aps/shared";
+import { FOCUS_RING } from "@/components/ui/focus";
 import { cn } from "@/lib/utils";
 
 /**
@@ -128,9 +129,9 @@ export function SessionSizePicker({
             onClick={() => onChange(n)}
             className={cn(
               "size-option flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 pb-2 pt-2.5 transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
+              FOCUS_RING,
               active
-                ? "bg-[color-mix(in_srgb,var(--accent)_16%,transparent)]"
+                ? "bg-[var(--accent-soft)]"
                 : "hover:bg-[var(--surface-hover)]",
             )}
           >

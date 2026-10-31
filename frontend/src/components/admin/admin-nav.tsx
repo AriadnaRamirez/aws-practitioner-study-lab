@@ -17,6 +17,10 @@ import {
   Users,
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { segmentedItem, segmentedList } from "@/components/ui/segmented";
 import { cn } from "@/lib/utils";
 
 type Item = { href: string; label: string; icon: LucideIcon };
@@ -50,8 +54,15 @@ function isActive(pathname: string, href: string) {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 }
 
-const LINK =
-  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]";
+const LINK = cn(
+  "flex items-center gap-2.5 rounded-full px-3 py-2 text-sm font-medium transition-colors",
+  FOCUS_RING,
+);
+
+const LINK_IDLE =
+  "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]";
+
+const GROUP_LABEL = "px-3 text-xs font-semibold text-[var(--foreground-muted)]";
 
 /** Desktop: fixed sidebar. Mobile: compact top bar with a scrolling tab strip. */
 export function AdminNav() {
@@ -61,19 +72,19 @@ export function AdminNav() {
   return (
     <>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col overflow-y-auto bg-[var(--surface)] px-3 py-5 lg:flex">
-        <Link href="/admin" className="flex items-center gap-2 px-3" aria-label="Panel de administración">
+        <Link
+          href="/admin"
+          className={cn("flex items-center gap-2 rounded-full px-3", FOCUS_RING)}
+          aria-label="Panel de administración"
+        >
           <Logo size={28} withWordmark />
         </Link>
-        <p className="mt-1 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--foreground-muted)]">
-          Administración
-        </p>
+        <p className={cn(GROUP_LABEL, "mt-1")}>Administración</p>
 
         <nav aria-label="Administración" className="mt-6 flex-1 space-y-6 overflow-y-auto">
           {GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--foreground-muted)]/80">
-                {group.label}
-              </p>
+              <p className={GROUP_LABEL}>{group.label}</p>
               <ul className="mt-1.5 space-y-0.5">
                 {group.items.map(({ href, label, icon: Icon }) => {
                   const active = isActive(pathname, href);
@@ -86,7 +97,7 @@ export function AdminNav() {
                           LINK,
                           active
                             ? "bg-[var(--surface-elevated)] text-[var(--foreground)]"
-                            : "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]",
+                            : LINK_IDLE,
                         )}
                       >
                         <Icon
@@ -104,17 +115,11 @@ export function AdminNav() {
         </nav>
 
         <div className="mt-4 space-y-0.5">
-          <Link
-            href="/dashboard"
-            className={cn(LINK, "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]")}
-          >
+          <Link href="/dashboard" className={cn(LINK, LINK_IDLE)}>
             <ArrowLeft className="size-4" aria-hidden />
             Volver al Lab
           </Link>
-          <Link
-            href="/logout"
-            className={cn(LINK, "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]")}
-          >
+          <Link href="/logout" className={cn(LINK, LINK_IDLE)}>
             <LogOut className="size-4" aria-hidden />
             Salir
           </Link>
@@ -123,49 +128,45 @@ export function AdminNav() {
 
       <header className="sticky top-0 z-40 bg-[var(--nav-bg)] backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <Link href="/admin" className="flex items-center gap-2" aria-label="Panel de administración">
+          <Link
+            href="/admin"
+            className={cn("flex items-center gap-2 rounded-full", FOCUS_RING)}
+            aria-label="Panel de administración"
+          >
             <Logo size={26} withWordmark />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--foreground-muted)]">
-              Admin
-            </span>
+            <Badge>Admin</Badge>
           </Link>
           <div className="flex items-center gap-1">
-            <Link
-              href="/dashboard"
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
-            >
+            <Link href="/dashboard" className={buttonVariants({ variant: "ghost", size: "xs" })}>
               Lab
             </Link>
             <Link
               href="/logout"
               aria-label="Salir"
-              className="rounded-lg p-1.5 text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
+              className={cn(buttonVariants({ variant: "ghost", size: "xs" }), "w-8 px-0")}
             >
               <LogOut className="size-4" aria-hidden />
             </Link>
           </div>
         </div>
-        <nav aria-label="Administración" className="flex gap-1 overflow-x-auto px-3 pb-2">
-          {items.map(({ href, label, icon: Icon }) => {
-            const active = isActive(pathname, href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
-                  active
-                    ? "bg-[var(--surface-elevated)] text-[var(--foreground)]"
-                    : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
-                )}
-              >
-                <Icon className={cn("size-3.5", active && "text-[var(--accent)]")} aria-hidden />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="px-3 pb-2">
+          <nav aria-label="Administración" className={segmentedList}>
+            {items.map(({ href, label, icon: Icon }) => {
+              const active = isActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={segmentedItem(active)}
+                >
+                  <Icon className={cn("size-3.5", active && "text-[var(--accent)]")} aria-hidden />
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </header>
     </>
   );

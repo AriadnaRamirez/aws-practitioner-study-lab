@@ -117,32 +117,43 @@
     page-break-inside: avoid;
   }
 
-  [data-guide-doc] .guide-concepts {
-    margin-top: 0 !important;
+  [data-guide-doc] .guide-topic > div {
+    background: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
   }
 
-  [data-guide-doc] .guide-concepts > * + * {
-    margin-top: 0 !important;
+  [data-guide-doc] .guide-concepts {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   [data-guide-doc] .guide-concept {
-    margin: 0 0 9pt !important;
-    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: 32mm minmax(0, 1fr);
+    gap: 4mm;
+    margin: 0 !important;
+    padding: 5pt 0 !important;
     border-radius: 0 !important;
     background: none !important;
+    border-bottom: 0.3pt solid #ccc;
   }
 
   [data-guide-doc] .guide-concept-name {
     font-size: 11pt !important;
   }
 
+  [data-guide-doc] .guide-concept-label {
+    font-size: 8.5pt !important;
+  }
+
   [data-guide-doc] .guide-concept-def {
-    margin-top: 2pt !important;
+    margin-top: 0 !important;
     font-size: 10.5pt !important;
   }
 
   [data-guide-doc] .guide-concept-note {
-    margin-top: 2pt !important;
+    margin-top: 1pt !important;
     font-size: 9.5pt !important;
   }
 }

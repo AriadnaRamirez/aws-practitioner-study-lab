@@ -9,9 +9,13 @@ import type {
   TopicProgressRow,
 } from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
-import { AwsMark } from "@/components/brand/aws-mark";
 import { CustomizeSessionDialog } from "@/components/study/customize-session-dialog";
+import { plural } from "@/components/study/session-builder/builder-model";
 import { SessionSizePicker } from "@/components/study/session-size-picker";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, cardVariants } from "@/components/ui/card";
+import { FOCUS_RING } from "@/components/ui/focus";
 import {
   STUDY_CATEGORIES,
   resolveCategoryTopicIds,
@@ -19,15 +23,10 @@ import {
   studyStartHref,
   type StudyCategory,
 } from "@/lib/study-categories";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /** Por defecto la partida mezcla todos los temas de ambos grupos. */
 const DEFAULT_CATEGORY_IDS = STUDY_CATEGORIES.map((c) => c.id);
-
-function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
 
 function lowerFirst(s: string): string {
   return s.charAt(0).toLowerCase() + s.slice(1);
@@ -73,9 +72,11 @@ export function resumeHref(s: ActiveSessionSummary): string {
 export function NewGameCard({
   topics,
   primarySession,
+  className,
 }: {
   topics: TopicProgressRow[];
   primarySession: ActiveSessionSummary | null;
+  className?: string;
 }) {
   const [gameSize, setGameSize] = useState<StudySize>(10);
   const [selectedCats, setSelectedCats] = useState<string[]>(DEFAULT_CATEGORY_IDS);
@@ -111,15 +112,12 @@ export function NewGameCard({
 
   return (
     <>
-      <div className="mx-auto mt-8 flex max-w-md flex-col gap-4 md:mt-0 md:max-w-none">
+      <div className={cn("flex flex-col gap-4", className)}>
         {primarySession ? (
           <div className="flex flex-col gap-2">
             <Link
               href={resumeHref(primarySession)}
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "inline-flex w-full justify-center",
-              )}
+              className={buttonVariants({ size: "lg", className: "w-full" })}
             >
               Continuar partida
             </Link>
@@ -132,28 +130,26 @@ export function NewGameCard({
 
         <section
           aria-labelledby="nueva-partida"
-          className="relative mb-3 animate-deck-in"
+          data-tour="new-game"
+          className="relative flex flex-1 flex-col pb-3 animate-deck-in"
         >
           <div
             aria-hidden
-            className="absolute inset-x-6 -bottom-3 top-6 rounded-2xl bg-[var(--surface-hover)] opacity-35"
+            className="absolute inset-x-6 bottom-0 top-6 rounded-2xl bg-[var(--surface-hover)] opacity-35"
           />
           <div
             aria-hidden
-            className="absolute inset-x-3 -bottom-1.5 top-3 rounded-2xl bg-[var(--surface-hover)] opacity-70 shadow-[0_10px_24px_-14px_rgba(0,0,0,0.6)]"
+            className="absolute inset-x-3 bottom-1.5 top-3 rounded-2xl bg-[var(--surface-hover)] opacity-70 shadow-[var(--shadow-float)]"
           />
 
-          <div className="relative overflow-hidden rounded-2xl bg-[var(--deck-face)] shadow-[0_18px_36px_-18px_rgba(0,0,0,0.55)]">
-            <div className="px-5 pb-5 pt-6 sm:px-6">
-              <div className="flex items-start justify-between gap-3">
-                <h2
-                  id="nueva-partida"
-                  className="font-sans text-3xl font-extrabold leading-none tracking-tight text-[var(--foreground)] sm:text-4xl"
-                >
-                  Nueva partida
-                </h2>
-                <AwsMark height={22} />
-              </div>
+          <div className="relative flex flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--deck-face)] shadow-[var(--shadow-float)]">
+            <div className="flex flex-1 flex-col px-5 pb-5 pt-6 sm:px-6">
+              <h2
+                id="nueva-partida"
+                className="text-3xl font-extrabold leading-none tracking-tight text-[var(--foreground)] sm:text-4xl"
+              >
+                Nueva partida
+              </h2>
               <p className="mt-2.5 text-sm text-[var(--foreground-muted)]">
                 <span className="font-semibold tabular-nums text-[var(--foreground)]">
                   {plural(cardsInGame, "carta", "cartas")}
@@ -161,8 +157,8 @@ export function NewGameCard({
                 al azar {scopePhrase(chosenTopicIds, knownTopicIds, chosenCats.length)}
               </p>
 
-              <div className="mt-5 space-y-2">
-                <div className="rounded-xl bg-[var(--surface)] px-3 pb-2 pt-3">
+              <div className="mt-auto space-y-2 pt-5">
+                <Card variant="inset" padding="none" className="px-3 pb-2 pt-3">
                   <p
                     id="tamano-sesion"
                     className="px-1 text-sm font-semibold text-[var(--foreground)]"
@@ -175,13 +171,17 @@ export function NewGameCard({
                     labelledBy="tamano-sesion"
                     className="mt-1.5"
                   />
-                </div>
+                </Card>
 
                 <button
                   type="button"
                   onClick={() => setCustomizeOpen(true)}
                   aria-haspopup="dialog"
-                  className="group flex w-full items-center gap-3 rounded-xl bg-[var(--surface)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface-hover)]"
+                  className={cn(
+                    cardVariants({ variant: "inset", padding: "none" }),
+                    "group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--surface-hover)]",
+                    FOCUS_RING,
+                  )}
                 >
                   <SlidersHorizontal
                     className="size-4 shrink-0 text-[var(--accent)]"
@@ -194,16 +194,16 @@ export function NewGameCard({
                     <span className="block text-xs text-[var(--foreground-muted)]">
                       Elige qué temas entran en tu partida
                     </span>
-                    <span className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-[11px] font-semibold text-[var(--foreground)] group-hover:bg-[var(--surface-elevated)]">
+                    <Badge className="mt-1.5 max-w-full gap-1.5 text-[var(--foreground)] group-hover:bg-[var(--surface-elevated)]">
                       <span
                         aria-hidden
                         className="size-1.5 shrink-0 rounded-full bg-[var(--accent)]"
                       />
-                      <span className="truncate">
+                      <span className="min-w-0 truncate">
                         {selectionSummary(chosenTopicIds, knownTopicIds, chosenCats)}
                         {poolSize ? ` · ${plural(poolSize, "carta", "cartas")}` : ""}
                       </span>
-                    </span>
+                    </Badge>
                   </span>
                   <ChevronRight
                     className="size-4 shrink-0 text-[var(--foreground-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--foreground)]"
@@ -216,13 +216,11 @@ export function NewGameCard({
             <div className="bg-[var(--card-face)] px-5 py-4 sm:px-6">
               <Link
                 href={gameHref}
-                className={cn(
-                  buttonVariants({
-                    variant: primarySession ? "secondary" : "default",
-                    size: "lg",
-                  }),
-                  "inline-flex w-full justify-center",
-                )}
+                className={buttonVariants({
+                  variant: primarySession ? "secondary" : "default",
+                  size: "lg",
+                  className: "w-full",
+                })}
               >
                 {isQuick ? "Iniciar partida rápida" : "Iniciar partida"}
               </Link>

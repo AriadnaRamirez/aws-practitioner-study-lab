@@ -18,7 +18,6 @@ import {
   type StudySize,
   type TopicProgressRow,
 } from "@aps/shared";
-import { AwsMark } from "@/components/brand/aws-mark";
 import { CelebrateBurst } from "@/components/study/celebrate-burst";
 import { FlashDeck } from "@/components/study/flash-deck";
 import {
@@ -26,7 +25,14 @@ import {
   type BuilderPreselect,
 } from "@/components/study/session-builder/session-builder";
 import { SessionSummary } from "@/components/study/session-summary";
-import { Button } from "@/components/ui/button";
+import {
+  BuilderSkeleton,
+  DeckSkeleton,
+} from "@/components/study/study-skeletons";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardLabel } from "@/components/ui/card";
+import { Notice } from "@/components/ui/notice";
+import { ProgressBar } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchMe, fetchTopicProgress, getStoredToken } from "@/lib/api";
 import { getTopics } from "@/lib/content-api";
@@ -443,13 +449,14 @@ export function FlashStudyClient() {
   }, [answered, uniqueItems]);
 
   if (phase === "boot" || phase === "starting") {
+    const resuming = Boolean(searchParams.get("session"));
+    if (phase === "boot" && !resuming && !searchParams.get("start")) {
+      return <BuilderSkeleton />;
+    }
     return (
-      <section className="py-8" aria-busy="true">
-        <Spinner label="Cargando" />
-        <div className="mt-8">
-          <FlashDeck wide loading eyebrow="Carta" title="…" />
-        </div>
-      </section>
+      <DeckSkeleton
+        message={resuming ? "Retomando tu partida…" : "Preparando tu partida…"}
+      />
     );
   }
 
@@ -460,11 +467,14 @@ export function FlashStudyClient() {
           Entra para estudiar.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/login">
-            <Button>Entrar</Button>
+          <Link href="/login" className={buttonVariants()}>
+            Entrar
           </Link>
-          <Link href="/register">
-            <Button variant="secondary">Crear cuenta</Button>
+          <Link
+            href="/register"
+            className={buttonVariants({ variant: "secondary" })}
+          >
+            Crear cuenta
           </Link>
         </div>
       </section>
@@ -475,12 +485,9 @@ export function FlashStudyClient() {
     return (
       <section className="min-w-0">
         {error ? (
-          <p
-            className="mb-6 rounded-xl bg-[color-mix(in_srgb,var(--danger)_18%,var(--surface))] px-4 py-3 text-sm text-[var(--foreground)]"
-            role="alert"
-          >
+          <Notice tone="danger" boxed className="mb-6">
             {error}
-          </p>
+          </Notice>
         ) : null}
         <SessionBuilder
           progressRows={progressRows}
@@ -516,7 +523,7 @@ export function FlashStudyClient() {
       className="mx-auto w-full min-w-0 py-2 md:max-w-xl lg:max-w-4xl [@media(max-height:500px)]:py-0 [@media(max-height:500px)]:md:max-w-none"
     >
       {scopeLabel ? (
-        <p className="mb-2 truncate text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)] [@media(max-height:500px)]:mb-1">
+        <p className="mb-2 truncate text-xs font-semibold text-[var(--foreground-muted)] [@media(max-height:500px)]:mb-1">
           {scopeLabel}
         </p>
       ) : null}
@@ -527,21 +534,11 @@ export function FlashStudyClient() {
         </p>
       </div>
 
-      <div
-        className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)] [@media(max-height:500px)]:mt-2"
-        role="progressbar"
-        aria-valuenow={progressPct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className="h-full rounded-full bg-[var(--foreground)] transition-[width] duration-300"
-          style={{
-            width: `${progressPct}%`,
-            boxShadow: "none",
-          }}
-        />
-      </div>
+      <ProgressBar
+        value={progressPct}
+        label="Progreso de la partida"
+        className="mt-4 [@media(max-height:500px)]:mt-2"
+      />
 
       {prompt ? (
         <div key={prompt.queueItemId} className="mt-8 [@media(max-height:500px)]:mt-3">
@@ -594,7 +591,6 @@ export function FlashStudyClient() {
                         )}
                         {feedback.correct ? "¡Correcto!" : "Incorrecto"}
                       </span>
-                      <AwsMark height={26} />
                     </div>
 
                     <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)] [@media(max-height:500px)]:mt-2">
@@ -644,10 +640,12 @@ export function FlashStudyClient() {
                   </div>
 
                   <div className="min-w-0">
-                    <div className="mt-4 rounded-xl bg-[var(--surface-elevated)] px-3.5 py-3 lg:mt-0 [@media(max-height:500px)]:md:mt-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)]">
-                        Explicación
-                      </p>
+                    <Card
+                      variant="inset"
+                      padding="sm"
+                      className="mt-4 lg:mt-0 [@media(max-height:500px)]:md:mt-0"
+                    >
+                      <CardLabel as="p">Explicación</CardLabel>
                       <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
                         {feedback.explanation?.trim()
                           ? feedback.explanation
@@ -655,7 +653,7 @@ export function FlashStudyClient() {
                             ? "Así se define este concepto."
                             : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
                       </p>
-                    </div>
+                    </Card>
 
                     <Button
                       className="mt-5 w-full [@media(max-height:500px)]:mt-3"
@@ -710,15 +708,18 @@ export function FlashStudyClient() {
           </FlashDeck>
         </div>
       ) : pending ? (
-        <div className="mt-8 [@media(max-height:500px)]:mt-3">
-          <FlashDeck wide loading eyebrow="Carta" title="…" footer="Cargando" />
+        <div className="mt-8 [@media(max-height:500px)]:mt-3" aria-busy="true">
+          <p className="sr-only" role="status">
+            Cargando la siguiente carta…
+          </p>
+          <FlashDeck wide loading eyebrow="Carta" title="" footer="Siguiente carta…" />
         </div>
       ) : null}
 
       {error ? (
-        <p className="mt-4 text-sm text-[var(--danger)]" role="alert">
+        <Notice tone="danger" className="mt-4">
           {error}
-        </p>
+        </Notice>
       ) : null}
     </section>
   );

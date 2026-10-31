@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { CuentaClient } from "@/components/study/cuenta/cuenta-client";
-import { parseCuentaTab } from "@/components/study/cuenta/cuenta-tabs";
+import { CuentaClient } from "@/components/cuenta/cuenta-client";
+import { parseCuentaTab } from "@/components/cuenta/cuenta-tabs";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {

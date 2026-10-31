@@ -5,10 +5,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Download } from "lucide-react";
 import type { KnowledgeItem } from "@aps/shared";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, cardVariants } from "@/components/ui/card";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { Notice } from "@/components/ui/notice";
+import { PAGE_TITLE, PageContainer, SectionTitle } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/spinner";
 import {
   fetchGuideKnowledge,
   guideById,
+  guideLabel,
   guideNote,
   guidePrintTitle,
   guideSections,
@@ -32,21 +37,31 @@ function Concept({
   headingLevel: "h2" | "h3";
 }) {
   const Heading = headingLevel;
+  const label = guideLabel(item);
   const note = guideNote(item);
   return (
-    <div className="guide-concept rounded-xl bg-[var(--surface)] p-4 sm:p-5">
-      <Heading className="guide-concept-name text-base font-bold tracking-tight text-[var(--foreground)]">
-        {item.name}
-      </Heading>
-      <p className="guide-concept-def mt-1.5 text-[15px] leading-relaxed text-[var(--foreground)]">
-        {item.definition}
-      </p>
-      {note ? (
-        <p className="guide-concept-note mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
-          <span className="font-semibold">Para recordar:</span> {note}
+    <li className="guide-concept grid grid-cols-1 gap-1 py-3.5 sm:grid-cols-[minmax(7.5rem,11rem)_minmax(0,1fr)] sm:items-baseline sm:gap-x-6">
+      <div className="min-w-0">
+        <Heading className="guide-concept-name text-base font-semibold leading-snug tracking-tight text-[var(--foreground)]">
+          {item.name}
+        </Heading>
+        {label ? (
+          <p className="guide-concept-label mt-0.5 text-xs leading-snug text-[var(--foreground-muted)]">
+            {label}
+          </p>
+        ) : null}
+      </div>
+      <div className="min-w-0">
+        <p className="guide-concept-def text-base leading-snug text-[var(--foreground)]">
+          {item.definition}
         </p>
-      ) : null}
-    </div>
+        {note ? (
+          <p className="guide-concept-note mt-1 text-sm leading-snug text-[var(--foreground-muted)]">
+            {note}
+          </p>
+        ) : null}
+      </div>
+    </li>
   );
 }
 
@@ -57,7 +72,6 @@ function Section({
   section: GuideSection;
   withHeading: boolean;
 }) {
-  const [first, ...rest] = section.items;
   const conceptHeading = withHeading ? "h3" : "h2";
   const headingId = `seccion-${section.category.id}`;
 
@@ -67,36 +81,33 @@ function Section({
       aria-labelledby={withHeading ? `${headingId}-titulo` : undefined}
       className="guide-topic mt-8 scroll-mt-6 first-of-type:mt-6"
     >
-      {/* Heading and first concept travel together so a heading never ends a page. */}
-      <div className="guide-keep">
+      <Card padding="none" className="overflow-hidden">
         {withHeading ? (
-          <div className="guide-topic-head mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2
-              id={`${headingId}-titulo`}
-              className="text-xl font-extrabold tracking-tight text-[var(--foreground)]"
-            >
-              {section.category.title}
-            </h2>
+          <div className="guide-topic-head guide-keep flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-[var(--border)] px-4 py-4 sm:px-5">
+            <SectionTitle id={`${headingId}-titulo`}>
+              {section.category.shortTitle}
+            </SectionTitle>
             <span className="guide-topic-meta text-sm tabular-nums text-[var(--foreground-muted)]">
               {conceptLabel(section.items.length)}
             </span>
           </div>
         ) : null}
-        {first ? (
-          <Concept item={first} headingLevel={conceptHeading} />
+        {section.items.length ? (
+          <ul className="guide-concepts divide-y divide-[var(--border)] px-4 sm:px-5">
+            {section.items.map((item) => (
+              <Concept
+                key={item.id}
+                item={item}
+                headingLevel={conceptHeading}
+              />
+            ))}
+          </ul>
         ) : (
-          <p className="text-sm text-[var(--foreground-muted)]">
+          <p className="px-4 py-4 text-sm text-[var(--foreground-muted)] sm:px-5">
             Todavía no hay conceptos publicados en este tema.
           </p>
         )}
-      </div>
-      {rest.length ? (
-        <div className="guide-concepts mt-3 space-y-3">
-          {rest.map((item) => (
-            <Concept key={item.id} item={item} headingLevel={conceptHeading} />
-          ))}
-        </div>
-      ) : null}
+      </Card>
     </section>
   );
 }
@@ -196,19 +207,11 @@ export function GuideDocumentClient({
 
   const toolbarActions = (
     <>
-      <Link
-        href="/guias"
-        className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-10")}
-      >
+      <Link href="/guias" className={buttonVariants({ variant: "ghost", size: "sm" })}>
         <ArrowLeft className="size-4" aria-hidden />
         Volver a Guías
       </Link>
-      <Button
-        size="sm"
-        className="h-10 px-4"
-        onClick={printGuide}
-        disabled={!items}
-      >
+      <Button size="sm" onClick={printGuide} disabled={!items}>
         <Download className="size-4" aria-hidden />
         Descargar PDF
       </Button>
@@ -216,14 +219,14 @@ export function GuideDocumentClient({
   );
 
   return (
-    <div
-      data-guide-page
-      className="mx-auto w-full min-w-0 max-w-3xl px-4 pb-24 pt-6 sm:px-6 lg:pt-8"
-    >
+    <PageContainer data-guide-page className="pb-24 sm:pb-24 lg:pb-24">
       <div
         ref={toolbarRef}
         data-guide-noprint
-        className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[var(--surface-elevated)] p-2 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.9)] print:hidden"
+        className={cn(
+          cardVariants({ padding: "none" }),
+          "flex flex-wrap items-center justify-between gap-2 p-2 print:hidden",
+        )}
       >
         {toolbarActions}
       </div>
@@ -237,7 +240,7 @@ export function GuideDocumentClient({
           <div
             role="toolbar"
             aria-label="Acciones de la guía"
-            className="pointer-events-auto flex max-w-full items-center gap-1.5 rounded-full bg-[var(--surface-elevated)] p-1.5 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.9)] motion-safe:animate-[pill-in_0.3s_ease-out_both]"
+            className="pointer-events-auto flex max-w-full items-center gap-1.5 rounded-full bg-[var(--surface-elevated)] p-1.5 shadow-[var(--shadow-float)] motion-safe:animate-[pill-in_0.3s_ease-out_both]"
           >
             {toolbarActions}
           </div>
@@ -251,17 +254,16 @@ export function GuideDocumentClient({
         className="mt-8"
       >
         <div className="guide-doc-head">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--foreground-muted)] print:hidden">
-            AWS Study Lab · Guía de estudio
+          <p className="guide-doc-brand hidden text-xs text-[var(--foreground-muted)] print:block">
+            AWS Study Lab
           </p>
           <h1
             id="guia-titulo"
-            className="guide-doc-title mt-2 font-sans text-3xl font-extrabold tracking-tight text-[var(--foreground)] sm:text-4xl"
+            className={cn("guide-doc-title", PAGE_TITLE)}
           >
-            <span className="hidden print:inline">AWS Study Lab · </span>
             {guide.title}
           </h1>
-          <p className="guide-doc-meta mt-2 text-sm text-[var(--foreground-muted)]">
+          <p className="guide-doc-meta mt-2 max-w-prose text-base text-[var(--foreground-muted)]">
             {guide.subtitle}
             {total !== null ? (
               <>
@@ -270,51 +272,59 @@ export function GuideDocumentClient({
               </>
             ) : null}
             {generatedOn ? (
-              <>
+              <span className="hidden print:inline">
                 <span aria-hidden> · </span>
                 Generada el {generatedOn}
-              </>
+              </span>
             ) : null}
           </p>
         </div>
 
         {error ? (
-          <div
-            role="alert"
-            className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl bg-[var(--surface)] p-4 text-sm text-[var(--foreground-muted)] print:hidden"
+          <Notice
+            tone="danger"
+            boxed
+            className="mt-8 print:hidden"
+            action={
+              <Button variant="secondary" size="sm" onClick={() => void load()}>
+                Reintentar
+              </Button>
+            }
           >
-            <span>{error}</span>
-            <Button variant="secondary" size="sm" onClick={() => void load()}>
-              Reintentar
-            </Button>
-          </div>
+            {error}
+          </Notice>
         ) : null}
 
         {!sections && !error ? (
-          <div className="mt-8 space-y-3" aria-hidden>
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" />
-            ))}
-          </div>
+          <>
+            <p className="sr-only" role="status">
+              Cargando la guía…
+            </p>
+            <Card padding="sm" className="mt-8 space-y-3" aria-hidden>
+              {Array.from({ length: 5 }, (_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-xl" />
+              ))}
+            </Card>
+          </>
         ) : null}
 
         {sections && multi ? (
-          <nav
-            aria-label="Temas de la guía"
-            className="guide-toc mt-6 rounded-2xl bg-[var(--surface)] p-4 sm:p-5"
-          >
+          <nav aria-label="Temas de la guía" className="guide-toc mt-6">
             <p className="text-sm font-semibold text-[var(--foreground)]">
-              En esta guía
+              Temas
             </p>
-            <ol className="mt-2 grid gap-1 sm:grid-cols-2">
+            <ol className="mt-2 flex flex-wrap gap-2">
               {sections.map((s) => (
                 <li key={s.category.id}>
                   <a
                     href={`#seccion-${s.category.id}`}
-                    className="flex items-baseline justify-between gap-3 rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] underline-offset-4 transition-colors hover:bg-[var(--surface-hover)] hover:underline"
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] transition-colors hover:bg-[var(--surface-hover)]",
+                      FOCUS_RING,
+                    )}
                   >
-                    <span>{s.category.title}</span>
-                    <span className="shrink-0 tabular-nums text-[var(--foreground-muted)]">
+                    <span>{s.category.shortTitle}</span>
+                    <span className="tabular-nums text-[var(--foreground-muted)]">
                       {s.items.length}
                     </span>
                   </a>
@@ -332,6 +342,6 @@ export function GuideDocumentClient({
           />
         ))}
       </article>
-    </div>
+    </PageContainer>
   );
 }

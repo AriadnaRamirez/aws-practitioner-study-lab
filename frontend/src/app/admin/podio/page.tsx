@@ -5,14 +5,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PodiumResponse, PodiumWindow } from "@aps/shared";
 import { cn } from "@/lib/utils";
 import { fetchPodium, getStoredToken } from "@/lib/api";
-import {
-  ADMIN_TABLE,
-  AdminBadge,
-  AdminEmpty,
-  AdminNotice,
-  AdminPageHeader,
-} from "@/components/admin/admin-ui";
+import { ADMIN_TABLE, AdminEmpty, AdminPage, AdminSkeleton } from "@/components/admin/admin-ui";
 import { AdminStat, AdminStatGrid } from "@/components/admin/admin-metrics";
+import { Badge } from "@/components/ui/badge";
+import { FOCUS_RING } from "@/components/ui/focus";
+import { Notice } from "@/components/ui/notice";
+import { ProgressBar } from "@/components/ui/progress";
+import { segmentedItem, segmentedList } from "@/components/ui/segmented";
 
 const WINDOWS: { id: PodiumWindow; label: string; hint: string }[] = [
   { id: "all", label: "Histórico", hint: "Todos los conceptos dominados." },
@@ -64,49 +63,38 @@ export default function AdminPodioPage() {
   const topScore = stats.leader?.score ?? 0;
 
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        title="Podio"
-        description="Ranking completo por conceptos dominados. Los estudiantes solo ven el top 3, a quien tienen justo arriba y su propio lugar; quien oculta su perfil no aparece."
-        actions={
-          authed ? (
-            <div
-              className="inline-flex rounded-xl bg-[var(--surface)] p-1"
-              role="tablist"
-              aria-label="Ventana del podio"
-            >
-              {WINDOWS.map((w) => (
-                <button
-                  key={w.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={window === w.id}
-                  onClick={() => setWindow(w.id)}
-                  className={cn(
-                    "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
-                    window === w.id
-                      ? "bg-[var(--surface-elevated)] text-[var(--foreground)]"
-                      : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]",
-                  )}
-                >
-                  {w.label}
-                </button>
-              ))}
-            </div>
-          ) : null
-        }
-      />
-
+    <AdminPage
+      title="Podio"
+      description="Ranking completo por conceptos dominados. Los estudiantes solo ven el top 3, a quien tienen justo arriba y su propio lugar; quien oculta su perfil no aparece."
+      actions={
+        authed ? (
+          <div className={segmentedList} role="tablist" aria-label="Ventana del podio">
+            {WINDOWS.map((w) => (
+              <button
+                key={w.id}
+                type="button"
+                role="tab"
+                aria-selected={window === w.id}
+                onClick={() => setWindow(w.id)}
+                className={segmentedItem(window === w.id)}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+        ) : null
+      }
+    >
       {!authed ? (
-        <AdminNotice tone="warning">
+        <Notice tone="warning" boxed>
           <Link
             href="/login?next=/admin/podio"
-            className="font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
+            className={cn("rounded-sm font-semibold underline underline-offset-2", FOCUS_RING)}
           >
             Entra como admin
           </Link>{" "}
           para ver el podio completo.
-        </AdminNotice>
+        </Notice>
       ) : (
         <>
           <AdminStatGrid>
@@ -129,9 +117,11 @@ export default function AdminPodioPage() {
           </AdminStatGrid>
 
           {loading ? (
-            <AdminEmpty>Cargando podio…</AdminEmpty>
+            <AdminSkeleton message="Cargando el ranking del podio…" />
           ) : error ? (
-            <AdminNotice tone="danger">{error}</AdminNotice>
+            <Notice tone="danger" boxed>
+              {error}
+            </Notice>
           ) : !data || data.entries.length === 0 ? (
             <AdminEmpty>Todavía no hay conceptos dominados en esta ventana.</AdminEmpty>
           ) : (
@@ -152,21 +142,14 @@ export default function AdminPodioPage() {
                     <tr key={entry.userId} className={ADMIN_TABLE.tr}>
                       <td className={ADMIN_TABLE.td}>
                         {entry.rank <= 3 ? (
-                          <AdminBadge tone="accent">#{entry.rank}</AdminBadge>
+                          <Badge tone="accent">#{entry.rank}</Badge>
                         ) : (
                           <span className="text-[var(--foreground-muted)]">#{entry.rank}</span>
                         )}
                       </td>
                       <td className={cn(ADMIN_TABLE.td, "font-semibold")}>@{entry.username}</td>
                       <td className={cn(ADMIN_TABLE.td, "hidden sm:table-cell")}>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-elevated)]">
-                          <div
-                            className="h-full rounded-full bg-[var(--accent)]"
-                            style={{
-                              width: `${topScore > 0 ? Math.round((entry.score / topScore) * 100) : 0}%`,
-                            }}
-                          />
-                        </div>
+                        <ProgressBar value={entry.score} max={topScore} />
                       </td>
                       <td className={cn(ADMIN_TABLE.td, "text-right font-semibold")}>
                         {entry.score}
@@ -179,6 +162,6 @@ export default function AdminPodioPage() {
           )}
         </>
       )}
-    </div>
+    </AdminPage>
   );
 }
