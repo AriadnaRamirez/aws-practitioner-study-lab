@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Eye, Lightbulb } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Lightbulb,
+} from "lucide-react";
 import type { KnowledgeItem } from "@aps/shared";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,9 +28,12 @@ import { categoryBadge, type GameCategory } from "@/lib/minigames/categories";
 import {
   buildCrossword,
   cellKey,
+  crosswordCountLabel,
   crosswordTopics,
   entryCells,
-  pickHints,
+  HINT_LETTERS,
+  hintCells,
+  hyphenCells,
   type Crossword,
   type CrosswordEntry,
   type Direction,
@@ -71,11 +81,11 @@ function CrucigramaFlow({ items }: { items: KnowledgeItem[] }) {
   return (
     <GamePicker
       title="Crucigrama"
-      subtitle="Lee cada pista y escribe el nombre del servicio o concepto. Las palabras largas traen su primera letra de pista. Sin espacios ni acentos: Route 53 se escribe ROUTE53."
+      subtitle="Escribe el nombre, en inglés si así se llama. Sin acentos. Hay 4 letras de pista, y el guion de las dos palabras ya está."
       options={categories.map((c) => ({
         id: c.category.id,
         title: c.category.title,
-        description: `${c.category.subtitle} · ${c.items.length} palabras posibles`,
+        description: `${c.category.subtitle} · ${c.items.length} palabras`,
         badge: categoryBadge(c.category),
         status: results[topicResultId(GAME_ID, c.category.id)],
       }))}
@@ -157,20 +167,34 @@ function CrosswordBoard({
     return map;
   }, [entries]);
 
-  const [given, setGiven] = useState<ReadonlySet<string>>(() =>
-    pickHints(entries),
-  );
+  /** Hyphens between words, plus a few hint letters, come filled in. */
+  const hyphens = useMemo(() => hyphenCells(entries), [entries]);
+  const hints = useMemo(() => hintCells(entries), [entries]);
+  const opened = useMemo(() => {
+    const set = new Set(hyphens);
+    for (const key of hints) set.add(key);
+    return set;
+  }, [hyphens, hints]);
+  /** Cells you can no longer type in: hyphens, hints, letters given, words already right. */
+  const [locked, setLocked] = useState<ReadonlySet<string>>(opened);
+  /** Hint letters and letters from help, drawn in accent so you can tell them apart. */
+  const [helped, setHelped] = useState<ReadonlySet<string>>(hints);
+  /** Cells a check marked as not fitting; typing over one clears it. */
+  const [checked, setChecked] = useState<ReadonlySet<string>>(new Set());
   const [letters, setLetters] = useState<Letters>(() =>
     Object.fromEntries(
-      [...given].map((k) => [k, cells.get(k)!.solution] as const),
+      [...opened].map((k) => [k, cells.get(k)!.solution] as const),
     ),
   );
   const [active, setActive] = useState(0);
   const [revealedWords, setRevealedWords] = useState<ReadonlySet<string>>(
     new Set(),
   );
+  /** Entry whose second wording is on screen. */
+  const [rephrased, setRephrased] = useState<string | null>(null);
+  const [listOpen, setListOpen] = useState(false);
   const [helpLetters, setHelpLetters] = useState(0);
-  /** Words completed with a wrong letter; any of these rules out "completed". */
+  /** Wrong letters found, by a check or by finishing a word; rules out "completed". */
   const [slips, setSlips] = useState(0);
   const [announce, setAnnounce] = useState("");
   const [startedAt] = useState(() => Date.now());
@@ -189,18 +213,14 @@ function CrosswordBoard({
   const solved = entries.map((e) => isSolved(e, letters));
   const solvedCount = solved.filter(Boolean).length;
 
-  /** Letters that don't fit, shown only once their word is complete. */
+  /** Red only where a check (or a finished word) found a letter that doesn't fit. */
   const wrong = useMemo(() => {
     const set = new Set<string>();
-    for (const e of entries) {
-      const keys = keysOf(e);
-      if (!keys.every((k) => letters[k])) continue;
-      for (const k of keys) {
-        if (letters[k] !== cells.get(k)!.solution) set.add(k);
-      }
+    for (const k of checked) {
+      if (letters[k] && letters[k] !== cells.get(k)!.solution) set.add(k);
     }
     return set;
-  }, [entries, letters, cells]);
+  }, [checked, letters, cells]);
 
   function focusCell(key: string | undefined) {
     if (!key) return;
@@ -223,7 +243,7 @@ function CrosswordBoard({
     );
   }
 
-  function goToEntry(index: number, map: Letters = letters, lock = given) {
+  function goToEntry(index: number, map: Letters = letters, lock = locked) {
     setActive(index);
     focusCell(openCell(entries[index], map, lock));
   }
@@ -236,17 +256,29 @@ function CrosswordBoard({
     return null;
   }
 
-  /** Saves the grid and decides where the cursor goes next. */
+  /**
+   * Saves the grid, locks every word that is now right so a crossing can't be
+   * erased by accident, and decides where the cursor goes next.
+   */
   function commit(
     next: Letters,
     from: string,
-    lock: ReadonlySet<string> = given,
-    helped = false,
+    base: ReadonlySet<string> = locked,
+    usedHelp = false,
   ) {
+    const lock = new Set(base);
+    for (const e of entries) {
+      if (isSolved(e, next)) for (const k of keysOf(e)) lock.add(k);
+    }
     setLetters(next);
+    setLocked(lock);
+
     if (entries.every((e) => isSolved(e, next))) {
       recordGameResult(
-        slips === 0 && helpLetters === 0 && revealedWords.size === 0 && !helped,
+        slips === 0 &&
+          helpLetters === 0 &&
+          revealedWords.size === 0 &&
+          !usedHelp,
         topicResultId(GAME_ID, categoryId),
       );
       setElapsed(Date.now() - startedAt);
@@ -268,12 +300,13 @@ function CrosswordBoard({
       if (target !== null) goToEntry(target, next, lock);
       return;
     }
-    const bad = keys.filter((k) => next[k] !== cells.get(k)!.solution).length;
+    const bad = keys.filter((k) => next[k] !== cells.get(k)!.solution);
+    setChecked((marks) => new Set([...marks, ...bad]));
     setSlips((n) => n + 1);
     setAnnounce(
-      bad === 1
+      bad.length === 1
         ? "Una letra no encaja: está marcada en rojo."
-        : `${bad} letras no encajan: están marcadas en rojo.`,
+        : `${bad.length} letras no encajan: están marcadas en rojo.`,
     );
   }
 
@@ -287,12 +320,23 @@ function CrosswordBoard({
     else if (otherDir !== undefined) setActive(otherDir);
   }
 
+  /** A cell you type over is no longer flagged. */
+  function unflag(key: string) {
+    setChecked((marks) => {
+      if (!marks.has(key)) return marks;
+      const next = new Set(marks);
+      next.delete(key);
+      return next;
+    });
+  }
+
   function onType(key: string, raw: string) {
     const char = raw
       .slice(-1)
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toUpperCase();
+    unflag(key);
     if (!char) {
       setLetters({ ...letters, [key]: "" });
       return;
@@ -313,6 +357,7 @@ function CrosswordBoard({
     if (e.key === "Backspace") {
       e.preventDefault();
       if (letters[key]) {
+        unflag(key);
         setLetters({ ...letters, [key]: "" });
         return;
       }
@@ -320,8 +365,9 @@ function CrosswordBoard({
       const prev = keys
         .slice(0, Math.max(keys.indexOf(key), 0))
         .reverse()
-        .find((k) => !given.has(k));
+        .find((k) => !locked.has(k));
       if (prev) {
+        unflag(prev);
         setLetters({ ...letters, [prev]: "" });
         focusCell(prev);
       }
@@ -334,29 +380,60 @@ function CrosswordBoard({
     for (let k = 1; k < Math.max(rows, cols); k++) {
       const target = cellKey(r + dr * k, c + dc * k);
       const info = cells.get(target);
-      if (!info || given.has(target)) continue;
+      if (!info || locked.has(target)) continue;
       setActive(info[dir] ?? info.across ?? info.down!);
       focusCell(target);
       return;
     }
   }
 
+  /** Says whether what you wrote fits, without showing the answer. */
+  function checkWord() {
+    const keys = keysOf(activeEntry);
+    const written = keys.filter((k) => letters[k] && !locked.has(k));
+    if (!written.length) {
+      setAnnounce("Todavía no has escrito nada en esta palabra.");
+      return;
+    }
+    const bad = written.filter((k) => letters[k] !== cells.get(k)!.solution);
+    if (!bad.length) {
+      setAnnounce(
+        written.length === keys.length
+          ? "Todo encaja."
+          : "Hasta aquí todo encaja: sigue.",
+      );
+      return;
+    }
+    if (bad.some((k) => !checked.has(k))) setSlips((n) => n + 1);
+    setChecked((marks) => new Set([...marks, ...bad]));
+    setAnnounce(
+      bad.length === 1
+        ? "Una letra no encaja: está marcada en rojo."
+        : `${bad.length} letras no encajan: están marcadas en rojo.`,
+    );
+    focusCell(bad[0]);
+  }
+
   function giveLetter() {
-    const key = openCell(activeEntry, letters, given);
-    if (!key || given.has(key)) return;
-    const lock = new Set(given).add(key);
-    setGiven(lock);
+    const key = openCell(activeEntry, letters, locked);
+    if (!key || locked.has(key)) return;
+    const lock = new Set(locked).add(key);
+    setLocked(lock);
+    setHelped((set) => new Set(set).add(key));
     setHelpLetters((n) => n + 1);
-    setAnnounce(`Pista: la letra ${cells.get(key)!.solution}.`);
+    unflag(key);
+    setAnnounce(`Te damos la letra ${cells.get(key)!.solution}.`);
     commit({ ...letters, [key]: cells.get(key)!.solution }, key, lock, true);
   }
 
   function revealWord() {
     const keys = keysOf(activeEntry);
-    const lock = new Set([...given, ...keys]);
+    const lock = new Set([...locked, ...keys]);
     const next = { ...letters };
     for (const k of keys) next[k] = cells.get(k)!.solution;
-    setGiven(lock);
+    setLocked(lock);
+    setHelped((set) => new Set([...set, ...keys]));
+    setChecked((marks) => new Set([...marks].filter((k) => !keys.includes(k))));
     setRevealedWords(new Set(revealedWords).add(activeEntry.id));
     commit(next, keys[keys.length - 1], lock, true);
     setAnnounce(`Revelada: ${activeEntry.answer}.`);
@@ -393,7 +470,7 @@ function CrosswordBoard({
           entries={entries.map((e) => ({
             id: e.id,
             title: e.name,
-            body: e.definition,
+            body: e.clue,
             tone: revealedWords.has(e.id) ? "danger" : undefined,
           }))}
         />
@@ -403,6 +480,7 @@ function CrosswordBoard({
 
   const groups: Direction[] = ["across", "down"];
   const activeDone = solved[active];
+  const activeRevealed = revealedWords.has(activeEntry.id);
 
   return (
     <div className="mt-6">
@@ -415,9 +493,8 @@ function CrosswordBoard({
             palabras
           </span>
           <span className="text-xs font-normal">
-            Las letras{" "}
-            <span className="font-bold text-[var(--accent)]">de color</span> ya
-            vienen de pista
+            {Math.min(HINT_LETTERS, hints.size)} letras de pista. Las que
+            aciertas se quedan fijas
           </span>
         </div>
         <ProgressBar
@@ -444,13 +521,36 @@ function CrosswordBoard({
           </Button>
           <div className="min-w-0 flex-1 px-1">
             <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--accent)] uppercase">
-              {activeDone ? <Check className="size-3.5" aria-hidden /> : null}
+              {activeRevealed ? (
+                <Eye className="size-3.5" aria-hidden />
+              ) : activeDone ? (
+                <Check className="size-3.5" aria-hidden />
+              ) : null}
               {activeEntry.number} {DIR_LABEL[activeEntry.dir]} ·{" "}
-              {activeEntry.answer.length} letras
+              {crosswordCountLabel(activeEntry.answer)}
+              {activeRevealed ? " · revelada" : ""}
             </p>
             <p className="mt-1 text-sm leading-snug text-[var(--foreground)] sm:text-base">
               {activeEntry.clue}
             </p>
+            {activeEntry.another && !activeDone ? (
+              rephrased === activeEntry.id ? (
+                <p className="mt-1.5 text-sm leading-snug text-[var(--foreground-muted)]">
+                  {activeEntry.another}
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setRephrased(activeEntry.id)}
+                  className={cn(
+                    "mt-1 rounded-sm text-xs font-semibold text-[var(--accent)] underline-offset-4 hover:underline",
+                    FOCUS_RING,
+                  )}
+                >
+                  Dímelo de otra forma
+                </button>
+              )
+            ) : null}
           </div>
           <Button
             variant="ghost"
@@ -486,7 +586,9 @@ function CrosswordBoard({
             const isDone =
               (info.across !== undefined && solved[info.across]) ||
               (info.down !== undefined && solved[info.down]);
-            const isGiven = given.has(key);
+            const isHyphen = info.solution === "-";
+            const isLocked = locked.has(key);
+            const isHelped = helped.has(key);
             const tone = cn(
               "size-full rounded-md text-center text-base font-bold uppercase transition-colors sm:text-xl",
               isWrong
@@ -496,9 +598,13 @@ function CrosswordBoard({
                   : isDone
                     ? "status-success"
                     : "bg-[var(--surface-elevated)]",
-              !isWrong && isGiven
-                ? "text-[var(--accent)]"
-                : "text-[var(--foreground)]",
+              isWrong
+                ? "text-[var(--foreground)]"
+                : isHelped
+                  ? "text-[var(--accent)]"
+                  : isHyphen
+                    ? "text-[var(--foreground-muted)]"
+                    : "text-[var(--foreground)]",
             );
             return (
               <div key={key} className="relative aspect-square">
@@ -510,10 +616,16 @@ function CrosswordBoard({
                     {info.number}
                   </span>
                 ) : null}
-                {isGiven ? (
+                {isLocked ? (
                   <div
                     role="img"
-                    aria-label={`Pista, ${entry.number} ${DIR_LABEL[entry.dir]}, letra ${position}: ${info.solution}`}
+                    aria-label={
+                      isHyphen
+                        ? `Guion entre palabras, ${entry.number} ${DIR_LABEL[entry.dir]}`
+                        : isHelped
+                          ? `Letra dada, ${entry.number} ${DIR_LABEL[entry.dir]}, letra ${position}: ${info.solution}`
+                          : `${entry.number} ${DIR_LABEL[entry.dir]}, letra ${position}: ${info.solution}, ya correcta`
+                    }
                     onClick={() => {
                       const index =
                         info[activeEntry.dir] ?? info.across ?? info.down!;
@@ -570,7 +682,11 @@ function CrosswordBoard({
         <p className="sr-only" role="status" aria-live="polite">
           {announce}
         </p>
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <div className="mt-5 flex flex-wrap justify-center gap-2 sm:gap-3">
+          <Button size="sm" onClick={checkWord} disabled={activeDone}>
+            <CheckCheck className="size-4" aria-hidden />
+            Revisar
+          </Button>
           <Button
             variant="secondary"
             size="sm"
@@ -578,7 +694,7 @@ function CrosswordBoard({
             disabled={activeDone}
           >
             <Lightbulb className="size-4" aria-hidden />
-            Darme una letra
+            Una letra
           </Button>
           <Button
             variant="ghost"
@@ -587,9 +703,12 @@ function CrosswordBoard({
             disabled={activeDone}
           >
             <Eye className="size-4" aria-hidden />
-            Revelar palabra
+            Revelar
           </Button>
         </div>
+        <p className="mt-2 text-center text-xs text-[var(--foreground-muted)]">
+          Revisar marca en rojo lo que está mal. No te muestra la respuesta.
+        </p>
         <p
           aria-hidden
           className="mt-2 min-h-5 text-center text-sm text-[var(--foreground-muted)]"
@@ -598,7 +717,22 @@ function CrosswordBoard({
         </p>
       </div>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2">
+      <Button
+        variant="secondary"
+        size="sm"
+        className="mx-auto mt-8 flex sm:hidden"
+        aria-expanded={listOpen}
+        onClick={() => setListOpen((open) => !open)}
+      >
+        {listOpen ? "Ocultar las pistas" : `Ver las ${entries.length} pistas`}
+      </Button>
+
+      <div
+        className={cn(
+          "mt-4 gap-6 sm:mt-8 sm:grid sm:grid-cols-2",
+          listOpen ? "grid" : "hidden",
+        )}
+      >
         {groups.map((dir) => {
           const list = entries
             .map((e, index) => ({ e, index }))
@@ -627,7 +761,12 @@ function CrosswordBoard({
                       )}
                     >
                       <span className="w-5 shrink-0 font-semibold text-[var(--foreground)]">
-                        {solved[index] ? (
+                        {revealedWords.has(e.id) ? (
+                          <Eye
+                            className="mt-0.5 size-4 text-[var(--foreground-muted)]"
+                            aria-label="Revelada"
+                          />
+                        ) : solved[index] ? (
                           <Check
                             className="mt-0.5 size-4 text-[var(--success-text)]"
                             aria-label="Resuelta"
@@ -639,7 +778,7 @@ function CrosswordBoard({
                       <span className={cn(solved[index] && "line-through")}>
                         {e.clue}{" "}
                         <span className="whitespace-nowrap text-[var(--foreground-muted)]">
-                          ({e.answer.length})
+                          ({crosswordCountLabel(e.answer)})
                         </span>
                       </span>
                     </button>

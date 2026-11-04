@@ -72,11 +72,11 @@ export const OPERATIONS_TOPIC: ApuntesTopic = {
     },
     {
       key: 'iac',
-      name: 'Infraestructura como código',
+      name: 'Infrastructure as code',
       definition:
         'Definir toda la infraestructura en archivos de texto, como un plano digital, para crearla de forma automática y repetible.',
       confusedWith: ['declarative-template', 'shell-script'],
-      note: 'Se abrevia IaC; en AWS se hace con CloudFormation.',
+      note: 'El nombre va en inglés. Se abrevia IaC; en AWS se hace con CloudFormation.',
     },
     {
       key: 'aws-configure',

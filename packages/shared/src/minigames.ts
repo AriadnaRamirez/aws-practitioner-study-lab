@@ -1,6 +1,6 @@
 /** Minijuegos: completion tags per user. Never part of study progress. */
 
-export const MINIGAME_IDS = ['crucigrama', 'quien-se-encarga', 'cuanto-pagas'] as const;
+export const MINIGAME_IDS = ['crucigrama'] as const;
 
 export type MinigameId = (typeof MINIGAME_IDS)[number];
 

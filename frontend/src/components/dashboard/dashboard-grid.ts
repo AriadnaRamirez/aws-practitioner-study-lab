@@ -5,7 +5,7 @@
  * ┌────────────────────────────────────────────────────┐
  * │ greeting · mascot · exam                            │  one tile, its own 7·5 split
  * ├────────────────┬───────────────────────────────────┤
- * │ new game       │ goal                              │
+ * │ new game       │ minigames                         │
  * │ (+ sessions)   ├───────────────────────────────────┤
  * │                │ weak topics                       │
  * └────────────────┴───────────────────────────────────┘
@@ -14,13 +14,13 @@
  * ┌──────────────────────────────────────────────────┐
  * │ greeting · mascot / exam                          │  one tile, the exam pane under the greeting
  * ├─────────────────────────┬────────────────────────┤
- * │ new game                │ goal                   │
+ * │ new game                │ minigames              │
  * │                         ├────────────────────────┤
  * │                         │ weak topics            │
  * └─────────────────────────┴────────────────────────┘
  *
- * The new game spans the goal and weak topics rows, so both columns always end on the same line. When
- * the weak topics are not shown, the goal spans both rows, so no cell is ever empty.
+ * The new game spans the minigames and weak topics rows, so both columns always end on the same
+ * line. When the weak topics are not shown, the minigames span both rows, so no cell is ever empty.
  */
 export const DASHBOARD_TRACKS =
   "md:grid-cols-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)_minmax(0,3fr)]";
@@ -33,25 +33,25 @@ export const DASHBOARD_TILE = {
   newGame: `${NARROW} mt-8 md:col-[1] md:row-[2/4] md:mt-0`,
 } as const;
 
-type Slots = { goal: string; weak: string };
+type Slots = { games: string; weak: string };
 
 /** Literal class names (Tailwind scans them) with and without the weak topics tile. */
 const SLOTS = {
   withWeak: {
-    goal: "md:col-[2] md:row-[2] lg:col-[2/4]",
+    games: "md:col-[2] md:row-[2] lg:col-[2/4]",
     weak: "md:col-[2] md:row-[3] lg:col-[2/4]",
   },
-  goalOnly: {
-    goal: "md:col-[2] md:row-[2/4] lg:col-[2/4]",
+  gamesOnly: {
+    games: "md:col-[2] md:row-[2/4] lg:col-[2/4]",
     weak: "",
   },
 } as const satisfies Record<string, Slots>;
 
-/** Cells of the progress tiles, given whether the weak topics tile is shown. */
+/** Cells of the side tiles, given whether the weak topics tile is shown. */
 export function dashboardSlots(showWeak: boolean): Slots {
-  const cells = showWeak ? SLOTS.withWeak : SLOTS.goalOnly;
+  const cells = showWeak ? SLOTS.withWeak : SLOTS.gamesOnly;
   return {
-    goal: `${NARROW} mt-3 md:mt-0 ${cells.goal}`,
+    games: `${NARROW} mt-8 md:mt-0 ${cells.games}`,
     weak: `${NARROW} mt-4 md:mt-0 ${cells.weak}`,
   };
 }

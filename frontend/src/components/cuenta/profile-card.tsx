@@ -66,7 +66,7 @@ export function ProfileCard({
       setEditing(false);
       setSavedName(true);
     } catch (err) {
-      setError(errorMessage(err, "No se pudo cambiar el usuario"));
+      setError(errorMessage(err, "No pudimos cambiar tu usuario. Inténtalo de nuevo."));
     } finally {
       setSaving(false);
     }
@@ -78,7 +78,9 @@ export function ProfileCard({
     try {
       onUserChange(await updateProfile({ podiumHidden: !user.podiumHidden }));
     } catch (err) {
-      setPodiumError(errorMessage(err, "No se pudo guardar"));
+      setPodiumError(
+        errorMessage(err, "No pudimos guardar tu preferencia. Inténtalo de nuevo."),
+      );
     } finally {
       setPodiumSaving(false);
     }
@@ -95,7 +97,7 @@ export function ProfileCard({
       <div className="mt-5 flex items-center gap-4">
         <span
           aria-hidden
-          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] font-display text-2xl font-bold uppercase text-[var(--accent)]"
+          className="flex size-14 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] font-display text-2xl font-bold uppercase text-[var(--foreground)]"
         >
           {user.username.charAt(0)}
         </span>

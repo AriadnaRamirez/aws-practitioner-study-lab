@@ -159,7 +159,11 @@ export function DashboardHero({
       setDialogOpen(false);
       void refreshUser();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "No se pudo guardar");
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos guardar la fecha. Inténtalo de nuevo.",
+      );
     } finally {
       setSaving(false);
     }
@@ -225,7 +229,7 @@ export function DashboardHero({
               aria-hidden
             />
             <span className="min-w-0 text-sm text-[var(--foreground-muted)]">
-              No pude cargar tu examen.{" "}
+              No pudimos cargar tu examen.{" "}
               <span className="font-semibold text-[var(--foreground)]">
                 Reintentar
               </span>

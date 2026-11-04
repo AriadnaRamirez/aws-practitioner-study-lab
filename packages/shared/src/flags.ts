@@ -1,7 +1,7 @@
 /** Feature flag contracts — maestro §3 / APS-16. */
 
 export const FEATURE_FLAG_EXAM_TRACK_AI = 'exam_track_ai' as const;
-/** Estudio (EXAM_STUDY) y Examen (EXAM_TIMED). Off = solo Cartas. */
+/** Examen cronometrado (EXAM_TIMED). Off = Estudiar solo muestra Cartas y Más falladas. */
 export const FEATURE_FLAG_EXAM_MODES = 'exam_modes' as const;
 
 /** Known flag keys (seed + UI). More flags may exist in DB later. */

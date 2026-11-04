@@ -133,7 +133,11 @@ export function GuideDocumentClient({
       setItems(await fetchGuideKnowledge());
       setGeneratedOn(DATE_FORMAT.format(new Date()));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos cargar la guía. Inténtalo de nuevo.",
+      );
     }
   }, []);
 
@@ -277,6 +281,12 @@ export function GuideDocumentClient({
                 Generada el {generatedOn}
               </span>
             ) : null}
+          </p>
+          <p className="guide-doc-lead mt-4 max-w-prose text-sm leading-relaxed text-[var(--foreground-muted)]">
+            El nombre va a la izquierda. A la derecha, qué es y, cuando aporta algo,
+            para qué sirve. Los nombres son los de la documentación de AWS y el
+            contenido sigue la guía del examen Cloud Practitioner (CLF-C02), versión
+            1.3 del 29 de octubre de 2026.
           </p>
         </div>
 

@@ -47,7 +47,11 @@ export function ProgressPanel() {
     fetchTopicProgress().then(
       (res) => setTopics(res.topics),
       (err) => {
-        setError(err instanceof Error ? err.message : "Error al cargar");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No pudimos cargar tu progreso. Inténtalo de nuevo.",
+        );
         setTopics([]);
       },
     );

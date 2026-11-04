@@ -17,8 +17,7 @@ export function ExamModesGate({ children }: { children: ReactNode }) {
       <PageContainer>
         <PageHeader title="Examen" />
         <Notice tone="info" boxed className="mt-6">
-          El modo examen aún no está disponible. Mientras tanto, practica con las cartas: usan
-          los mismos conceptos del examen.
+          El examen todavía no está listo. Mientras, practica con las cartas.
         </Notice>
         <Link href="/estudiar" className={buttonVariants({ className: "mt-6" })}>
           Ir a Estudiar
@@ -32,7 +31,7 @@ export function ExamModesGate({ children }: { children: ReactNode }) {
       <PageContainer aria-busy="true">
         <PageHeader title="Examen" />
         <p className="sr-only" role="status">
-          Preparando el modo examen…
+          Preparando el examen…
         </p>
         <div className="mt-8 flex flex-col gap-6" aria-hidden>
           <div className="space-y-3">

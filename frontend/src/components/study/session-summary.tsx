@@ -32,10 +32,10 @@ type Props = {
 };
 
 function headline(pct: number): string {
-  if (pct >= 90) return "¡Sesión impecable!";
+  if (pct >= 90) return "¡Partida impecable!";
   if (pct >= 70) return "¡Muy bien!";
   if (pct >= 50) return "Buen avance";
-  return "Cada error suma: sigue practicando";
+  return "Sigue practicando: de los errores se aprende";
 }
 
 /** Fills from zero on mount so the ring animates in. */
@@ -63,7 +63,7 @@ function PodiumStanding({
   if (podium === "error") {
     return (
       <p className="text-sm text-[var(--foreground-muted)]">
-        No pudimos cargar el podio ahora.
+        No pudimos cargar el podio. Inténtalo de nuevo.
       </p>
     );
   }
@@ -211,9 +211,7 @@ export function SessionSummary({
         <ProgressRing
           value={filled}
           label={
-            byConcept
-              ? "Conceptos acertados a la primera"
-              : "Respuestas correctas"
+            byConcept ? "Aciertos a la primera" : "Respuestas correctas"
           }
           className="size-36 sm:size-40 [@media(max-height:500px)]:md:size-28"
         >
@@ -226,7 +224,7 @@ export function SessionSummary({
         </ProgressRing>
         <div className="min-w-0 flex-1">
           <p className="text-sm text-[var(--foreground-muted)]">
-            Resumen de tu sesión
+            Así te fue
           </p>
           <h1
             id="resumen-sesion"
@@ -243,25 +241,25 @@ export function SessionSummary({
                 <strong className="font-semibold text-[var(--foreground)]">
                   {firstTry} de {unique}
                 </strong>{" "}
-                {unique === 1 ? "concepto" : "conceptos"} a la primera
+                {unique === 1 ? "carta" : "cartas"} a la primera
                 {recovered > 0
-                  ? ` y corregiste ${recovered} al repetirl${recovered === 1 ? "o" : "os"}`
+                  ? ` y corregiste ${recovered} al volver a intentar`
                   : ""}
                 .
               </p>
               {missed > 0 ? (
                 <p>
                   {missed === 1
-                    ? "El concepto que fallaste queda en Más falladas para repasarlo."
-                    : `Los ${missed} conceptos que fallaste quedan en Más falladas para repasarlos.`}
+                    ? "La que fallaste queda en Más falladas."
+                    : `Las ${missed} que fallaste quedan en Más falladas.`}
                 </p>
               ) : null}
             </div>
           ) : (
             <p className="mt-2 text-sm text-[var(--foreground-muted)]">
               Respondiste {summary.answered}{" "}
-              {summary.answered === 1 ? "carta" : "cartas"} de {unique}{" "}
-              {unique === 1 ? "concepto" : "conceptos"}.
+              {summary.answered === 1 ? "vez" : "veces"}, en {unique}{" "}
+              {unique === 1 ? "carta" : "cartas"}.
             </p>
           )}
         </div>
@@ -286,9 +284,8 @@ export function SessionSummary({
           ))}
         </dl>
         <p className="mt-3 text-xs leading-relaxed text-[var(--foreground-muted)]">
-          Dominas un concepto al acertarlo {MASTERY_STREAK} veces seguidas,
-          aunque sea en partidas distintas. Cada concepto dominado suma un punto
-          en el podio.
+          Dominas una carta con {MASTERY_STREAK} aciertos seguidos, aunque sea
+          en partidas distintas. Cada carta dominada suma un punto en el podio.
         </p>
 
         <Card

@@ -139,6 +139,11 @@ function sharedRatio(sentence: string, definition: string): number {
   return shared / words.length;
 }
 
+/** Contraste que pudo quedar en una explicación antigua; la guía no lo muestra. */
+function isContrastTip(sentence: string): boolean {
+  return /^\s*no lo confundas con\b/i.test(sentence);
+}
+
 /** Frases que solo reformulan la definición. */
 function restatesDefinition(sentence: string, definition: string): boolean {
   const ratio = sharedRatio(sentence, definition);
@@ -151,8 +156,8 @@ function restatesDefinition(sentence: string, definition: string): boolean {
 }
 
 /**
- * Nota breve del concepto. Quita la definición repetida, la pista de la sigla
- * y las frases que solo reformulan lo mismo.
+ * Para qué sirve, en una frase. Quita la definición repetida, la pista de la
+ * sigla, lo que solo reformula lo mismo y el "no lo confundas con".
  */
 export function guideNote(item: KnowledgeItem): string | null {
   const raw = item.explanation?.trim();
@@ -176,7 +181,10 @@ export function guideNote(item: KnowledgeItem): string | null {
     .split(/(?<=[.!?])\s+/)
     .map((sentence) => sentence.trim())
     .filter(
-      (sentence) => sentence && !restatesDefinition(sentence, item.definition),
+      (sentence) =>
+        sentence &&
+        !isContrastTip(sentence) &&
+        !restatesDefinition(sentence, item.definition),
     );
   const text = kept.join(" ").trim();
   if (!text) return null;
@@ -199,7 +207,7 @@ export async function fetchGuideKnowledge(): Promise<KnowledgeItem[]> {
   }
   if (!res.ok)
     throw new Error(
-      "No pudimos cargar los conceptos. Inténtalo de nuevo en un momento.",
+      "No pudimos cargar los conceptos. Inténtalo de nuevo.",
     );
   return (await res.json()) as KnowledgeItem[];
 }

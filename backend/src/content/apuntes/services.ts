@@ -44,19 +44,19 @@ export const SERVICE_TOPICS: ApuntesTopic[] = [
       },
       {
         key: 'on-demand',
-        name: 'Bajo demanda',
+        name: 'On-Demand',
         definition:
           'Forma de pagar una instancia por hora de uso, sin compromiso ni pago por adelantado.',
         confusedWith: ['reserved', 'spot'],
-        note: 'También se llama On-Demand: 1 hora de uso, 1 hora de pago.',
+        note: 'El nombre va en inglés. 1 hora de uso, 1 hora de pago.',
       },
       {
         key: 'reserved',
-        name: 'Reservada',
+        name: 'Reserved',
         definition:
-          'Instancia con compromiso de uso de 1 o 3 años, a cambio de un descuento de hasta 72 % frente a bajo demanda.',
+          'Instancia con compromiso de uso de 1 o 3 años, a cambio de un descuento de hasta 72 % frente a On-Demand.',
         confusedWith: ['on-demand', 'spot'],
-        note: 'Conviene cuando el uso es estable y predecible.',
+        note: 'El nombre va en inglés. Conviene cuando el uso es estable y predecible.',
       },
       {
         key: 'spot',
@@ -180,7 +180,7 @@ export const SERVICE_TOPICS: ApuntesTopic[] = [
         key: 's3-one-zone-ia',
         name: 'S3 One Zone-IA',
         definition:
-          'Clase de S3 de acceso poco frecuente que guarda los datos en una sola zona de disponibilidad; es más barata, pero los datos se pierden si esa zona falla.',
+          'Clase de S3 de acceso poco frecuente que guarda los datos en una sola Availability Zone; es más barata, pero los datos se pierden si esa zona falla.',
         confusedWith: ['s3-standard-ia', 's3-standard', 'glacier-deep'],
       },
       {
@@ -297,18 +297,19 @@ export const SERVICE_TOPICS: ApuntesTopic[] = [
       },
       {
         key: 'public-subnet',
-        name: 'Subred pública',
+        name: 'Public subnet',
         definition:
           'Subred cuya tabla de rutas envía el tráfico de internet al Internet Gateway.',
         confusedWith: ['private-subnet', 'igw'],
+        note: 'El nombre va en inglés.',
       },
       {
         key: 'private-subnet',
-        name: 'Subred privada',
+        name: 'Private subnet',
         definition:
           'Subred sin ruta hacia un Internet Gateway, así que no tiene salida directa a internet.',
         confusedWith: ['public-subnet', 'nat-gateway'],
-        note: 'Ahí se colocan, por ejemplo, las bases de datos.',
+        note: 'El nombre va en inglés. Ahí se colocan, por ejemplo, las bases de datos.',
       },
       {
         key: 'igw',
@@ -389,9 +390,10 @@ export const SERVICE_TOPICS: ApuntesTopic[] = [
       },
       {
         key: 'root-user',
-        name: 'Usuario raíz',
+        name: 'Root user',
         definition:
-          'Dueño de la cuenta, con permisos ilimitados; se protege con MFA, no se le crean claves de acceso y solo se usa para tareas administrativas.',
+          'Dueño de la cuenta, con permisos ilimitados; se protege con MFA, no se le crean access keys y solo se usa para tareas administrativas.',
+        note: 'El nombre va en inglés.',
         confusedWith: ['iam-user', 'iam-role', 'iam-group'],
       },
       {
@@ -446,11 +448,11 @@ export const SERVICE_TOPICS: ApuntesTopic[] = [
       },
       {
         key: 'access-keys',
-        name: 'Claves de acceso',
+        name: 'Access keys',
         definition:
           'Par Access Key ID y Secret Access Key que autentica a un usuario en la CLI o en los SDK.',
         confusedWith: ['console-password', 'iam-role'],
-        note: 'Al usuario raíz no se le crean.',
+        note: 'El nombre va en inglés. Al root user no se le crean.',
       },
       {
         key: 'console-password',
@@ -582,10 +584,11 @@ export const SERVICE_TOPICS: ApuntesTopic[] = [
       },
       {
         key: 'console',
-        name: 'Consola de administración',
+        name: 'Management Console',
         definition:
           'Portal web para administrar los servicios de AWS con clics.',
         confusedWith: ['cli', 'sdk'],
+        note: 'El nombre va en inglés.',
       },
       {
         key: 'sdk',

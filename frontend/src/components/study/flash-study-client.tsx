@@ -186,7 +186,11 @@ export function FlashStudyClient() {
           });
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo iniciar");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No pudimos empezar la partida. Inténtalo de nuevo.",
+        );
         setPhase("setup");
       } finally {
         setPending(false);
@@ -214,7 +218,7 @@ export function FlashStudyClient() {
           }
           applyView(view);
         } catch {
-          setError("No se pudo reanudar la sesión. Empieza una nueva.");
+          setError("No pudimos retomar tu partida. Empieza una nueva.");
           setPhase("setup");
         } finally {
           setPending(false);
@@ -410,7 +414,11 @@ export function FlashStudyClient() {
           autoTimer.current = null;
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al responder");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No pudimos guardar tu respuesta. Inténtalo de nuevo.",
+        );
         setSelectedChoice(null);
         answeringRef.current = false;
       } finally {
@@ -492,7 +500,7 @@ export function FlashStudyClient() {
     return (
       <section className="py-8">
         <p className="text-sm text-[var(--foreground-muted)]">
-          Entra para estudiar. Si ya tenías sesión, puede que haya expirado.
+          Entra para estudiar. Si ya estabas dentro, vuelve a entrar.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href={loginHref("/estudiar")} className={buttonVariants()}>

@@ -30,7 +30,7 @@ export function SessionCard({ user }: { user: PublicUser }) {
       router.replace("/?deleted=1");
       router.refresh();
     } catch (err) {
-      setError(errorMessage(err, "No se pudo eliminar la cuenta"));
+      setError(errorMessage(err, "No pudimos eliminar tu cuenta. Inténtalo de nuevo."));
       setPending(false);
     }
   }

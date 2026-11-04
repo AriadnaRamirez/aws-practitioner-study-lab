@@ -71,6 +71,37 @@ describe('flash-render', () => {
     expect(card.stem).not.toContain('…');
   });
 
+  it('names the correct answer and leaves the rival out of the explanation', () => {
+    const item = base({
+      explanation:
+        'EC2 significa “Elastic Compute Cloud”. Pagas por el tiempo que la instancia está encendida. No lo confundas con Lambda: cómputo sin servidor.',
+    });
+    const byName = renderFlashVariant(item, 'DEFINITION_TO_NAME', pool);
+    expect(byName.explanation).toBe(
+      'La correcta es «EC2». EC2 significa “Elastic Compute Cloud”. Pagas por el tiempo que la instancia está encendida.',
+    );
+    const byDefinition = renderFlashVariant(item, 'NAME_TO_DEFINITION', pool);
+    expect(byDefinition.explanation.startsWith(
+      'La correcta es «Cómputo redimensionable».',
+    )).toBe(true);
+    expect(byDefinition.explanation).toContain('Elastic Compute Cloud');
+    expect(byDefinition.explanation.toLowerCase()).not.toContain('confundas');
+  });
+
+  it('uses the definition as the reason when the stored text is only a contrast', () => {
+    const item = base({
+      explanation: 'No lo confundas con Lambda: cómputo sin servidor.',
+    });
+    const byName = renderFlashVariant(item, 'DEFINITION_TO_NAME', pool);
+    expect(byName.explanation).toBe(
+      'La correcta es «EC2». Cómputo redimensionable.',
+    );
+    const byDefinition = renderFlashVariant(item, 'NAME_TO_DEFINITION', pool);
+    expect(byDefinition.explanation).toBe(
+      'La correcta es «Cómputo redimensionable», porque así se define EC2.',
+    );
+  });
+
   it('pickVariant respects allowedVariants', () => {
     const item = base({ allowedVariants: ['NAME_TO_DEFINITION'] });
     for (let i = 0; i < 8; i++) {

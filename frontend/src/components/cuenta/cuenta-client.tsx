@@ -54,7 +54,8 @@ export function CuentaClient({ initialTab }: { initialTab: CuentaTab }) {
         setUser(me);
         setStoredUser(me);
       },
-      (err) => setError(errorMessage(err, "No se pudo cargar la cuenta")),
+      (err) =>
+        setError(errorMessage(err, "No pudimos cargar tu cuenta. Inténtalo de nuevo.")),
     );
   }, []);
 
@@ -170,7 +171,9 @@ function HistoryPanel({ timezone }: { timezone?: string }) {
     fetchStudySessions(50).then(
       (res) => setSessions(res.sessions),
       (err) => {
-        setError(errorMessage(err, "No se pudo cargar el historial"));
+        setError(
+          errorMessage(err, "No pudimos cargar tu historial. Inténtalo de nuevo."),
+        );
         setSessions([]);
       },
     );
@@ -181,8 +184,8 @@ function HistoryPanel({ timezone }: { timezone?: string }) {
       <p className="text-sm text-[var(--foreground-muted)]">
         {sessions && sessions.length > 0
           ? sessions.length === 1
-            ? "Tu primera partida. Tócala para ver cada respuesta. Las cartas que fallas vuelven a salir, por eso suele haber más respuestas que conceptos."
-            : `Tus últimas ${sessions.length} partidas. Toca una para ver cada respuesta. Las cartas que fallas vuelven a salir, por eso suele haber más respuestas que conceptos.`
+            ? "Tu primera partida. Tócala para ver cada respuesta."
+            : `Tus últimas ${sessions.length} partidas. Toca una para ver cada respuesta.`
           : "Tus partidas aparecerán aquí."}
       </p>
       {error ? (

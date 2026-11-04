@@ -37,31 +37,13 @@ export function buildApuntesTopics(): Topic[] {
   }));
 }
 
-function firstClause(definition: string): string {
-  return definition
-    .split(';')[0]
-    .trim()
-    .replace(/[.\s]+$/, '');
-}
-
-/** "Servicio que…" → "servicio que…", but "IDS de red" stays as is. */
-function lowerFirst(text: string): string {
-  const [first, second] = text;
-  if (!first || !second || second !== second.toLowerCase()) return text;
-  return first.toLowerCase() + text.slice(1);
-}
-
-function explanationFor(
-  concept: ApuntesConcept,
-  contrast: ApuntesConcept,
-): string {
-  return [
+/** Why this concept is the answer: the expansion and what it is for. */
+function explanationFor(concept: ApuntesConcept): string {
+  const parts = [
     concept.long ? `${concept.name} significa “${concept.long}”.` : '',
     concept.note ?? '',
-    `No lo confundas con ${contrast.name}: ${lowerFirst(firstClause(contrast.definition))}.`,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  ].filter(Boolean);
+  return parts.length ? parts.join(' ') : concept.definition;
 }
 
 export function buildApuntesKnowledge(): KnowledgeItem[] {
@@ -103,7 +85,7 @@ export function buildApuntesKnowledge(): KnowledgeItem[] {
         name: c.name,
         definition: c.definition,
         distractors: rivals.slice(0, DISTRACTORS).map((o) => o.definition),
-        explanation: explanationFor(c, rivals[0]),
+        explanation: explanationFor(c),
         allowedVariants: [
           'NAME_TO_DEFINITION',
           'DEFINITION_TO_NAME',

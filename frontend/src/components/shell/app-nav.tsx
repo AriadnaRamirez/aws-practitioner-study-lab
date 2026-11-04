@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { PublicUser } from "@aps/shared";
+import { FEATURE_FLAG_EXAM_MODES, type PublicUser } from "@aps/shared";
 import { Logo } from "@/components/brand/logo";
 import { PodiumTrophy } from "@/components/shell/podium-trophy";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
   getStoredUser,
   PROGRESS_CHANGED_EVENT,
 } from "@/lib/api";
+import { useFeatureFlag } from "@/lib/use-feature-flag";
 import { cn } from "@/lib/utils";
 
 type NavItem = { href: string; label: string; match?: string[] };
@@ -31,7 +32,6 @@ type NavItem = { href: string; label: string; match?: string[] };
 const STUDENT_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Inicio", match: ["/dashboard"] },
   { href: "/estudiar", label: "Estudiar", match: ["/estudiar"] },
-  { href: "/mas-falladas", label: "Más falladas" },
   { href: "/guias", label: "Guías" },
   { href: "/minijuegos", label: "Minijuegos" },
   { href: "/cuenta", label: "Cuenta", match: ["/cuenta"] },
@@ -78,7 +78,7 @@ function StreakPill({ days }: { days: number }) {
 type Mastery = { pct: number; mastered: number; total: number };
 
 function MasteryPill({ pct, mastered, total }: Mastery) {
-  const label = `${pct}% de conceptos dominados (${mastered} de ${total}). Ver tu progreso`;
+  const label = `${pct}% dominado, ${mastered} de ${total} conceptos. Ver tu progreso`;
   return (
     <Link
       href="/cuenta?tab=progreso"
@@ -191,15 +191,24 @@ export function AppNav() {
     };
   }, [menuOpen]);
 
+  const examOn = useFeatureFlag(FEATURE_FLAG_EXAM_MODES) === true;
+  const studentItems = examOn
+    ? STUDENT_ITEMS.flatMap((item) =>
+        item.href === "/estudiar"
+          ? [item, { href: "/examen", label: "Examen" }]
+          : [item],
+      )
+    : STUDENT_ITEMS;
+
   const items: NavItem[] = !ready
     ? []
     : user
       ? user.role === "ADMIN"
         ? [
-            ...STUDENT_ITEMS,
+            ...studentItems,
             { href: "/admin", label: "Admin", match: ["/admin"] },
           ]
-        : STUDENT_ITEMS
+        : studentItems
       : GUEST_ITEMS;
 
   function isActive(item: NavItem) {

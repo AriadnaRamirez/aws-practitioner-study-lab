@@ -71,10 +71,10 @@ export function AnswerFeedback({
     nextRef.current?.focus({ preventScroll: true });
   }, []);
 
-  const headline = correct ? (itemMastered ? "¡Dominado!" : "Bien") : "Aún no";
+  const headline = correct ? (itemMastered ? "¡Ya la dominas!" : "Bien") : "Aún no";
   const announcement = correct
     ? itemMastered
-      ? "Correcto. Concepto dominado."
+      ? "Correcto. Ya la dominas."
       : "Correcto."
     : `Incorrecto. La correcta es ${correctLabel.replace(/[.\s]+$/, "")}. ${missNote ?? missLine(requeued)}`;
 

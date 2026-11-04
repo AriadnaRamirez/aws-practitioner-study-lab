@@ -216,7 +216,11 @@ export function GuidesIndexClient() {
     try {
       setItems(await fetchGuideKnowledge());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos cargar las guías. Inténtalo de nuevo.",
+      );
     }
   }, []);
 
@@ -231,7 +235,7 @@ export function GuidesIndexClient() {
     <PageContainer width="wide">
       <PageHeader
         title="Guías"
-        subtitle="Un PDF por tema, para repasar sin conexión."
+        subtitle="Léelas para entender el tema o para repasar antes del examen."
         mascot="study"
       />
 

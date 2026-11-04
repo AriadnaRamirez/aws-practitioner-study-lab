@@ -84,9 +84,6 @@ function DashboardSkeleton() {
           progressError={false}
           topics={[]}
           topicsLoaded={false}
-          exams={null}
-          examsError={false}
-          timeZone="America/Mexico_City"
         />
       </BentoGrid>
     </PageContainer>
@@ -216,9 +213,6 @@ export function DashboardClient() {
           progressError={progressError}
           topics={topics}
           topicsLoaded={topicsLoaded}
-          exams={exams}
-          examsError={examsError}
-          timeZone={user.timezone || "America/Mexico_City"}
         />
       </BentoGrid>
     </PageContainer>

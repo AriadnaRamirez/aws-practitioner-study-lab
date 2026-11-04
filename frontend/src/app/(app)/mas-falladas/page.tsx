@@ -1,15 +1,6 @@
-import type { Metadata } from "next";
-import { MasFalladasClient } from "@/components/mas-falladas/mas-falladas-client";
-import { RequireAuth } from "@/components/shell/require-auth";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Más falladas",
-};
-
+/** Antigua pestaña: ahora es un modo dentro de Estudiar. */
 export default function MasFalladasPage() {
-  return (
-    <RequireAuth>
-      <MasFalladasClient />
-    </RequireAuth>
-  );
+  redirect("/estudiar?mode=repaso");
 }

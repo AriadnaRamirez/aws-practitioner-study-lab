@@ -212,8 +212,6 @@ describe('admin metrics', () => {
     expect(stats.players).toBe(2);
     expect(stats.games).toEqual([
       { id: 'crucigrama', players: 2, completed: 1 },
-      { id: 'quien-se-encarga', players: 0, completed: 0 },
-      { id: 'cuanto-pagas', players: 1, completed: 1 },
     ]);
   });
 

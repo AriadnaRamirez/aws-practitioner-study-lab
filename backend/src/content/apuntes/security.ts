@@ -270,14 +270,15 @@ export const SECURITY_TOPIC: ApuntesTopic = {
       definition:
         'Capa extra en el inicio de sesión que combina factores: algo que sabes (PIN), algo que tienes (app autenticadora) o algo que eres (huella).',
       confusedWith: ['authentication', 'least-privilege'],
-      note: 'Es la primera protección del usuario raíz.',
+      note: 'El nombre va en inglés. Es la primera protección del root user.',
     },
     {
       key: 'least-privilege',
       id: 'ki-sec-least-privilege',
-      name: 'Mínimo privilegio',
+      name: 'Least privilege',
       definition:
         'Dar solo los permisos indispensables para una tarea, durante un tiempo definido.',
+      note: 'El nombre va en inglés.',
       confusedWith: ['rbac', 'authorization'],
     },
     {

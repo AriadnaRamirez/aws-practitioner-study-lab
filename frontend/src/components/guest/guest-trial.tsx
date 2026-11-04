@@ -96,6 +96,21 @@ function distractorNames(
   return [...new Set(ranked.map((o) => o.name))].slice(0, 3);
 }
 
+/** Correct name, then why. A leftover rival contrast never reaches the card. */
+function guestExplanation(item: KnowledgeItem): string {
+  const reason = (item.explanation ?? "")
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(
+      (sentence) => sentence && !/^no lo confundas con\b/i.test(sentence),
+    )
+    .join(" ")
+    .trim();
+  const why = reason.length >= 12 ? reason : item.definition.trim();
+  const closed = /[.!?]$/.test(why) ? why : `${why}.`;
+  return `La correcta es «${item.name.trim()}». ${closed}`;
+}
+
 /** The intro promises exam questions, so the sample comes from AWS services, not course modules. */
 function buildSamples(items: KnowledgeItem[]): SampleQ[] {
   const aws = items.filter(
@@ -116,7 +131,7 @@ function buildSamples(items: KnowledgeItem[]): SampleQ[] {
         prompt: item.definition,
         choices,
         correctIndex: choices.indexOf(item.name),
-        explanation: item.explanation,
+        explanation: guestExplanation(item),
         hints,
       };
     });
@@ -126,7 +141,7 @@ function resultCopy(correct: number, total: number) {
   if (total > 0 && correct === total) return "¡Perfecto! Vas listo para más";
   if (correct / Math.max(total, 1) >= 0.6)
     return "¡Muy bien! Ya tienes buena base";
-  return "Buen comienzo: aquí se aprende fallando";
+  return "Buen comienzo: aquí equivocarse también enseña";
 }
 
 const PREVIEW: { icon: LucideIcon; text: string }[] = [
@@ -268,7 +283,7 @@ export function GuestTrial() {
         if (next.convertedUserId) {
           setPhase("error");
           setError(
-            "Esta prueba ya se convirtió en una cuenta. Entra para seguir estudiando.",
+            "Esta prueba ya es una cuenta. Entra para seguir estudiando.",
           );
         } else if (next.sessionsRemaining <= 0) {
           setPhase("capped");
@@ -278,7 +293,9 @@ export function GuestTrial() {
       } catch (err) {
         if (cancelled) return;
         setError(
-          err instanceof Error ? err.message : "No se pudo iniciar la prueba",
+          err instanceof Error
+            ? err.message
+            : "No pudimos iniciar la prueba. Inténtalo de nuevo.",
         );
         setPhase("error");
       }
@@ -296,7 +313,9 @@ export function GuestTrial() {
       setPhase("done");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo registrar la sesión",
+        err instanceof Error
+          ? err.message
+          : "No pudimos guardar tu prueba. Inténtalo de nuevo.",
       );
       setPhase("error");
     }
@@ -577,7 +596,7 @@ export function GuestTrial() {
                     <span className="font-semibold text-[var(--foreground)]">
                       ¿Te está gustando?
                     </span>{" "}
-                    Con tu cuenta guardas tu avance y lo que fallas vuelve a
+                    Con tu cuenta guardas tu avance, y lo que te cuesta vuelve a
                     salir hasta que lo domines.
                   </p>
                   <Link

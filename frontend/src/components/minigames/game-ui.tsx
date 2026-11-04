@@ -181,10 +181,10 @@ export function GameSummary({
             {perfect ? (
               <>
                 <GameStatusBadge status="completed" />
-                Sin errores: quedó marcado como completado.
+                Sin errores. Quedó completado.
               </>
             ) : (
-              "Termínalo sin errores para marcarlo como completado."
+              "Hazlo sin errores para completarlo."
             )}
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -299,7 +299,7 @@ export function KnowledgeGate({
         <Notice
           boxed
           tone="danger"
-          title="No pudimos cargar los conceptos"
+          title="No pudimos cargar las cartas"
           action={
             <Button size="sm" variant="secondary" onClick={reload}>
               Reintentar

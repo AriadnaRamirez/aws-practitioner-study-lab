@@ -67,7 +67,7 @@ export function ExamSummary({ summary, onAgain }: Props) {
         </SectionTitle>
         {summary.mistakes.length === 0 ? (
           <p className="mt-4 text-[var(--foreground-muted)]">
-            Excelente — todas las respuestas fueron correctas.
+            ¡Muy bien! Todas correctas.
           </p>
         ) : (
           <ul className="mt-4 space-y-3">

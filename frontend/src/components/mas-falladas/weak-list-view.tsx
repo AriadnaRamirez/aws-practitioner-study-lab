@@ -7,12 +7,7 @@ import { Mascot } from "@/components/brand/mascot";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
-import {
-  PAGE_TITLE,
-  PageContainer,
-  PageHeader,
-  SECTION_TITLE,
-} from "@/components/ui/page";
+import { SECTION_TITLE } from "@/components/ui/page";
 import { Skeleton, Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { buildInsights, InsightsStrip } from "./weak-insights-panel";
@@ -23,9 +18,9 @@ import {
 } from "./weak-item-card";
 import { isMastered, plural } from "./weak-insights";
 import { loginHref } from "@/lib/route-labels";
+import { WEAK_REVIEW_HREF } from "@/lib/study-categories";
 
-const TITLE = "Más falladas";
-const INTRO = `Cada acierto seguido mueve una carta un paso a la derecha. Con ${MASTERY_STREAK}, la dominas.`;
+const INTRO = `Aquí están las cartas que se te dificultan. Con ${MASTERY_STREAK} aciertos seguidos, ya la dominas.`;
 /** Cards shown per lane before "Ver todas". */
 const LANE_LIMIT = 5;
 
@@ -322,7 +317,9 @@ function Board({
 }
 
 const HEADER =
-  "grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-center lg:pt-6";
+  "grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-center";
+
+const INTRO_CLASS = "max-w-prose text-base text-[var(--foreground-muted)]";
 
 function EmptyState({
   hasPlayed,
@@ -334,11 +331,10 @@ function EmptyState({
   onRetry: () => void;
 }) {
   return (
-    <PageContainer width="wide">
-      <PageHeader
-        title={TITLE}
-        subtitle={error ? "No pudimos cargar tu lista." : INTRO}
-      />
+    <>
+      <p className={INTRO_CLASS}>
+        {error ? "No pudimos cargar tu lista. Inténtalo de nuevo." : INTRO}
+      </p>
       {error ? (
         <Notice
           tone="danger"
@@ -358,7 +354,7 @@ function EmptyState({
           {error}
         </Notice>
       ) : (
-        <Card className="mt-10 flex flex-col items-center px-6 py-10 text-center">
+        <Card className="mt-8 flex flex-col items-center px-6 py-10 text-center">
           <Mascot
             pose={hasPlayed ? "champion" : "wave"}
             size="md"
@@ -378,43 +374,39 @@ function EmptyState({
             href={hasPlayed ? "/estudiar" : "/estudiar?quick=1&start=10"}
             className={cn(buttonVariants({ size: "lg" }), "mt-6")}
           >
-            {hasPlayed ? "Ir a estudiar" : "Jugar mi primera partida"}
+            {hasPlayed ? "Jugar una partida" : "Jugar mi primera partida"}
           </Link>
         </Card>
       )}
-    </PageContainer>
+    </>
   );
 }
 
 export function WeakSignedOut() {
   return (
-    <PageContainer width="wide">
-      <PageHeader
-        title={TITLE}
-        subtitle="Inicia sesión para ver las cartas que más se te resisten."
-      />
+    <>
+      <p className={INTRO_CLASS}>
+        Entra para ver las cartas que más se te dificultan.
+      </p>
       <Link
-        href={loginHref("/mas-falladas")}
-        className={cn(buttonVariants({ size: "lg" }), "mt-8")}
+        href={loginHref(WEAK_REVIEW_HREF)}
+        className={cn(buttonVariants({ size: "lg" }), "mt-6")}
       >
         Entrar
       </Link>
-    </PageContainer>
+    </>
   );
 }
 
 function LoadingState() {
   return (
-    <PageContainer width="wide" aria-busy>
+    <div aria-busy>
       <p className="sr-only" role="status">
         Cargando tus cartas más falladas…
       </p>
       <div className={HEADER}>
         <div className="min-w-0">
-          <h1 className={PAGE_TITLE}>{TITLE}</h1>
-          <p className="mt-2 max-w-prose text-base text-[var(--foreground-muted)]">
-            {INTRO}
-          </p>
+          <p className={INTRO_CLASS}>{INTRO}</p>
           <Skeleton className="mt-6 block h-3 w-full rounded-full" />
           <Skeleton className="mt-3 block h-4 w-2/3" />
         </div>
@@ -435,7 +427,7 @@ function LoadingState() {
           </div>
         ))}
       </div>
-    </PageContainer>
+    </div>
   );
 }
 
@@ -471,13 +463,10 @@ export function WeakListView({
   const insights = buildInsights(items, toMaster);
 
   return (
-    <PageContainer width="wide">
+    <>
       <div className={HEADER}>
         <div className="min-w-0">
-          <h1 className={PAGE_TITLE}>{TITLE}</h1>
-          <p className="mt-2 max-w-prose text-base text-[var(--foreground-muted)]">
-            {INTRO}
-          </p>
+          <p className={INTRO_CLASS}>{INTRO}</p>
           <StageBar counts={counts} total={items.length} />
         </div>
         <RoundCard
@@ -505,6 +494,6 @@ export function WeakListView({
       <Board items={items} onOpen={setOpenItem} />
 
       <WeakItemDialog item={openItem} onClose={closeItem} />
-    </PageContainer>
+    </>
   );
 }

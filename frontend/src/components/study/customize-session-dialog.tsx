@@ -65,7 +65,7 @@ export function CustomizeSessionDialog({
       <div className={SHORT_LANDSCAPE_FULL_ROW}>
         <DialogHeader
           titleId={titleId}
-          title="Personalizar sesión"
+          title="Elegir temas"
           onClose={onClose}
         >
           <p className="mt-0.5 text-xs leading-snug text-[var(--foreground-muted)]">

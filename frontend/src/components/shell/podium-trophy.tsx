@@ -161,7 +161,9 @@ export function PodiumTrophy() {
       .catch((err) => {
         if (!cancelled) {
           setError(
-            err instanceof Error ? err.message : "No se pudo cargar el podio",
+            err instanceof Error
+              ? err.message
+              : "No pudimos cargar el podio. Inténtalo de nuevo.",
           );
         }
       });

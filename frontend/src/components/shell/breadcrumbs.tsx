@@ -12,13 +12,10 @@ type Crumb = { href: string; label: string };
 const STUDENT: Record<string, string> = {
   estudiar: "Estudiar",
   examen: "Examen",
-  "mas-falladas": "Más falladas",
   guias: "Guías",
   cuenta: "Cuenta",
   minijuegos: "Minijuegos",
   crucigrama: "Crucigrama",
-  "quien-se-encarga": "¿Quién se encarga?",
-  "cuanto-pagas": "¿Cuánto pagas?",
 };
 
 const ADMIN: Record<string, string> = {

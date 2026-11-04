@@ -10,7 +10,7 @@ export const CLOUD_TOPIC: ApuntesTopic = {
       key: 'cloud-computing',
       name: 'Computación en la nube',
       definition:
-        'Entrega bajo demanda de potencia de cómputo, almacenamiento y otros recursos por internet, pagando solo por lo que usas.',
+        'Entrega On-Demand de potencia de cómputo, almacenamiento y otros recursos por internet, pagando solo por lo que usas.',
       confusedWith: ['virtualization', 'private-cloud'],
     },
     {
@@ -104,11 +104,11 @@ export const CLOUD_TOPIC: ApuntesTopic = {
     },
     {
       key: 'pay-as-you-go',
-      name: 'Pago por uso',
+      name: 'Pay-as-you-go',
       definition:
         'Principio de precios de AWS: pagas solo por lo que usas, sin contratos largos.',
       confusedWith: ['commit-discount', 'capex'],
-      note: 'En inglés, pay-as-you-go.',
+      note: 'El nombre va en inglés.',
     },
     {
       key: 'commit-discount',
@@ -134,18 +134,19 @@ export const CLOUD_TOPIC: ApuntesTopic = {
     },
     {
       key: 'region',
-      name: 'Región',
+      name: 'Region',
       definition:
-        'Ubicación física en el mundo con varias zonas de disponibilidad; se elige por cumplimiento legal, latencia y servicios disponibles.',
+        'Ubicación física en el mundo con varias Availability Zones; se elige por cumplimiento legal, latencia y servicios disponibles.',
       confusedWith: ['az', 'edge-location'],
-      note: 'Es un límite geopolítico: los servicios y precios varían entre regiones.',
+      note: 'El nombre va en inglés. Es un límite geopolítico: los servicios y precios varían entre Regions.',
     },
     {
       key: 'az',
-      name: 'Zona de disponibilidad',
+      name: 'Availability Zone',
       definition:
-        'Uno o más centros de datos aislados dentro de una región; cada región tiene al menos 3 para tolerar fallos.',
+        'Uno o más centros de datos aislados dentro de una Region; cada Region tiene al menos 3 para tolerar fallos.',
       confusedWith: ['region', 'edge-location'],
+      note: 'El nombre va en inglés. Se abrevia AZ.',
     },
     {
       key: 'edge-location',
@@ -158,9 +159,10 @@ export const CLOUD_TOPIC: ApuntesTopic = {
     {
       key: 'shared-responsibility',
       id: 'ki-shared-responsibility',
-      name: 'Modelo de responsabilidad compartida',
+      name: 'Shared responsibility model',
       definition:
         'Reparto de la seguridad: AWS protege la nube (lo físico, el mantenimiento y la virtualización) y el cliente protege lo que pone en ella (datos, cifrado y accesos).',
+      note: 'El nombre va en inglés.',
       confusedWith: ['security-of', 'security-in', 'shared-controls'],
     },
     {

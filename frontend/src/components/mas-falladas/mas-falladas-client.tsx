@@ -15,7 +15,7 @@ import { FlashDeck } from "@/components/study/flash-deck";
 import { WeakListView, WeakSignedOut } from "./weak-list-view";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
-import { PageContainer, PageHeader } from "@/components/ui/page";
+import { SectionTitle } from "@/components/ui/page";
 import { ProgressBar } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Stat } from "@/components/ui/stat";
@@ -37,8 +37,12 @@ const VARIANT_LABEL: Record<string, string> = {
   NAME_FOCUS: "Elige el nombre",
 };
 
-/** No auto-advance — user taps Siguiente after reading feedback. */
-export function MasFalladasClient() {
+/**
+ * The "Más falladas" tab of Estudiar. The page chrome (title and tabs) comes
+ * from the hub, so this renders sections only.
+ * No auto-advance — user taps Siguiente after reading feedback.
+ */
+export function MasFalladasPanel() {
   const [items, setItems] = useState<WeakItem[] | null>(null);
   const [hasPlayed, setHasPlayed] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +80,9 @@ export function MasFalladasClient() {
       setItems(res.items);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo cargar la lista",
+        err instanceof Error
+          ? err.message
+          : "No pudimos cargar tu lista. Inténtalo de nuevo.",
       );
       setItems([]);
     }
@@ -110,7 +116,7 @@ export function MasFalladasClient() {
       setError(
         err instanceof Error
           ? err.message
-          : "No se pudo iniciar la sesión de refuerzo",
+          : "No pudimos empezar el repaso. Inténtalo de nuevo.",
       );
     } finally {
       setPending(false);
@@ -149,7 +155,11 @@ export function MasFalladasClient() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al responder");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos guardar tu respuesta. Inténtalo de nuevo.",
+      );
       setSelected(null);
       answeringRef.current = false;
     } finally {
@@ -204,157 +214,155 @@ export function MasFalladasClient() {
     const progressPct = total ? Math.round((answered / total) * 100) : 0;
 
     return (
-      <PageContainer width="wide">
-        <section className="mx-auto w-full min-w-0 py-2 md:max-w-xl lg:max-w-4xl">
-          <div className="mb-2 flex min-w-0 items-center justify-between gap-3">
-            <h1 className="truncate text-xs font-semibold text-[var(--foreground-muted)]">
-              Ronda de refuerzo · Más falladas
-            </h1>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              onClick={() => {
-                backToList();
-                void load();
-              }}
-            >
-              Salir de la ronda
-            </Button>
-          </div>
-          <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-            <p className="font-semibold text-[var(--foreground)]">
-              Racha {sessionStreak}
-            </p>
-            <p className="tabular-nums text-[var(--foreground-muted)]">
-              {remaining > 0
-                ? `Quedan ${remaining} ${remaining === 1 ? "carta" : "cartas"}`
-                : "¡Listo!"}
-            </p>
-          </div>
+      <div
+        data-weak-round
+        className="mx-auto w-full min-w-0 py-2 md:max-w-xl lg:max-w-4xl"
+      >
+        <div className="mb-2 flex min-w-0 items-center justify-between gap-3">
+          <h2 className="truncate text-xs font-semibold text-[var(--foreground-muted)]">
+            Ronda de refuerzo · Más falladas
+          </h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => {
+              backToList();
+              void load();
+            }}
+          >
+            Salir de la ronda
+          </Button>
+        </div>
+        <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+          <p className="font-semibold text-[var(--foreground)]">
+            Racha {sessionStreak}
+          </p>
+          <p className="tabular-nums text-[var(--foreground-muted)]">
+            {remaining > 0
+              ? `Quedan ${remaining} ${remaining === 1 ? "carta" : "cartas"}`
+              : "¡Listo!"}
+          </p>
+        </div>
 
-          <ProgressBar
-            value={progressPct}
-            label="Progreso de la ronda"
-            className="mt-4"
-          />
+        <ProgressBar
+          value={progressPct}
+          label="Progreso de la ronda"
+          className="mt-4"
+        />
 
-          {error ? (
-            <Notice tone="danger" className="mt-4">
-              {error}
-            </Notice>
-          ) : null}
+        {error ? (
+          <Notice tone="danger" className="mt-4">
+            {error}
+          </Notice>
+        ) : null}
 
-          <div key={prompt.queueItemId} className="mt-8">
-            <FlashDeck
-              wide
-              eyebrow={eyebrow}
-              title={prompt.stem}
-              footer={
-                prompt.isRepeat
-                  ? "Otra vez: la fallaste hace un momento"
-                  : "Carta nueva"
-              }
-              flipped={phase === "feedback" && Boolean(feedback)}
-              back={
-                feedback ? (
-                  <AnswerFeedback
-                    correct={feedback.correct}
-                    correctLabel={`${String.fromCharCode(65 + feedback.correctIndex)}. ${prompt.choices[feedback.correctIndex]}`}
-                    explanation={
-                      feedback.explanation?.trim() ||
-                      (feedback.correct
-                        ? "Así se define este concepto."
-                        : `La correcta es «${prompt.choices[feedback.correctIndex]}».`)
-                    }
-                    chosenHint={feedback.chosenHint}
-                    requeued={requeued}
-                    itemMastered={Boolean(feedback.itemMastered)}
-                    streakTowardMastery={feedback.itemConsecutiveCorrect}
-                    nextLabel={
-                      summaryRef.current || feedback.finished
-                        ? "Ver resultado"
-                        : "Siguiente"
-                    }
-                    onNext={onNext}
-                  />
-                ) : null
-              }
-            >
-              <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
-                {prompt.choices.map((choice, idx) => {
-                  const i = idx as 0 | 1 | 2 | 3;
-                  const isSelected = selected === i;
-                  const showKey = phase === "feedback" && feedback;
-                  const isCorrect = Boolean(
-                    showKey && feedback.correctIndex === i,
-                  );
-                  const isWrongPick = Boolean(
-                    showKey && isSelected && !feedback.correct,
-                  );
+        <div key={prompt.queueItemId} className="mt-8">
+          <FlashDeck
+            wide
+            eyebrow={eyebrow}
+            title={prompt.stem}
+            footer={
+              prompt.isRepeat
+                ? "Otra vez: la fallaste hace un momento"
+                : "Carta nueva"
+            }
+            flipped={phase === "feedback" && Boolean(feedback)}
+            back={
+              feedback ? (
+                <AnswerFeedback
+                  wide
+                  correct={feedback.correct}
+                  correctLabel={`${String.fromCharCode(65 + feedback.correctIndex)}. ${prompt.choices[feedback.correctIndex]}`}
+                  explanation={
+                    feedback.explanation?.trim() ||
+                    (feedback.correct
+                      ? "Así se define."
+                      : `La correcta es «${prompt.choices[feedback.correctIndex]}».`)
+                  }
+                  chosenHint={feedback.chosenHint}
+                  requeued={requeued}
+                  itemMastered={Boolean(feedback.itemMastered)}
+                  streakTowardMastery={feedback.itemConsecutiveCorrect}
+                  nextLabel={
+                    summaryRef.current || feedback.finished
+                      ? "Ver resultado"
+                      : "Siguiente"
+                  }
+                  onNext={onNext}
+                />
+              ) : null
+            }
+          >
+            <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
+              {prompt.choices.map((choice, idx) => {
+                const i = idx as 0 | 1 | 2 | 3;
+                const isSelected = selected === i;
+                const showKey = phase === "feedback" && feedback;
+                const isCorrect = Boolean(
+                  showKey && feedback.correctIndex === i,
+                );
+                const isWrongPick = Boolean(
+                  showKey && isSelected && !feedback.correct,
+                );
 
-                  return (
-                    <li key={`${prompt.queueItemId}-${i}`}>
-                      <button
-                        type="button"
-                        disabled={pending || phase === "feedback"}
-                        onClick={() => {
-                          if (hasTextSelection()) return;
-                          void onAnswer(i);
-                        }}
-                        className={cn(
-                          "keycap keycap-option w-full select-text px-4 py-3 text-sm leading-snug normal-case disabled:cursor-wait",
-                          isCorrect && "keycap-correct",
-                          isWrongPick && "keycap-wrong",
-                          !showKey && isSelected && "keycap-accent",
-                        )}
-                      >
-                        <span className="mr-2 shrink-0 font-semibold opacity-45">
-                          {String.fromCharCode(65 + i)}.
+                return (
+                  <li key={`${prompt.queueItemId}-${i}`}>
+                    <button
+                      type="button"
+                      disabled={pending || phase === "feedback"}
+                      onClick={() => {
+                        if (hasTextSelection()) return;
+                        void onAnswer(i);
+                      }}
+                      className={cn(
+                        "keycap keycap-option w-full select-text px-4 py-3 text-sm leading-snug normal-case disabled:cursor-wait",
+                        isCorrect && "keycap-correct",
+                        isWrongPick && "keycap-wrong",
+                        !showKey && isSelected && "keycap-accent",
+                      )}
+                    >
+                      <span className="mr-2 shrink-0 font-semibold opacity-45">
+                        {String.fromCharCode(65 + i)}.
+                      </span>
+                      <span>{choice}</span>
+                      {pending && isSelected ? (
+                        <span className="ml-2 inline-flex align-middle">
+                          <Spinner label="Enviando respuesta" />
                         </span>
-                        <span>{choice}</span>
-                        {pending && isSelected ? (
-                          <span className="ml-2 inline-flex align-middle">
-                            <Spinner label="Enviando respuesta" />
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </FlashDeck>
-          </div>
-        </section>
-      </PageContainer>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </FlashDeck>
+        </div>
+      </div>
     );
   }
 
   if (phase === "done" && summary) {
     return (
-      <PageContainer width="wide">
-        <SessionSummary
-          summary={summary}
-          autoReturn={false}
-          extraAction={{ label: "Volver a la lista", onClick: backToList }}
-        />
-      </PageContainer>
+      <SessionSummary
+        summary={summary}
+        autoReturn={false}
+        extraAction={{ label: "Volver a la lista", onClick: backToList }}
+      />
     );
   }
 
   if (phase === "done") {
     return (
-      <PageContainer className="animate-[fade-up_0.35s_ease-out]">
-        <PageHeader
-          title="Refuerzo listo"
-          subtitle={
-            summary
-              ? `${summary.correctAnswers}/${summary.answered} aciertos · racha máx. ${summary.maxSessionStreak}`
-              : started
-                ? `Sesión de ${started.size} ítems terminada`
-                : "Sesión terminada"
-          }
-        />
+      <div className="animate-[fade-up_0.35s_ease-out]">
+        <SectionTitle>Refuerzo listo</SectionTitle>
+        <p className="mt-2 text-base text-[var(--foreground-muted)]">
+          {summary
+            ? `${summary.correctAnswers}/${summary.answered} aciertos · mejor racha ${summary.maxSessionStreak}`
+            : started
+              ? `Partida de ${started.size} cartas terminada`
+              : "Partida terminada"}
+        </p>
 
         {summary ? (
           <dl className="mt-8 grid grid-cols-2 gap-3">
@@ -367,20 +375,17 @@ export function MasFalladasClient() {
         ) : null}
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/estudiar" className={cn(buttonVariants())}>
-            Estudiar
-          </Link>
+          <Button type="button" onClick={backToList}>
+            Volver a la lista
+          </Button>
           <Link
-            href="/"
+            href="/estudiar"
             className={cn(buttonVariants({ variant: "secondary" }))}
           >
-            Inicio
+            Partida de cartas
           </Link>
-          <Button type="button" variant="ghost" onClick={backToList}>
-            Lista
-          </Button>
         </div>
-      </PageContainer>
+      </div>
     );
   }
 

@@ -1,9 +1,9 @@
-import { Grid3x3, Handshake, PiggyBank, type LucideIcon } from "lucide-react";
+import { Grid3x3, type LucideIcon } from "lucide-react";
 import type { KnowledgeItem } from "@aps/shared";
 import { crosswordTopics } from "@/lib/minigames/crucigrama";
 
 type Minigame = {
-  /** Ruta: /minijuegos/<slug>. Crea la carpeta con el mismo nombre en app/(app)/minijuegos. */
+  /** Ruta: /minijuegos/<slug>. */
   slug: string;
   title: string;
   description: string;
@@ -20,31 +20,11 @@ export const MINIGAMES: readonly Minigame[] = [
     slug: "crucigrama",
     title: "Crucigrama",
     description:
-      "Lee la definición y escribe el nombre del servicio o concepto. Algunas letras vienen de pista.",
+      "La pista dice qué es. Escribe el nombre. Si son dos palabras, el guion ya está.",
     topic: "Cualquier tema",
     format: "8 palabras",
     minutes: 6,
     icon: Grid3x3,
     topicIds: (items) => crosswordTopics(items).map((t) => t.category.id),
-  },
-  {
-    slug: "quien-se-encarga",
-    title: "¿Quién se encarga?",
-    description:
-      "Modelo de responsabilidad compartida: decide si cada tarea es de AWS o tuya.",
-    topic: "Conceptos de la nube",
-    format: "10 tareas",
-    minutes: 4,
-    icon: Handshake,
-  },
-  {
-    slug: "cuanto-pagas",
-    title: "¿Cuánto pagas?",
-    description:
-      "Bajo demanda, reservada o Spot: elige cómo pagar la instancia EC2 en cada caso.",
-    topic: "Precios",
-    format: "10 casos",
-    minutes: 5,
-    icon: PiggyBank,
   },
 ];

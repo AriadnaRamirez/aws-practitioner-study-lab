@@ -24,13 +24,24 @@ interface WeakProgressRow {
   masteredAt: Date | null;
 }
 
+function withoutContrast(text: string): string {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(
+      (sentence) => sentence && !/^\s*no lo confundas con\b/i.test(sentence),
+    )
+    .join(' ')
+    .trim();
+}
+
 export function knowledgeContent(k: KnowledgeItem): WeakItemContent {
   return {
     title: k.name,
     subtitle: k.definition,
     topicId: k.topicId,
     answer: k.definition,
-    explanation: k.explanation?.trim() || null,
+    explanation: withoutContrast(k.explanation ?? '') || null,
   };
 }
 

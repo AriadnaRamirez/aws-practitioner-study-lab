@@ -14,8 +14,8 @@ const buttonVariants = cva(
         /** Any other action. */
         secondary:
           "bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]",
-        /** Small inline action inside a card ("Practicar", "Cambiar fecha"). */
-        soft: "bg-[var(--accent-soft)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)]",
+        /** Small inline action inside a card. Hairline, no tint of its own color. */
+        soft: "border border-[var(--border-strong)] bg-transparent text-[var(--foreground)] hover:border-[var(--foreground)] hover:bg-[var(--surface-hover)]",
         ghost:
           "text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
         outline:

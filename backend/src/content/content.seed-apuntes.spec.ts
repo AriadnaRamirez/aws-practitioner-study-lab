@@ -53,6 +53,13 @@ describe('course-notes bank', () => {
     }
   });
 
+  it('explains the concept itself, without a rival contrast', () => {
+    for (const item of knowledge) {
+      expect(item.explanation.toLowerCase()).not.toContain('confundas');
+      expect(item.explanation.trim().length).toBeGreaterThan(10);
+    }
+  });
+
   it('places every card in a known topic', () => {
     const topics = new Set(buildApuntesTopics().map((t) => t.id));
     for (const item of knowledge) expect(topics.has(item.topicId)).toBe(true);

@@ -24,14 +24,10 @@ export function BuilderSkeleton({
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="font-sans text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
-              Personaliza tu sesión de cartas
+              Arma tu partida
             </p>
             <p className="mt-1 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Sigue los 3 pasos y luego toca{" "}
-              <span className="font-semibold text-[var(--foreground)]">
-                Iniciar con mis opciones
-              </span>
-              : tu sesión usará lo que elijas.
+              Elige cuántas cartas, cómo se reparten y los temas.
             </p>
           </div>
           <Mascot

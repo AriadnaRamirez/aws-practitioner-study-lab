@@ -38,7 +38,11 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
       const res = await fetchSessionHistoryDetail(sessionId);
       setDetail(res);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo cargar");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos cargar esta partida. Inténtalo de nuevo.",
+      );
     }
   }, [sessionId]);
 
@@ -49,7 +53,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
   if (authed === false) {
     return (
       <PageContainer>
-        <PageHeader title="Sesión" subtitle="Entra para ver el detalle." />
+        <PageHeader title="Partida" subtitle="Entra para ver cómo te fue." />
         <Link href={loginHref(`/cuenta/historial/${sessionId}`)} className={cn(buttonVariants(), "mt-8")}>
           Entrar
         </Link>
@@ -126,13 +130,13 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
       <PageHeader
         className="mt-4"
         title={`${modeLabel(detail.mode)} · ${formatSessionDay(detail, detail.timezone)}`}
-        subtitle={`${formatSessionWhen(detail, detail.timezone)} · ${detail.size} conceptos · aciertos ${formatScore(detail)} · ${formatDuration(detail.durationMs)}`}
+        subtitle={`${formatSessionWhen(detail, detail.timezone)} · ${detail.size} cartas · aciertos ${formatScore(detail)} · ${formatDuration(detail.durationMs)}`}
       />
 
       {attempts.length === 0 ? (
         <p className="mt-8 text-sm text-[var(--foreground-muted)]">
-          Esta sesión no tiene intentos registrados (la dejaste a medias o
-          sigue en curso).
+          Esta partida no tiene respuestas. La dejaste a medias o sigue en
+          curso.
         </p>
       ) : (
         <ol className="mt-8 space-y-3">

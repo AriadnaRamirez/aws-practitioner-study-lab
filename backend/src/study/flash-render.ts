@@ -93,19 +93,60 @@ function rankedNames(
   return [...new Set(ranked)].slice(0, 3);
 }
 
+const CONTRAST_SENTENCE = /^\s*no lo confundas con\b/i;
+
+function sentencesOf(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+}
+
+function ensurePeriod(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
 /**
- * Every variant already shows the definition (stem or correct choice), so
- * drop it from the explanation instead of reading it twice.
+ * Why the answer is right: the expansion and what the concept is for.
+ * Drops a rival contrast and a sentence that only repeats the definition.
  */
-export function flashExplanation(item: KnowledgeItem): string {
-  const definition = item.definition.trim();
-  const full = item.explanation.trim();
-  if (!definition || !full.includes(definition)) return full;
-  const rest = full
-    .replace(definition, '')
+export function flashReason(item: KnowledgeItem): string {
+  const definition = item.definition.trim().replace(/[.\s]+$/, '');
+  let text = sentencesOf(item.explanation)
+    .filter((sentence) => !CONTRAST_SENTENCE.test(sentence))
+    .join(' ');
+  if (definition) {
+    const at = text
+      .toLocaleLowerCase('es')
+      .indexOf(definition.toLocaleLowerCase('es'));
+    if (at !== -1) {
+      text = `${text.slice(0, at)} ${text.slice(at + definition.length)}`;
+    }
+  }
+  const reason = text
     .replace(/\s{2,}/g, ' ')
+    .replace(/^[.\s]+/, '')
     .trim();
-  return rest.length >= 12 ? rest : full;
+  return reason.length >= 12 ? ensurePeriod(reason) : '';
+}
+
+function quoted(answer: string): string {
+  return answer.trim().replace(/[.\s]+$/, '');
+}
+
+/** Names the correct choice, then says why it is right. */
+export function flashExplanation(item: KnowledgeItem, correct?: string): string {
+  const answer = quoted(correct ?? item.name);
+  const reason = flashReason(item);
+  if (/^la correcta es\b/i.test(reason)) return reason;
+  if (!answer) return reason || ensurePeriod(item.definition);
+  if (reason) return `La correcta es «${answer}». ${reason}`;
+  if (answer === quoted(item.name)) {
+    return `La correcta es «${answer}». ${ensurePeriod(item.definition)}`;
+  }
+  return `La correcta es «${answer}», porque así se define ${item.name.trim()}.`;
 }
 
 /** What the wrong pick actually is, so the miss teaches a contrast. */
@@ -152,7 +193,7 @@ export function renderFlashVariant(
       return {
         variant,
         stem: `¿Qué es ${item.name}?`,
-        explanation: flashExplanation(item),
+        explanation: flashExplanation(item, item.definition),
         ...packed,
       };
     }
@@ -166,7 +207,7 @@ export function renderFlashVariant(
       return {
         variant,
         stem: item.definition,
-        explanation: flashExplanation(item),
+        explanation: flashExplanation(item, item.name),
         ...packed,
       };
     }
@@ -180,7 +221,7 @@ export function renderFlashVariant(
       return {
         variant,
         stem: `Identifica el nombre correcto: «${item.definition.trim()}»`,
-        explanation: flashExplanation(item),
+        explanation: flashExplanation(item, item.name),
         ...packed,
       };
     }

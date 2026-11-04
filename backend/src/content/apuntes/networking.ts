@@ -410,7 +410,7 @@ export const NETWORKING_TOPIC: ApuntesTopic = {
       id: 'ki-net-subnet',
       name: 'Subred',
       definition:
-        'División de una red en segmentos más pequeños; en AWS cada una vive en una sola zona de disponibilidad.',
+        'División de una red en segmentos más pequeños; en AWS cada una vive en una sola Availability Zone.',
       confusedWith: ['cidr', 'vpc'],
     },
   ],

@@ -40,7 +40,9 @@ export function SecurityCard() {
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(errorMessage(err, "No se pudo cambiar la contraseña"));
+      setError(
+        errorMessage(err, "No pudimos cambiar tu contraseña. Inténtalo de nuevo."),
+      );
     } finally {
       setPending(false);
     }

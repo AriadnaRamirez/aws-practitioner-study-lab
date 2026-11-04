@@ -36,7 +36,11 @@ export default function AdminPodioPage() {
     try {
       setData(await fetchPodium(w));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo cargar el podio");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos cargar el podio. Inténtalo de nuevo.",
+      );
     } finally {
       setLoading(false);
     }

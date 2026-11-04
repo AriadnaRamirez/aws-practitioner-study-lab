@@ -22,6 +22,7 @@ import {
   resolveCategoryTopicIds,
   scopeForTopicIds,
   studyStartHref,
+  WEAK_REVIEW_HREF,
   type StudyCategory,
 } from "@/lib/study-categories";
 import { cn } from "@/lib/utils";
@@ -69,8 +70,8 @@ function selectionSummary(
 }
 
 export function resumeHref(s: ActiveSessionSummary): string {
-  if (s.mode === "EXAM_TIMED") return `/estudiar/examen?session=${s.id}`;
-  if (s.mode === "WEAK_REVIEW") return "/mas-falladas";
+  if (s.mode === "EXAM_TIMED") return `/examen?session=${s.id}`;
+  if (s.mode === "WEAK_REVIEW") return WEAK_REVIEW_HREF;
   return `/estudiar?session=${s.id}`;
 }
 
@@ -170,7 +171,7 @@ export function NewGameCard({
                 id="tamano-sesion"
                 className="px-1 text-sm font-semibold text-[var(--foreground)]"
               >
-                Tamaño de la sesión
+                Cuántas cartas
               </p>
               <SessionSizePicker
                 value={gameSize}
@@ -196,7 +197,7 @@ export function NewGameCard({
               />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-[var(--foreground)]">
-                  Personalizar sesión
+                  Elegir temas
                 </span>
                 <span className="block text-xs text-[var(--foreground-muted)]">
                   Elige qué temas entran en tu partida

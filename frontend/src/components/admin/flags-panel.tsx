@@ -27,9 +27,9 @@ const FLAG_COPY: Record<string, { title: string; description: string }> = {
       "Cuando está apagado, los listados públicos ocultan temas, flash y banco con trackId=AIF.",
   },
   [FEATURE_FLAG_EXAM_MODES]: {
-    title: "Modos Estudio y Examen",
+    title: "Examen",
     description:
-      "Apagado = solo Cartas. Oculta las pestañas Estudio y Examen y la API rechaza esas sesiones.",
+      "Apagado = el menú no muestra Examen y la API rechaza esas sesiones. Estudiar sigue con Cartas y Más falladas.",
   },
 };
 
@@ -69,7 +69,11 @@ export function FlagsPanel() {
         prev.map((f) => (f.key === updated.key ? updated : f)),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos guardar. Inténtalo de nuevo.",
+      );
     }
   }
 

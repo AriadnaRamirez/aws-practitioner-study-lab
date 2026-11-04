@@ -5,6 +5,7 @@ import {
   type KnowledgeItem,
   type Topic,
 } from '@aps/shared';
+import { CCP_PRACTICE_FACTS } from './content.seed-ccp';
 import {
   AIF_FACTS,
   EXTRA_CLF_FACTS,
@@ -149,7 +150,7 @@ const PRACTICE_FACTS: Fact[] = [
       'Hardware on-prem obligatorio',
       'Licencias perpetuas de hipervisor',
     ],
-    explanation: 'Consumo bajo demanda = OPEX flexible.',
+    explanation: 'Consumo On-Demand (en inglés) = OPEX flexible.',
   },
   {
     topicId: 'topic-cloud-fundamentals',
@@ -207,6 +208,7 @@ export function buildSeedQuestions(): ExamQuestion[] {
     ...buildAwsGuideQuestions(),
     ...base,
     ...factsToQuestions(EXTRA_CLF_FACTS, 'clf'),
+    ...factsToQuestions(CCP_PRACTICE_FACTS, 'ccp'),
     ...factsToQuestions(AIF_FACTS, 'aif'),
   ];
 }

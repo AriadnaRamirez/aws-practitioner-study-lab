@@ -81,6 +81,14 @@
     font-size: 9.5pt !important;
   }
 
+  [data-guide-doc] .guide-doc-lead {
+    margin-top: 8pt !important;
+    max-width: none !important;
+    font-size: 9.5pt !important;
+    line-height: 1.4 !important;
+    color: #333 !important;
+  }
+
   [data-guide-doc] .guide-toc {
     margin-top: 0 !important;
     padding: 0 !important;

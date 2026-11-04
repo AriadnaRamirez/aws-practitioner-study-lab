@@ -35,7 +35,7 @@ export type BuilderPreselect = {
   size: StudySize | null;
 };
 
-const START_LABEL = "Iniciar con mis opciones";
+const START_LABEL = "Iniciar partida";
 
 function StepNumber({ n }: { n: number }) {
   return (
@@ -176,7 +176,7 @@ export function SessionBuilder({
   const distributionLabel = distribution === "balanced" ? "parejo" : "al azar";
   const summaryMeta = [
     plural(chosen.length, "tema", "temas"),
-    pool !== null ? `de un pool de ${pool}` : null,
+    pool !== null ? `entre ${plural(pool, "carta", "cartas")}` : null,
     distributionLabel,
   ]
     .filter(Boolean)
@@ -240,14 +240,10 @@ export function SessionBuilder({
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="font-sans text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
-              Personaliza tu sesión de cartas
+              Arma tu partida
             </h1>
             <p className="mt-1 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Sigue los 3 pasos y luego toca{" "}
-              <span className="font-semibold text-[var(--foreground)]">
-                {START_LABEL}
-              </span>
-              : tu sesión usará lo que elijas.
+              Elige cuántas cartas, cómo se reparten y los temas.
             </p>
           </div>
           <Mascot
@@ -325,8 +321,7 @@ export function SessionBuilder({
           </div>
           {preset === "weakest" ? (
             <p className="mt-2.5 text-xs text-[var(--foreground-muted)]">
-              Tus {WEAKEST_COUNT} temas con menor porcentaje de cartas
-              dominadas.
+              Los {WEAKEST_COUNT} temas que menos dominas.
             </p>
           ) : null}
 
@@ -450,7 +445,7 @@ export function SessionBuilder({
             )}
           >
             {chosen.length
-              ? "Empieza con las cartas, el reparto y los temas que elegiste. Los recordamos para la próxima."
+              ? "Guardamos esta elección para la próxima."
               : "Elige al menos un tema para empezar."}
           </p>
         </Card>

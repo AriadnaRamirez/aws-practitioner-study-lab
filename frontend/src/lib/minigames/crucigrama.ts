@@ -1,7 +1,6 @@
 import type { KnowledgeItem } from "@aps/shared";
 import {
   playableCategories,
-  shortDefinition,
   type GameCategory,
 } from "@/lib/minigames/categories";
 import { shuffle, type Rng } from "@/lib/minigames/random";
@@ -9,8 +8,10 @@ import { shuffle, type Rng } from "@/lib/minigames/random";
 /** Words placed per puzzle; a category needs `MIN_CROSSWORD_WORDS` usable answers. */
 export const CROSSWORD_WORDS = 8;
 export const MIN_CROSSWORD_WORDS = 6;
-/** Keeps the grid playable on a phone. */
-const MAX_SIDE = 12;
+/** Letters only. The hyphen between words does not count toward this. */
+const MAX_LETTERS = 12;
+/** Grid edge, including the hyphen cells between words. */
+const MAX_SIDE = 16;
 const MIN_LEN = 3;
 const ATTEMPTS = 80;
 
@@ -23,7 +24,10 @@ export type CrosswordEntry = {
   row: number;
   col: number;
   answer: string;
+  /** One sentence, so it fits on the bar above the grid. */
   clue: string;
+  /** The same idea said another way, offered before revealing the word. */
+  another: string | null;
   name: string;
   definition: string;
 };
@@ -34,18 +38,39 @@ export type Crossword = {
   entries: CrosswordEntry[];
 };
 
-/** "Route 53" → "ROUTE53", "Autenticación" → "AUTENTICACION". */
+/**
+ * "Route 53" → "ROUTE-53", "Autenticación" → "AUTENTICACION",
+ * "PCI-DSS" → "PCI-DSS". A hyphen marks each gap between words.
+ */
 export function crosswordAnswer(name: string): string {
   return name
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function crosswordLetters(answer: string): number {
+  return answer.replace(/-/g, "").length;
+}
+
+/** "7 letras" or "7 letras, dos palabras". */
+export function crosswordCountLabel(answer: string): string {
+  const letters = crosswordLetters(answer);
+  const words = answer.split("-").filter(Boolean).length;
+  const letterLabel = letters === 1 ? "1 letra" : `${letters} letras`;
+  if (words <= 1) return letterLabel;
+  if (words === 2) return `${letterLabel}, dos palabras`;
+  return `${letterLabel}, ${words} palabras`;
 }
 
 export function isCrosswordable(item: KnowledgeItem): boolean {
-  const len = crosswordAnswer(item.name).length;
-  return len >= MIN_LEN && len <= MAX_SIDE;
+  const answer = crosswordAnswer(item.name);
+  const letters = crosswordLetters(answer);
+  return (
+    letters >= MIN_LEN && letters <= MAX_LETTERS && answer.length <= MAX_SIDE
+  );
 }
 
 /** Topics with enough short names to build a puzzle. */
@@ -59,12 +84,82 @@ function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** The clue must not give the answer away. */
-function clueFor(item: KnowledgeItem): string {
-  return shortDefinition(item.definition).replace(
-    new RegExp(escapeRegExp(item.name), "gi"),
+/** Hide the answer as a whole word, so "NIC" does not eat "único". */
+function blankAnswer(text: string, name: string): string {
+  const phrase = name.trim();
+  if (phrase.length < 2) return text;
+  return text.replace(
+    new RegExp(
+      `(?<![\\p{L}\\p{N}])${escapeRegExp(phrase)}(?![\\p{L}\\p{N}])`,
+      "giu",
+    ),
     "____",
   );
+}
+
+const PLAIN_PHRASES: readonly [RegExp, string][] = [
+  [
+    /RPO y RTO de milisegundos/gi,
+    "casi sin perder datos y volviendo al instante",
+  ],
+  [
+    /RPO y RTO de minutos/gi,
+    "pierdes pocos minutos de datos y vuelves en minutos",
+  ],
+  [
+    /RPO y RTO de horas/gi,
+    "puedes perder horas de datos y tardar horas en volver",
+  ],
+  [
+    /RPO y RTO de días/gi,
+    "puedes perder días de datos y tardar días en volver",
+  ],
+];
+
+function plainText(text: string): string {
+  let out = text.replace(/;?\s*en la analogía de la cocina[^.;]*/gi, "");
+  for (const [pattern, plain] of PLAIN_PHRASES)
+    out = out.replace(pattern, plain);
+  return out;
+}
+
+/** Trimmed, capitalised and closed with a period. */
+function sentence(text: string): string {
+  const out = text
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.:;,]+$/, "");
+  if (!out) return "";
+  const cased = out.charAt(0).toUpperCase() + out.slice(1);
+  return /[!?]$/.test(cased) ? cased : `${cased}.`;
+}
+
+/** Long second clues get cut at the first sentence break. */
+function shorten(text: string, max = 170): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max).lastIndexOf(". ");
+  return cut > 50 ? text.slice(0, cut) : text.slice(0, max);
+}
+
+/**
+ * Two ways to say the same thing: the bar above the grid shows the first, and
+ * the second is there for when the first one does not land.
+ */
+function cluesFor(item: KnowledgeItem): {
+  clue: string;
+  another: string | null;
+} {
+  const text = plainText(item.definition);
+  const clauses = text
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const clue = sentence(blankAnswer(clauses[0] ?? text, item.name));
+
+  const rest = clauses.slice(1).join(". ");
+  const other = rest || plainText(item.explanation ?? "");
+  const another = other ? sentence(shorten(blankAnswer(other, item.name))) : "";
+  return { clue, another: another && another !== clue ? another : null };
 }
 
 export const cellKey = (row: number, col: number) => `${row},${col}`;
@@ -79,38 +174,58 @@ export function entryCells(
   }));
 }
 
-/** Letters given per word: none for 3-letter answers, the first letter up to 7, two from 8. */
-function hintTarget(length: number): number {
-  if (length <= 3) return 0;
-  return length <= 7 ? 1 : 2;
+/** Letters already on the grid when the puzzle opens. Hyphens are extra. */
+export const HINT_LETTERS = 4;
+
+/**
+ * The grid opens almost empty. The only cells already filled are the hyphens
+ * between two words, plus a few hint letters.
+ */
+export function hyphenCells(entries: readonly CrosswordEntry[]): Set<string> {
+  const set = new Set<string>();
+  for (const entry of entries) {
+    for (const cell of entryCells(entry)) {
+      if (cell.letter === "-") set.add(cellKey(cell.row, cell.col));
+    }
+  }
+  return set;
 }
 
 /**
- * Cells shown from the start. A word's first hint is its first letter, extras
- * are spread out; a hint on a crossing counts for both words.
+ * A few letters to start from: one per word, near the middle, so a short name
+ * is not given away. The same cell is never picked twice.
  */
-export function pickHints(
-  entries: readonly CrosswordEntry[],
-  rng: Rng = Math.random,
-): Set<string> {
-  const given = new Set<string>();
-  for (const e of shuffle(entries, rng)) {
-    const keys = entryCells(e).map((c) => cellKey(c.row, c.col));
-    const target = hintTarget(keys.length);
-    const count = () => keys.filter((k) => given.has(k)).length;
-    if (count() < target) given.add(keys[0]);
-    const nearGiven = (i: number) =>
-      given.has(keys[i - 1] ?? "") || given.has(keys[i + 1] ?? "");
-    const rest = shuffle(
-      keys.map((_, i) => i).filter((i) => !given.has(keys[i])),
-      rng,
-    ).sort((a, b) => Number(nearGiven(a)) - Number(nearGiven(b)));
-    for (const i of rest) {
-      if (count() >= target) break;
-      given.add(keys[i]);
+export function hintCells(entries: readonly CrosswordEntry[]): Set<string> {
+  const picked = new Set<string>();
+  const words = entries
+    .map((entry) =>
+      entryCells(entry)
+        .filter((cell) => cell.letter !== "-")
+        .map((cell) => cellKey(cell.row, cell.col)),
+    )
+    .filter((keys) => keys.length > 1);
+  let round = 0;
+  while (picked.size < HINT_LETTERS) {
+    let added = 0;
+    for (const keys of words) {
+      if (picked.size >= HINT_LETTERS) break;
+      const free = keys.filter((key) => !picked.has(key));
+      if (free.length <= round) continue;
+      const mid = Math.floor((free.length - 1) / 2);
+      const step = Math.ceil(round / 2);
+      const at =
+        round === 0
+          ? mid
+          : round % 2 === 1
+            ? Math.max(0, mid - step)
+            : Math.min(free.length - 1, mid + step);
+      picked.add(free[at]);
+      added += 1;
     }
+    if (!added) break;
+    round += 1;
   }
-  return given;
+  return picked;
 }
 
 type Cell = { letter: string; across?: boolean; down?: boolean };
@@ -283,7 +398,7 @@ export function buildCrossword(
       row: p.row,
       col: p.col,
       answer: p.word,
-      clue: clueFor(p.item),
+      ...cluesFor(p.item),
       name: p.item.name,
       definition: p.item.definition,
     }))

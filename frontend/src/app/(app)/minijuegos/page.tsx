@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MinigamesIndex } from "@/components/minigames/minigames-index";
+import { CrucigramaGame } from "@/components/minigames/crucigrama-game";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function MinijuegosPage() {
   return (
     <RequireAuth>
-      <MinigamesIndex />
+      <CrucigramaGame />
     </RequireAuth>
   );
 }

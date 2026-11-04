@@ -7,18 +7,21 @@ import { RecordMinigameResultDto } from './dto/record-minigame-result.dto';
 import { MinigamesService } from './minigames.service';
 
 describe('isMinigameResultId', () => {
-  it.each([
-    'crucigrama',
-    'cuanto-pagas',
-    'quien-se-encarga',
-    'crucigrama:cloud-concepts',
-  ])('accepts %p', (id) => {
-    expect(isMinigameResultId(id)).toBe(true);
-  });
+  it.each(['crucigrama', 'crucigrama:cloud-concepts'])(
+    'accepts %p',
+    (id) => {
+      expect(isMinigameResultId(id)).toBe(true);
+    },
+  );
 
   it.each([
     '',
     'memorama',
+    'cuanto-pagas',
+    'quien-se-encarga',
+    'pieza-que-falta',
+    'como-se-conecta',
+    'cloud-architect',
     'crucigrama:',
     'crucigrama:Compute',
     'crucigrama:a:b',
@@ -32,7 +35,7 @@ describe('isMinigameResultId', () => {
 describe('RecordMinigameResultDto', () => {
   it('requires a boolean perfect flag', async () => {
     const dto = plainToInstance(RecordMinigameResultDto, {
-      resultId: 'cuanto-pagas',
+      resultId: 'crucigrama',
       perfect: 'yes',
     });
     const errors = await validate(dto);
@@ -52,14 +55,14 @@ describe('MinigamesService', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     prisma.minigameResult.findMany.mockResolvedValue([
-      { resultId: 'cuanto-pagas', status: MinigameStatus.COMPLETED },
+      { resultId: 'crucigrama', status: MinigameStatus.COMPLETED },
       { resultId: 'crucigrama:compute', status: MinigameStatus.PLAYED },
     ]);
   });
 
   it('lists the user tags in API casing', async () => {
     await expect(service.list('user_1')).resolves.toEqual({
-      'cuanto-pagas': 'completed',
+      crucigrama: 'completed',
       'crucigrama:compute': 'played',
     });
     expect(prisma.minigameResult.findMany).toHaveBeenCalledWith(
@@ -68,14 +71,14 @@ describe('MinigamesService', () => {
   });
 
   it('marks a perfect run as completed', async () => {
-    await service.record('user_1', { resultId: 'cuanto-pagas', perfect: true });
+    await service.record('user_1', { resultId: 'crucigrama', perfect: true });
     expect(prisma.minigameResult.upsert).toHaveBeenCalledWith({
       where: {
-        userId_resultId: { userId: 'user_1', resultId: 'cuanto-pagas' },
+        userId_resultId: { userId: 'user_1', resultId: 'crucigrama' },
       },
       create: {
         userId: 'user_1',
-        resultId: 'cuanto-pagas',
+        resultId: 'crucigrama',
         status: MinigameStatus.COMPLETED,
       },
       update: { status: MinigameStatus.COMPLETED },
@@ -84,7 +87,7 @@ describe('MinigamesService', () => {
 
   it('never downgrades: an imperfect run only creates a played row', async () => {
     const results = await service.record('user_1', {
-      resultId: 'cuanto-pagas',
+      resultId: 'crucigrama',
       perfect: false,
     });
     expect(prisma.minigameResult.upsert).toHaveBeenCalledWith(
@@ -95,7 +98,7 @@ describe('MinigamesService', () => {
         update: {},
       }),
     );
-    expect(results['cuanto-pagas']).toBe('completed');
+    expect(results.crucigrama).toBe('completed');
   });
 
   it('rejects unknown games before touching the database', async () => {

@@ -55,7 +55,11 @@ export function ExamRunner() {
       setSummary(result);
       setPhase("done");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo enviar el examen");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "No pudimos enviar tu examen. Inténtalo de nuevo.",
+      );
     } finally {
       setBusy(false);
       setSubmitting(false);
@@ -84,7 +88,11 @@ export function ExamRunner() {
       setSummary(null);
       setPhase("running");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo iniciar");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "No pudimos empezar el examen. Inténtalo de nuevo.",
+      );
     } finally {
       setBusy(false);
     }
@@ -103,7 +111,11 @@ export function ExamRunner() {
       });
       setSession(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "No pudimos guardar tu respuesta. Inténtalo de nuevo.",
+      );
     } finally {
       setBusy(false);
     }
@@ -122,7 +134,11 @@ export function ExamRunner() {
       });
       setSession(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo marcar");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "No pudimos marcar esta pregunta. Inténtalo de nuevo.",
+      );
     } finally {
       setBusy(false);
     }
@@ -142,7 +158,7 @@ export function ExamRunner() {
         <PageHeader
           title="Examen"
           actions={
-            <Link href={loginHref("/estudiar/examen")} className={buttonVariants()}>
+            <Link href={loginHref("/examen")} className={buttonVariants()}>
               Entrar
             </Link>
           }
@@ -288,19 +304,22 @@ export function ExamRunner() {
 
   return (
     <PageContainer>
-      <PageHeader title="Examen" />
+      <PageHeader
+        title="Examen"
+        subtitle="65 preguntas y 90 minutos, como el examen real. También hay tandas más cortas."
+      />
 
       <div className="mt-8 flex flex-col gap-6">
         <fieldset className="space-y-3">
           <legend className="text-sm font-semibold text-[var(--foreground)]">
-            Tamaño
+            Cuántas preguntas
           </legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {EXAM_TIMED_SIZES.map((n) => {
               const limit = EXAM_TIMED_LIMIT_SEC[n];
               const label =
                 n === 65
-                  ? `Mock completo · ${n} preguntas · ${formatMinutes(limit)}`
+                  ? `Examen completo · ${n} preguntas · ${formatMinutes(limit)}`
                   : `${n} preguntas · ${formatMinutes(limit)}`;
               return (
                 <label

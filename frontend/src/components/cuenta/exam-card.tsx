@@ -102,7 +102,9 @@ export function ExamCard({
       setExams(await fetchMyExams());
       setLoadError(null);
     } catch (err) {
-      setLoadError(errorMessage(err, "No se pudo cargar tu examen"));
+      setLoadError(
+        errorMessage(err, "No pudimos cargar tu examen. Inténtalo de nuevo."),
+      );
     }
   }, []);
 
@@ -128,7 +130,9 @@ export function ExamCard({
       setDialogOpen(false);
       fetchMe().then(onUserChange, () => {});
     } catch (err) {
-      setSaveError(errorMessage(err, "No se pudo guardar"));
+      setSaveError(
+        errorMessage(err, "No pudimos guardar la fecha. Inténtalo de nuevo."),
+      );
     } finally {
       setSaving(false);
     }

@@ -1745,8 +1745,11 @@ export class StudyService {
           publishedOnly: false,
         });
         title = k.name;
-        explanation = flashExplanation(k);
         const variant = (a.variant ?? 'DEFINITION_TO_NAME') as FlashVariant;
+        explanation = flashExplanation(
+          k,
+          variant === 'NAME_TO_DEFINITION' ? k.definition : k.name,
+        );
         // Do NOT re-run renderFlashVariant: it reshuffles choices and would
         // mislabel the historical choiceIndex. Use stable item fields.
         if (variant === 'NAME_TO_DEFINITION') {

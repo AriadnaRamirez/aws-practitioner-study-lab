@@ -10,6 +10,7 @@ import {
   formatSessionWhen,
   modeLabel,
 } from "@/lib/format-study";
+import { WEAK_REVIEW_HREF } from "@/lib/study-categories";
 import { cn } from "@/lib/utils";
 
 type SessionHistoryProps = {
@@ -40,7 +41,7 @@ export function SessionHistory({
         {showMasFalladasLink ? (
           <p className="mt-3 text-sm">
             <Link
-              href="/mas-falladas"
+              href={WEAK_REVIEW_HREF}
               className={cn(
                 "rounded-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline",
                 FOCUS_RING,
@@ -63,7 +64,7 @@ export function SessionHistory({
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {modeLabel(s.mode)}
                 <span className="ml-2 font-normal text-[var(--foreground-muted)]">
-                  · {s.size} conceptos
+                  · {s.size} cartas
                 </span>
               </p>
               <p className="text-xs text-[var(--foreground-muted)]">

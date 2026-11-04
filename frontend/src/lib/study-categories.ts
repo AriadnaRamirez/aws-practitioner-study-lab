@@ -68,7 +68,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de cómputo",
     shortTitle: "Cómputo",
-    subtitle: "EC2, Lambda, ECS, tipos de instancia",
+    subtitle: "Servidores virtuales, funciones sin servidor y cómo pagarlos",
     topicIds: ["topic-compute"],
     tone: "orange",
     glyph: "cloud",
@@ -78,7 +78,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de almacenamiento",
     shortTitle: "Almacenamiento",
-    subtitle: "S3 y sus clases, EBS, EFS, familia Snow",
+    subtitle: "Archivos, discos para una instancia y copias que sacas de línea",
     topicIds: ["topic-storage"],
     tone: "ink",
     glyph: "cloud",
@@ -88,7 +88,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de bases de datos",
     shortTitle: "Bases de datos",
-    subtitle: "RDS, DynamoDB, DMS",
+    subtitle: "Bases relacionales, NoSQL y cómo moverlas",
     topicIds: ["topic-databases"],
     tone: "slate",
     glyph: "cloud",
@@ -98,7 +98,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de redes y entrega",
     shortTitle: "Redes y entrega",
-    subtitle: "VPC, subredes, gateways, CloudFront…",
+    subtitle: "Tu red privada, la salida a internet y la entrega de contenido",
     topicIds: ["topic-networking"],
     tone: "cream",
     glyph: "network",
@@ -108,7 +108,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de seguridad",
     shortTitle: "Seguridad",
-    subtitle: "IAM, KMS, Shield, WAF, GuardDuty…",
+    subtitle: "Quién entra, claves, ataques y cómo te enteras",
     topicIds: ["topic-security"],
     tone: "orange",
     glyph: "cloud",
@@ -118,7 +118,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de gestión y monitoreo",
     shortTitle: "Gestión y monitoreo",
-    subtitle: "CloudWatch, CloudFormation, costos…",
+    subtitle: "Métricas, plantillas de infraestructura y cuánto estás gastando",
     topicIds: ["topic-management"],
     tone: "ink",
     glyph: "cloud",
@@ -148,7 +148,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de redes",
     shortTitle: "Redes",
-    subtitle: "OSI, TCP/UDP, IP, CIDR, DNS",
+    subtitle: "Cómo viajan los datos: capas, puertos, direcciones y nombres",
     topicIds: ["topic-net-basics"],
     tone: "ink",
     glyph: "network",
@@ -168,7 +168,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de operaciones del sistema",
     shortTitle: "Operaciones",
-    subtitle: "Automatización, AWS CLI, solución de problemas",
+    subtitle: "Automatizar, usar la terminal y encontrar qué falló",
     topicIds: ["topic-sysops"],
     tone: "cream",
     glyph: "book",
@@ -178,7 +178,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de arquitectura de AWS",
     shortTitle: "Arquitectura",
-    subtitle: "CAF, Well-Architected, alta disponibilidad, soporte",
+    subtitle: "Cómo se diseña una solución fiable, segura y al costo correcto",
     topicIds: ["topic-architecture"],
     tone: "slate",
     glyph: "cloud",
@@ -197,7 +197,7 @@ export const AWS_SERVICES_CATEGORY: StudyCategory = {
   group: "aws",
   title: "Servicios de AWS",
   shortTitle: "Todos los servicios",
-  subtitle: "Los 6 tipos de servicio",
+  subtitle: "Cómputo, datos, redes, seguridad y cómo operarlos",
   topicIds: topicIdsOfGroup("aws"),
   tone: "orange",
   glyph: "cloud",
@@ -294,6 +294,9 @@ export function scopeTitle(scope: StudyScope): string {
   if (scope.kind === "category") return scope.category.title;
   return `Tu selección · ${scope.categories.length} temas`;
 }
+
+/** Pestaña «Más falladas» dentro de Estudiar. */
+export const WEAK_REVIEW_HREF = "/estudiar?mode=repaso";
 
 /** URL de inicio para un alcance; la partida rápida reparte por tema. */
 export function studyStartHref(

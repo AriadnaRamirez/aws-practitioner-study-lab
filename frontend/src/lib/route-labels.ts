@@ -1,9 +1,8 @@
 /** Student-facing names for in-app paths (login hint, redirects). */
 const ROUTE_LABELS: Array<[prefix: string, label: string]> = [
   ["/dashboard", "Inicio"],
-  ["/estudiar/examen", "el modo examen"],
+  ["/examen", "Examen"],
   ["/estudiar", "Estudiar"],
-  ["/mas-falladas", "Más falladas"],
   ["/guias", "Guías"],
   ["/minijuegos", "Minijuegos"],
   ["/cuenta/historial", "tu historial"],

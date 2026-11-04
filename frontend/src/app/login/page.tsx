@@ -68,7 +68,11 @@ function LoginForm() {
       const next = safeNextPath(nextParam, res.user.role);
       window.location.assign(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo entrar");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos entrar. Inténtalo de nuevo.",
+      );
       setPending(false);
     }
   }

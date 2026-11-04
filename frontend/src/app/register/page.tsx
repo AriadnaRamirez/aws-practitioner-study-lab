@@ -148,7 +148,11 @@ export default function RegisterPage() {
       setDoneUser(res.user.username);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo registrar");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No pudimos crear tu cuenta. Inténtalo de nuevo.",
+      );
     } finally {
       setPending(false);
     }
