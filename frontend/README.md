@@ -1,6 +1,6 @@
 # Frontend — AWS Practitioner Study Lab
 
-App **Next.js** (UI en español). Habla solo con el backend vía `NEXT_PUBLIC_API_URL`.
+App **Next.js** (UI en español). Habla con el backend por `/api/v1` (proxy de Next, mismo origen); `NEXT_PUBLIC_API_URL` solo si quieres saltarte el proxy.
 
 ## Run
 

@@ -56,9 +56,26 @@ model User {
   attempts            Attempt[]
   itemProgress        ItemProgress[]
   dailyStreak         DailyStreak?
+  exams               UserExam[]
 
   @@index([email])
   @@index([username])
+}
+
+/// Scheduled AWS certification exam (APS-21). CLF-C02 mirrors User.examDate.
+model UserExam {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Code from @aps/shared EXAM_CATALOG (e.g. CLF-C02, AIF-C01).
+  examCode  String
+  /// Civil date, no time.
+  examDate  DateTime @db.Date
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, examCode])
+  @@index([userId, examDate])
 }
 
 model PasswordResetToken {
@@ -192,6 +209,8 @@ model Attempt {
   latencyMs   Int?
   variant     String?
   choiceIndex Int?
+  /// Text of the picked option (choices are shuffled per prompt, so the index alone is not enough).
+  chosenText  String?
   createdAt   DateTime      @default(now())
 
   @@index([userId, createdAt(sort: Desc)])

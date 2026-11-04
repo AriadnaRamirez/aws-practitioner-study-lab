@@ -3,9 +3,8 @@ import type {
   KnowledgeItem,
   Topic,
 } from "@aps/shared";
-import { getStoredToken } from "@/lib/api";
-import { getAdminToken } from "@/lib/admin-users-api";
 import { getApiUrl } from "@/lib/api";
+import { adminAuthHeaders } from "@/lib/admin-users-api";
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -18,27 +17,19 @@ async function parseError(res: Response): Promise<string> {
   return `Error ${res.status}`;
 }
 
-/** Prefer JWT admin; fall back to x-admin-token. */
 async function adminFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const headers = new Headers(init?.headers);
+  const headers = adminAuthHeaders(init?.headers);
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const jwt = getStoredToken();
-  if (jwt) headers.set("Authorization", `Bearer ${jwt}`);
-  headers.set("x-admin-token", getAdminToken());
 
   const res = await fetch(`${getApiUrl()}${path}`, { ...init, headers });
   if (res.status === 204) return undefined as T;
   if (!res.ok) throw new Error(await parseError(res));
   return (await res.json()) as T;
-}
-
-export function listAdminTopics() {
-  return adminFetch<Topic[]>("/admin/topics");
 }
 
 export function createTopic(body: {
@@ -74,10 +65,6 @@ export function deleteTopic(id: string) {
   return adminFetch<void>(`/admin/topics/${id}`, { method: "DELETE" });
 }
 
-export function listAdminKnowledge() {
-  return adminFetch<KnowledgeItem[]>("/admin/knowledge-items");
-}
-
 export function createKnowledge(
   body: Omit<KnowledgeItem, "id" | "createdAt" | "updatedAt">,
 ) {
@@ -101,10 +88,6 @@ export function deleteKnowledge(id: string) {
   return adminFetch<void>(`/admin/knowledge-items/${id}`, {
     method: "DELETE",
   });
-}
-
-export function listAdminQuestions() {
-  return adminFetch<ExamQuestion[]>("/admin/exam-questions");
 }
 
 export function createQuestion(

@@ -1,22 +1,6 @@
 import type { FeatureFlagDto } from "@aps/shared";
 import { getApiUrl } from "@/lib/api";
-
-const ADMIN_TOKEN_KEY = "aps_admin_token";
-
-export function getAdminToken(): string {
-  if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? "dev-admin-token";
-  }
-  return (
-    window.localStorage.getItem(ADMIN_TOKEN_KEY) ??
-    process.env.NEXT_PUBLIC_ADMIN_TOKEN ??
-    "dev-admin-token"
-  );
-}
-
-export function setAdminToken(token: string) {
-  window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
-}
+import { adminAuthHeaders } from "@/lib/admin-users-api";
 
 export async function fetchFeatureFlags(): Promise<FeatureFlagDto[]> {
   const res = await fetch(`${getApiUrl()}/feature-flags`, {
@@ -35,10 +19,7 @@ export async function updateFeatureFlag(
 ): Promise<FeatureFlagDto> {
   const res = await fetch(`${getApiUrl()}/admin/feature-flags/${key}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "x-admin-token": getAdminToken(),
-    },
+    headers: adminAuthHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ enabled, updatedBy }),
   });
   if (!res.ok) {

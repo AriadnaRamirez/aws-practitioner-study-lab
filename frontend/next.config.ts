@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
     deviceSizes: [360, 414, 640, 768, 1080],
     imageSizes: [64, 96, 128, 256, 384],
+    qualities: [75, 85],
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],

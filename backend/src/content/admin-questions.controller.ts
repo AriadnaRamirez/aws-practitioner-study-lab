@@ -17,10 +17,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {
-  AdminGuard,
-  ApiAdminTokenHeader,
-} from '../common/guards/admin.guard';
+import { AdminGuard, ApiAdminTokenHeader } from '../common/guards/admin.guard';
 import { ContentService } from './content.service';
 import {
   CreateExamQuestionDto,
@@ -29,7 +26,9 @@ import {
 
 @ApiTags('admin-exam-questions')
 @ApiAdminTokenHeader()
-@ApiUnauthorizedResponse({ description: 'Missing/invalid x-admin-token' })
+@ApiUnauthorizedResponse({
+  description: 'Missing/invalid admin session (Bearer JWT, role ADMIN)',
+})
 @UseGuards(AdminGuard)
 @Controller('admin/exam-questions')
 export class AdminQuestionsController {

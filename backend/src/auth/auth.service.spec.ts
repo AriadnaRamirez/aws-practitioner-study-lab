@@ -1,4 +1,9 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import { AuthService } from './auth.service';
@@ -158,6 +163,117 @@ describe('AuthService', () => {
       where: { username: { equals: 'Ana', mode: 'insensitive' } },
     });
     expect(result.tokens.tokenType).toBe('Bearer');
+  });
+
+  it('legacy updateProfile({ examDate }) upserts the CLF-C02 UserExam', async () => {
+    const tx = {
+      user: {
+        update: jest
+          .fn()
+          .mockResolvedValue({ ...user, examDate: new Date('2026-11-07') }),
+      },
+      userExam: { upsert: jest.fn(), deleteMany: jest.fn() },
+    };
+    prisma.$transaction.mockImplementation(
+      async (fn: (t: typeof tx) => unknown) => fn(tx),
+    );
+
+    const result = await service.updateProfile(user as never, {
+      examDate: '2026-11-07',
+    });
+
+    expect(result.examDate).toBe('2026-11-07');
+    expect(tx.userExam.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId_examCode: { userId: 'user_1', examCode: 'CLF-C02' } },
+      }),
+    );
+  });
+
+  it('legacy updateProfile({ examDate: null }) removes the CLF-C02 UserExam', async () => {
+    const tx = {
+      user: { update: jest.fn().mockResolvedValue(user) },
+      userExam: { upsert: jest.fn(), deleteMany: jest.fn() },
+    };
+    prisma.$transaction.mockImplementation(
+      async (fn: (t: typeof tx) => unknown) => fn(tx),
+    );
+
+    await service.updateProfile(user as never, { examDate: null });
+
+    expect(tx.userExam.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'user_1', examCode: 'CLF-C02' },
+    });
+  });
+
+  describe('updateProfile({ username })', () => {
+    beforeEach(() => {
+      (prisma.user as Record<string, jest.Mock>).update = jest.fn(
+        async ({ data }: { data: object }) => ({ ...user, ...data }),
+      );
+    });
+
+    it('renames when the handle is free', async () => {
+      prisma.user.findFirst.mockResolvedValue(null);
+      const result = await service.updateProfile(user as never, {
+        username: ' ana_nueva ',
+      });
+      expect(prisma.user.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            username: { equals: 'ana_nueva', mode: 'insensitive' },
+            NOT: { id: 'user_1' },
+          },
+        }),
+      );
+      expect(result.username).toBe('ana_nueva');
+    });
+
+    it('rejects a handle another user already has', async () => {
+      prisma.user.findFirst.mockResolvedValue({ id: 'user_2' });
+      await expect(
+        service.updateProfile(user as never, { username: 'Diego' }),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('allows changing only the casing of your own handle', async () => {
+      const result = await service.updateProfile(user as never, {
+        username: 'Ana',
+      });
+      expect(prisma.user.findFirst).not.toHaveBeenCalled();
+      expect(result.username).toBe('Ana');
+    });
+  });
+
+  describe('deleteAccount', () => {
+    beforeEach(() => {
+      const p = prisma as unknown as Record<string, Record<string, jest.Mock>>;
+      p.user.delete = jest.fn().mockReturnValue('delete-op');
+      p.guestProbe = { updateMany: jest.fn().mockReturnValue('unlink-op') };
+    });
+
+    it('deletes the user after checking the password', async () => {
+      await service.deleteAccount(user as never, { password: 'Segura123' });
+      expect(prisma.$transaction).toHaveBeenCalledWith([
+        'unlink-op',
+        'delete-op',
+      ]);
+    });
+
+    it('rejects a wrong password without deleting', async () => {
+      await expect(
+        service.deleteAccount(user as never, { password: 'nope' }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('refuses to delete an admin account', async () => {
+      await expect(
+        service.deleteAccount({ ...user, role: Role.ADMIN } as never, {
+          password: 'Segura123',
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
   });
 
   it('rejects bad login credentials', async () => {

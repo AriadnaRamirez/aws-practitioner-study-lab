@@ -1,37 +1,63 @@
-/** Copys de onboarding — cortos, para el estudiante. */
+/** Recorrido guiado — copys cortos, para el estudiante. */
 
-export type OnboardingStep = {
-  id: "flash" | "miss-repeat" | "dominio" | "examen";
-  eyebrow: string;
+export type TourStep = {
+  id: string;
   title: string;
   body: string;
+  /**
+   * `data-tour` anchors to spotlight; the first one visible on screen wins.
+   * No visible anchor (or none listed) → centered card.
+   */
+  anchors?: string[];
+  /** Route where the anchors live; the tour navigates there first. */
+  path?: string;
+  /** Skip the step unless this anchor exists in the DOM (even if hidden). */
+  requires?: string;
+  /** Last step only: primary action that ends the tour and navigates. */
+  cta?: { label: string; href: string };
 };
 
-export const ONBOARDING_STEPS: OnboardingStep[] = [
+/** Collapsed nav on phones: nav steps point at the "Menú" button instead. */
+export const MENU_ANCHOR = "nav-menu";
+
+export const TOUR_STEPS: TourStep[] = [
   {
-    id: "flash",
-    eyebrow: "1 · Cartas",
-    title: "Conceptos con 4 opciones",
-    body: "Practica nombre y definición de servicios AWS. Rápido y al grano.",
-  },
-  {
-    id: "miss-repeat",
-    eyebrow: "2 · Refuerzo",
-    title: "Si fallas, regresa",
-    body: "La carta vuelve más adelante en la misma sesión para que la practiques otra vez.",
-  },
-  {
-    id: "dominio",
-    eyebrow: "3 · Dominio",
-    title: "3 aciertos seguidos",
-    body: "Así marcas un concepto como dominado. Eso cuenta en el podio.",
+    id: "bienvenida",
+    title: "¡Hola! Te enseño cómo funciona",
+    body: "Un recorrido de 30 segundos para preparar tu examen Cloud Practitioner. Puedes saltarlo y repetirlo desde Cuenta cuando quieras.",
+    path: "/dashboard",
   },
   {
     id: "examen",
-    eyebrow: "4 · Examen",
-    title: "Estudio o simulacro",
-    body: "En Estudio ves la respuesta al momento. En Examen, cronómetro y resultado al final.",
+    title: "Tu examen, en cuenta regresiva",
+    body: "Si ya sabes cuándo es tu examen, agéndalo aquí: verás cuántos días faltan y una meta diaria a tu medida.",
+    anchors: ["exam-countdown"],
+    path: "/dashboard",
+  },
+  {
+    id: "partida",
+    title: "Así se estudia: partidas de cartas",
+    body: "Cada carta es un concepto del examen con 4 opciones. Si fallas, la carta vuelve a salir. Cuando aciertas la misma carta 3 veces seguidas, la dominas.",
+    anchors: ["new-game"],
+    path: "/dashboard",
+  },
+  {
+    id: "menu",
+    title: "Todo lo demás, en el menú",
+    body: "Estudiar: arma partidas con los temas que quieras. Más falladas: repasa las cartas que se te resisten. Guías: lee cada tema o bájalo en PDF. Minijuegos: practica jugando.",
+    anchors: ["nav-main", MENU_ANCHOR],
+  },
+  {
+    id: "indicadores",
+    title: "Tu avance, siempre a la vista",
+    body: "Arriba ves tu % de conceptos dominados, tu racha de días seguidos y el podio. Tócalos para ver el detalle.",
+    anchors: ["header-stats"],
+  },
+  {
+    id: "listo",
+    title: "¡Listo! Empieza jugando",
+    body: "Tu primera partida es de 10 cartas de todos los temas: no necesitas saber nada antes, aprendes de cada respuesta. Tu perfil y este recorrido están en Cuenta.",
+    path: "/dashboard",
+    cta: { label: "Jugar mi primera partida", href: "/estudiar?quick=1&start=10" },
   },
 ];
-
-export const ONBOARDING_TITLE = "Cómo estudiar aquí";

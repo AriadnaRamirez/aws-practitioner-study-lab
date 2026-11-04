@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Figtree, Syne } from "next/font/google";
+import { ShootingStars } from "@/components/shell/shooting-stars";
 import "./globals.css";
 
 const syne = Syne({
@@ -18,15 +19,12 @@ const figtree = Figtree({
 
 export const metadata: Metadata = {
   title: {
-    default: "Study Lab",
-    template: "%s · Study Lab",
+    default: "AWS Study Lab",
+    template: "%s · AWS Study Lab",
   },
+  applicationName: "AWS Study Lab",
   description:
     "Prepárate para AWS Cloud Practitioner con cartas, estudio y examen.",
-  icons: {
-    icon: [{ url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" }],
-    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
-  },
 };
 
 export default function RootLayout({
@@ -41,6 +39,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-dvh w-full max-w-full overflow-x-hidden bg-[var(--background)] text-[var(--foreground)] antialiased">
+        <ShootingStars />
         {children}
       </body>
     </html>

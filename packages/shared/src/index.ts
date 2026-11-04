@@ -1,6 +1,6 @@
 /** Shared contracts for AWS Practitioner Study Lab. */
 
-export const APP_NAME = 'AWS Practitioner Study Lab';
+export const APP_NAME = 'AWS Study Lab';
 export const API_PREFIX = 'api/v1';
 
 export type HealthStatus = 'ok' | 'degraded';
@@ -13,6 +13,21 @@ export interface HealthResponse {
 }
 
 export * from './auth';
+export {
+  EXAM_CATALOG,
+  EXAM_CODES,
+  LEGACY_EXAM_CODE,
+  isExamCode,
+  getExamCatalogEntry,
+  type ExamLevel,
+  type ExamCatalogEntry,
+  type ExamCode,
+  type UserExam,
+  type UserExamsResponse,
+  type CreateUserExamRequest,
+  type UpdateUserExamRequest,
+  type DeleteUserExamResponse,
+} from './exams';
 export {
   TOPIC_TYPES,
   FLASH_VARIANTS,
@@ -47,6 +62,7 @@ export {
   EXAM_TIMED_LIMIT_SEC,
   examTimedLimitSec,
   MISS_REPEAT_OFFSET,
+  MAX_MISS_REPEATS_PER_ITEM,
   MASTERY_STREAK,
   STUDY_ITEM_TYPES,
   STUDY_MODE_LABELS,
@@ -57,6 +73,7 @@ export {
   type TimedSessionStatus,
   type StudyPrompt,
   type StartStudySessionRequest,
+  type StudySessionScope,
   type StudySessionView,
   type AnswerStudyRequest,
   type AnswerStudyResponse,
@@ -78,6 +95,11 @@ export {
   type AdminGuestRow,
   type AdminUpdateUserRequest,
   type AdminResetPasswordResponse,
+  type AdminDailyPoint,
+  type AdminKpi,
+  type AdminMissedItem,
+  type AdminRecentSession,
+  type AdminMetrics,
 } from './guest';
 export {
   PODIUM_WINDOWS,
@@ -89,11 +111,15 @@ export {
 } from './podium';
 export {
   FEATURE_FLAG_EXAM_TRACK_AI,
+  FEATURE_FLAG_EXAM_MODES,
   KNOWN_FEATURE_FLAGS,
   type KnownFeatureFlagKey,
   type FeatureFlagDto,
 } from './flags';
 export {
+  WEAK_REVIEW_MAX_ROUND,
+  WEAK_REVIEW_MIN_ROUND,
+  planWeakReview,
   type StudyQueueItem,
   type WeakItem,
   type WeakItemsResponse,

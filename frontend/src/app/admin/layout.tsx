@@ -1,65 +1,47 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { APP_NAME } from "@aps/shared";
+import { redirect } from "next/navigation";
+import { AdminNav } from "@/components/admin/admin-nav";
+import { buttonVariants } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
+import { PageContainer } from "@/components/ui/page";
+import { getAdminSession } from "@/lib/admin-server";
 
-const NAV = [
-  { href: "/admin", label: "Resumen" },
-  { href: "/admin/usuarios", label: "Usuarios" },
-  { href: "/admin/guests", label: "Invitados" },
-  { href: "/admin/temas", label: "Temas" },
-  { href: "/admin/flash", label: "Flash" },
-  { href: "/admin/banco", label: "Banco" },
-  { href: "/admin/import", label: "Importar" },
-  { href: "/admin/flags", label: "Flags" },
-] as const;
+export const metadata: Metadata = {
+  title: { default: "Administración", template: "%s · Admin" },
+};
 
-export default function AdminLayout({
+export const dynamic = "force-dynamic";
+
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getAdminSession();
+  if (session.status === "anonymous") redirect("/login?next=/admin");
+  if (session.status === "forbidden") redirect("/dashboard");
+
+  if (session.status === "unavailable") {
+    return (
+      <main className="min-h-dvh text-[var(--foreground)]">
+        <PageContainer width="narrow" className="space-y-4">
+          <Notice tone="warning" boxed>
+            No se pudo verificar tu sesión de administración. Revisa que la API
+            esté arriba e inténtalo de nuevo.
+          </Notice>
+          <Link href="/dashboard" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+            Volver al Lab
+          </Link>
+        </PageContainer>
+      </main>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div>
-            <p className="text-xs font-medium tracking-wide text-zinc-500">
-              Panel owner · uso + contenido
-            </p>
-            <Link href="/admin" className="text-lg font-semibold tracking-tight">
-              {APP_NAME}
-            </Link>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <Link
-              href="/dashboard"
-              className="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-            >
-              ← Lab
-            </Link>
-            <Link
-              href="/logout"
-              className="font-medium text-zinc-800 underline-offset-4 hover:underline dark:text-zinc-200"
-            >
-              Salir
-            </Link>
-          </div>
-        </div>
-        <nav
-          className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-2 pb-2"
-          aria-label="Admin"
-        >
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+    <div className="min-h-dvh text-[var(--foreground)]">
+      <AdminNav />
+      <main className="min-w-0 lg:pl-60">{children}</main>
     </div>
   );
 }

@@ -1,7 +1,9 @@
--- APS-8 study session tables. ItemProgress already exists (APS-11) with
--- ProgressItemType — rename enum to StudyItemType for shared maestro naming.
+-- APS-8 study session + item progress.
+-- This history never created ProgressItemType / ItemProgress, so create
+-- StudyItemType and ItemProgress here instead of renaming a missing enum.
 
-ALTER TYPE "ProgressItemType" RENAME TO "StudyItemType";
+-- CreateEnum
+CREATE TYPE "StudyItemType" AS ENUM ('KNOWLEDGE', 'EXAM_QUESTION');
 
 -- CreateEnum
 CREATE TYPE "StudyMode" AS ENUM ('FLASH_STUDY', 'EXAM_STUDY', 'EXAM_TIMED', 'WEAK_REVIEW');
@@ -48,6 +50,22 @@ CREATE TABLE "Attempt" (
 );
 
 -- CreateTable
+CREATE TABLE "ItemProgress" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "itemType" "StudyItemType" NOT NULL,
+    "itemId" TEXT NOT NULL,
+    "consecutiveCorrect" INTEGER NOT NULL DEFAULT 0,
+    "failCount" INTEGER NOT NULL DEFAULT 0,
+    "passCount" INTEGER NOT NULL DEFAULT 0,
+    "masteredAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ItemProgress_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "DailyStreak" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -72,6 +90,12 @@ CREATE INDEX "Attempt_sessionId_idx" ON "Attempt"("sessionId");
 CREATE INDEX "Attempt_itemType_itemId_idx" ON "Attempt"("itemType", "itemId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ItemProgress_userId_itemType_itemId_key" ON "ItemProgress"("userId", "itemType", "itemId");
+
+-- CreateIndex
+CREATE INDEX "ItemProgress_userId_failCount_idx" ON "ItemProgress"("userId", "failCount" DESC);
+
+-- CreateIndex
 CREATE UNIQUE INDEX "DailyStreak_userId_key" ON "DailyStreak"("userId");
 
 -- AddForeignKey
@@ -82,6 +106,9 @@ ALTER TABLE "Attempt" ADD CONSTRAINT "Attempt_sessionId_fkey" FOREIGN KEY ("sess
 
 -- AddForeignKey
 ALTER TABLE "Attempt" ADD CONSTRAINT "Attempt_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ItemProgress" ADD CONSTRAINT "ItemProgress_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "DailyStreak" ADD CONSTRAINT "DailyStreak_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

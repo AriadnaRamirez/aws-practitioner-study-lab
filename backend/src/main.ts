@@ -34,7 +34,7 @@ async function bootstrap() {
         'Study FLASH_STUDY (APS-8 Nest): miss-repeat + dominio 3 + rachas.',
         'Study EXAM_STUDY / EXAM_TIMED (APS-9/10): feedback o cronometrado mock 65/90.',
         'Guest marketing + usage analytics (APS-13).',
-        'Admin accepts Bearer JWT (role ADMIN) or legacy header `x-admin-token`.',
+        'Admin requires Bearer JWT (role ADMIN); optional `x-admin-token` only when ADMIN_TOKEN is set (tooling).',
       ].join(' '),
     )
     .setVersion('0.1.0')
@@ -47,7 +47,7 @@ async function bootstrap() {
     .addTag('exam-questions', 'Public published ExamQuestions')
     .addTag('study', 'Flash / Estudio / Modo Examen sessions (NestJS)')
     .addTag('admin-usage', 'Owner usage analytics (users, guests, conversion)')
-    .addTag('admin-topics', 'Admin CRUD topics (x-admin-token)')
+    .addTag('admin-topics', 'Admin CRUD topics')
     .addTag('admin-knowledge', 'Admin CRUD knowledge items')
     .addTag('admin-exam-questions', 'Admin CRUD exam questions')
     .addApiKey(
@@ -55,7 +55,8 @@ async function bootstrap() {
         type: 'apiKey',
         in: 'header',
         name: 'x-admin-token',
-        description: 'Placeholder admin secret for content CRUD (APS-6)',
+        description:
+          'Optional tooling secret (ADMIN_TOKEN, min 24 chars); disabled when unset',
       },
       'admin-token',
     )

@@ -10,20 +10,26 @@ import {
   buildSeedQuestions,
   buildSeedTopics,
 } from '../src/content/content.seed';
+import { syncLegacyExamFromUser } from '../src/user-exams/exam-date.util';
 
 const prisma = new PrismaClient();
+
+/** Seed passwords live only in backend/.env (gitignored); the repo is public. */
+function envPassword(name: 'ADMIN_PASSWORD' | 'DEMO_PASSWORD'): string {
+  const value = process.env[name]?.trim();
+  if (!value || value.length < 8) {
+    throw new Error(`${name} must be set in backend/.env (at least 8 characters)`);
+  }
+  return value;
+}
 
 async function seedAdmin() {
   const email = (process.env.ADMIN_EMAIL ?? 'admin@example.com')
     .trim()
     .toLowerCase();
   const username = (process.env.ADMIN_USERNAME ?? 'admin').trim();
-  const password = process.env.ADMIN_PASSWORD ?? 'ChangeMeAdmin1!';
+  const password = envPassword('ADMIN_PASSWORD');
   const timezone = process.env.ADMIN_TIMEZONE ?? 'America/Mexico_City';
-
-  if (password.length < 8) {
-    throw new Error('ADMIN_PASSWORD must be at least 8 characters');
-  }
 
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -135,15 +141,32 @@ async function seedContent() {
     });
   }
 
+  // Seed-owned rows (ki-/eq- ids) that left the bank are archived, not deleted,
+  // so attempts and progress keep pointing at real items.
+  const archivedKnowledge = await prisma.knowledgeItem.updateMany({
+    where: {
+      id: { startsWith: 'ki-', notIn: knowledge.map((k) => k.id) },
+      status: { not: ContentStatus.archived },
+    },
+    data: { status: ContentStatus.archived },
+  });
+  const archivedQuestions = await prisma.examQuestion.updateMany({
+    where: {
+      id: { startsWith: 'eq-', notIn: questions.map((q) => q.id) },
+      status: { not: ContentStatus.archived },
+    },
+    data: { status: ContentStatus.archived },
+  });
+
   // eslint-disable-next-line no-console
   console.log(
-    `Content seed OK: ${topics.length} topics, ${knowledge.length} knowledge, ${questions.length} questions`,
+    `Content seed OK: ${topics.length} topics, ${knowledge.length} knowledge, ${questions.length} questions` +
+      ` (archived ${archivedKnowledge.count} knowledge, ${archivedQuestions.count} questions)`,
   );
 }
 
 async function seedDemoStudents() {
-  const password = process.env.DEMO_PASSWORD ?? 'StudyPass1!';
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await bcrypt.hash(envPassword('DEMO_PASSWORD'), 12);
   const timezone = 'America/Mexico_City';
   // ~23 days out so the dashboard countdown looks real for demos.
   const examDate = new Date();
@@ -162,14 +185,14 @@ async function seedDemoStudents() {
   ];
 
   for (const d of demos) {
-    await prisma.user.upsert({
+    // Existing exam dates are user data: only new demo users get one.
+    const user = await prisma.user.upsert({
       where: { email: d.email },
       update: {
         username: d.username,
         passwordHash,
         role: Role.STUDENT,
         timezone,
-        examDate,
         bannedAt: null,
       },
       create: {
@@ -181,11 +204,12 @@ async function seedDemoStudents() {
         examDate,
       },
     });
+    await syncLegacyExamFromUser(prisma, user.id, user.examDate);
   }
 
   // eslint-disable-next-line no-console
   console.log(
-    `Demo students OK: demo|estudiante / ${password} (email: demo@example.com | estudiante@example.com)`,
+    'Demo students OK: demo, estudiante (password: DEMO_PASSWORD)',
   );
 }
 
@@ -200,9 +224,19 @@ async function seedFeatureFlags() {
     },
   });
 
+  const examModes = await prisma.featureFlag.upsert({
+    where: { key: 'exam_modes' },
+    update: {},
+    create: {
+      key: 'exam_modes',
+      enabled: false,
+      updatedBy: 'seed',
+    },
+  });
+
   // eslint-disable-next-line no-console
   console.log(
-    `FeatureFlag seed OK: ${examTrackAi.key}=${examTrackAi.enabled}`,
+    `FeatureFlag seed OK: ${examTrackAi.key}=${examTrackAi.enabled}, ${examModes.key}=${examModes.enabled}`,
   );
 }
 

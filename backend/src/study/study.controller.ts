@@ -56,6 +56,7 @@ export class StudyController {
       size: dto.size,
       topicIds: dto.topicIds,
       timezone: dto.timezone,
+      balanced: dto.balanced,
     });
   }
 

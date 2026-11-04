@@ -4,21 +4,7 @@ import type {
   ImportJob,
 } from "@aps/shared";
 import { getApiUrl } from "@/lib/api";
-
-export const ADMIN_TOKEN_KEY = "aps_admin_token";
-
-export function getAdminToken(): string {
-  if (typeof window === "undefined") return "dev-admin-token";
-  return (
-    window.localStorage.getItem(ADMIN_TOKEN_KEY) ??
-    process.env.NEXT_PUBLIC_ADMIN_TOKEN ??
-    "dev-admin-token"
-  );
-}
-
-export function setAdminToken(token: string) {
-  window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
-}
+import { adminAuthHeaders } from "@/lib/admin-users-api";
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -35,8 +21,7 @@ async function adminFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const headers = new Headers(init?.headers);
-  headers.set("x-admin-token", getAdminToken());
+  const headers = adminAuthHeaders(init?.headers);
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -66,10 +51,8 @@ export function listImportJobs(): Promise<ImportJob[]> {
 }
 
 export async function downloadExport(format: ImportFormat): Promise<void> {
-  const headers = new Headers();
-  headers.set("x-admin-token", getAdminToken());
   const res = await fetch(`${getApiUrl()}/admin/export?format=${format}`, {
-    headers,
+    headers: adminAuthHeaders(),
   });
   if (!res.ok) throw new Error(await parseError(res));
 

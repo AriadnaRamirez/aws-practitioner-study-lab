@@ -24,6 +24,19 @@ export function formatSessionWhen(
   }
 }
 
+/** "3 nov" in the session's zone, for titles. */
+export function formatSessionDay(session: StudyHistoryEntry, timeZone?: string): string {
+  const tz = timeZone || session.timezone || "UTC";
+  const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
+  try {
+    return new Intl.DateTimeFormat("es-MX", { ...opts, timeZone: tz })
+      .format(new Date(session.startedAt))
+      .replace(".", "");
+  } catch {
+    return new Date(session.startedAt).toLocaleDateString("es-MX", opts).replace(".", "");
+  }
+}
+
 export function formatDuration(ms: number | null): string {
   if (ms == null) return "—";
   const totalSec = Math.round(ms / 1000);
@@ -40,5 +53,5 @@ export function formatScore(session: StudyHistoryEntry): string {
   if (session.scoreCorrect == null || session.scoreTotal == null) {
     return session.endedAt ? "—" : "En curso";
   }
-  return `${session.scoreCorrect}/${session.scoreTotal}`;
+  return `${session.scoreCorrect} de ${session.scoreTotal}`;
 }

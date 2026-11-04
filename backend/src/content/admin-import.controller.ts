@@ -16,16 +16,15 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-import {
-  AdminGuard,
-  ApiAdminTokenHeader,
-} from '../common/guards/admin.guard';
+import { AdminGuard, ApiAdminTokenHeader } from '../common/guards/admin.guard';
 import { RunImportDto } from './dto/import-export.dto';
 import { ImportExportService } from './import-export.service';
 
 @ApiTags('admin-import')
 @ApiAdminTokenHeader()
-@ApiUnauthorizedResponse({ description: 'Missing/invalid x-admin-token' })
+@ApiUnauthorizedResponse({
+  description: 'Missing/invalid admin session (Bearer JWT, role ADMIN)',
+})
 @UseGuards(AdminGuard)
 @Controller('admin/import')
 export class AdminImportController {
@@ -61,7 +60,9 @@ export class AdminImportController {
 
 @ApiTags('admin-export')
 @ApiAdminTokenHeader()
-@ApiUnauthorizedResponse({ description: 'Missing/invalid x-admin-token' })
+@ApiUnauthorizedResponse({
+  description: 'Missing/invalid admin session (Bearer JWT, role ADMIN)',
+})
 @UseGuards(AdminGuard)
 @Controller('admin/export')
 export class AdminExportController {

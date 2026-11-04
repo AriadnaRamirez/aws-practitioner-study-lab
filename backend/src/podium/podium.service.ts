@@ -8,6 +8,21 @@ import type {
 import { PrismaService } from '../prisma/prisma.service';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const PUBLIC_TOP = 3;
+
+/** Students see the top 3, the entry right above them and themselves. */
+export function entriesForViewer(
+  entries: PodiumEntry[],
+  viewer: Pick<User, 'id' | 'role'>,
+): PodiumEntry[] {
+  if (viewer.role === 'ADMIN') return entries;
+  const myRank = entries.find((e) => e.userId === viewer.id)?.rank ?? null;
+  return entries.filter(
+    (e) =>
+      e.rank <= PUBLIC_TOP ||
+      (myRank !== null && (e.rank === myRank || e.rank === myRank - 1)),
+  );
+}
 
 @Injectable()
 export class PodiumService {
@@ -67,7 +82,8 @@ export class PodiumService {
       metric: 'masteredItems',
       windowStartedAt: windowStartedAt?.toISOString() ?? null,
       computedAt: computedAt.toISOString(),
-      entries,
+      entries: entriesForViewer(entries, viewer),
+      totalRanked: entries.length,
       me: {
         rank: viewer.podiumHidden ? null : (myEntry?.rank ?? null),
         userId: viewer.id,

@@ -1,4 +1,5 @@
 import type { SessionSize, TimedSessionStatus } from '@aps/shared';
+import { parseLedger, type MissLedger } from './miss-ledger';
 import type {
   BankItem,
   QueueEntry,
@@ -6,15 +7,16 @@ import type {
   TimedSessionRecord,
 } from './study.store';
 
-export type ExamQueueStateJson = {
+type ExamQueueStateJson = {
   kind: 'exam_queue';
   queue: QueueEntry[];
   bank: Record<string, BankItem>;
   itemTypes?: Record<string, 'KNOWLEDGE' | 'EXAM_QUESTION'>;
   incorrectAnswers: number;
+  ledger?: MissLedger;
 };
 
-export type ExamTimedStateJson = {
+type ExamTimedStateJson = {
   kind: 'exam_timed';
   status: TimedSessionStatus;
   endsAt: string;
@@ -41,6 +43,7 @@ export function serializeExamQueue(session: StudySessionRecord): string {
     bank,
     itemTypes: Object.keys(itemTypes).length ? itemTypes : undefined,
     incorrectAnswers: session.incorrectAnswers,
+    ledger: session.ledger,
   };
   return JSON.stringify(payload);
 }
@@ -88,6 +91,7 @@ export function parseExamQueueState(
     correctAnswers: row.correctCount,
     incorrectAnswers: raw.incorrectAnswers ?? 0,
     missRepeats: row.missRepeatCount,
+    ledger: parseLedger(raw.ledger),
     status: row.endedAt ? 'completed' : 'active',
     createdAt: row.startedAt.toISOString(),
     endedAt: row.endedAt?.toISOString(),

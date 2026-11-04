@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DashboardClient } from "@/components/study/dashboard-client";
+import { DashboardClient } from "@/components/dashboard/dashboard-client";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <RequireAuth fallback="home">
+    <RequireAuth>
       <DashboardClient />
     </RequireAuth>
   );

@@ -1,124 +1,76 @@
 @import "tailwindcss";
 
+/* The app is dark-only: `dark:` follows the class on <html>, never the OS theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
-  Brand palette (locked):
-  Orange #E85002 · Black #000000 · White #F9F9F9
-  Light gray #A7A7A7 · Gray #646464 · Dark gray #333333
-  Gradient #000000 → #C10801 → #F16001 → #D9C3AB
+  AWS Study Lab design tokens. Components use these through `var(--…)`;
+  the reusable primitives live in src/components/ui.
+
+  Brand: ink #0A0F1A · copper #D2652F · white #F9F9F9 · light gray #A7A7A7
 */
 :root {
-  --brand-orange: #e85002;
+  --brand-orange: #d2652f;
   --brand-black: #000000;
   /* Matches mascot plate backgrounds so characters blend seamlessly */
   --brand-ink: #0a0f1a;
   --brand-white: #f9f9f9;
   --brand-light-gray: #a7a7a7;
-  --brand-gray: #646464;
-  --brand-dark-gray: #1a2233;
-  --brand-grad-1: #0a0f1a;
-  --brand-grad-2: #c10801;
-  --brand-grad-3: #f16001;
-  --brand-grad-4: #d9c3ab;
 
+  /* Surfaces, from the page up: background → surface → elevated → hover */
   --background: var(--brand-ink);
-  --foreground: var(--brand-white);
-  --foreground-muted: var(--brand-light-gray);
   --surface: #121826;
   --surface-elevated: #1a2233;
   --surface-hover: #243044;
   --border: rgba(249, 249, 249, 0.12);
   --border-strong: rgba(249, 249, 249, 0.22);
-  --accent: var(--brand-orange);
-  --accent-hover: #f16001;
-  --accent-foreground: var(--brand-white);
-  --accent-soft: rgba(232, 80, 2, 0.14);
-  --accent-deep: #c10801;
-  --accent-warm: var(--brand-orange);
-  /* Neutral focus ring — orange reserved for primary CTAs */
-  --ring: rgba(249, 249, 249, 0.55);
-  --glow: rgba(0, 0, 0, 0.35);
-  --glow-secondary: rgba(0, 0, 0, 0.2);
-  --hero-mesh-a: rgba(255, 255, 255, 0.04);
-  --hero-mesh-b: rgba(26, 34, 51, 0.35);
-  --hero-mesh-c: rgba(26, 34, 51, 0.25);
-  --nav-bg: rgba(10, 15, 26, 0.92);
-  --card-face: var(--brand-white);
-  --card-face-fg: var(--brand-black);
-  /* Solid correct green — never a washed emerald overlay */
-  --success: #1f9d55;
-  --success-fg: #04140a;
-  --danger: #e85d3a;
-  --danger-fg: #1a0603;
-  /* Deck faces stay ink/surface — orange only on primary CTAs */
-  --deck-face: var(--surface-elevated);
-  --deck-mid: var(--surface);
-  --deck-back: #0d121c;
-  --deck-grad-1: var(--surface-elevated);
-  --deck-grad-2: var(--surface);
-  --deck-grad-3: #0d121c;
-  --glass: rgba(249, 249, 249, 0.08);
-  --glass-strong: rgba(249, 249, 249, 0.12);
-  --glass-border: rgba(249, 249, 249, 0.18);
-  --glass-blur: 8px;
-  --pill-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.65);
-  --branding-gradient: linear-gradient(
-    90deg,
-    var(--brand-grad-1) 0%,
-    var(--brand-grad-2) 32%,
-    var(--brand-grad-3) 68%,
-    var(--brand-grad-4) 100%
-  );
-}
 
-.dark {
-  --background: var(--brand-ink);
+  /* Text */
   --foreground: var(--brand-white);
   --foreground-muted: var(--brand-light-gray);
-  --surface: #121826;
-  --surface-elevated: #1a2233;
-  --surface-hover: #243044;
-  --border: rgba(249, 249, 249, 0.12);
-  --border-strong: rgba(249, 249, 249, 0.22);
+
+  /* Copper is for the primary action and progress, nothing else */
   --accent: var(--brand-orange);
-  --accent-hover: #f16001;
+  --accent-hover: #df7843;
   --accent-foreground: var(--brand-white);
-  --accent-soft: rgba(232, 80, 2, 0.14);
-  --accent-deep: #c10801;
-  --accent-warm: var(--brand-orange);
-  /* Neutral focus ring — orange reserved for primary CTAs */
-  --ring: rgba(249, 249, 249, 0.55);
-  --glow: rgba(0, 0, 0, 0.35);
-  --glow-secondary: rgba(0, 0, 0, 0.2);
-  --hero-mesh-a: rgba(255, 255, 255, 0.04);
-  --hero-mesh-b: rgba(26, 34, 51, 0.35);
-  --hero-mesh-c: rgba(26, 34, 51, 0.25);
-  --nav-bg: rgba(10, 15, 26, 0.92);
-  --card-face: var(--brand-white);
-  --card-face-fg: var(--brand-black);
-  /* Solid correct green — never a washed emerald overlay */
+  --accent-soft: rgba(210, 101, 47, 0.14);
+
+  /* Feedback. `*-text` reads on dark surfaces; `*-fg` sits on the solid fill. */
   --success: #1f9d55;
   --success-fg: #04140a;
+  --success-soft: rgba(31, 157, 85, 0.16);
+  --success-text: #6fd39b;
   --danger: #e85d3a;
   --danger-fg: #1a0603;
-  /* Deck faces stay ink/surface — orange only on primary CTAs */
+  --danger-soft: rgba(232, 93, 58, 0.14);
+  --danger-text: #f4a08a;
+  --warning: #e0a53a;
+  --warning-soft: rgba(224, 165, 58, 0.14);
+  --warning-text: #f2c66d;
+
+  /* Neutral focus ring — copper stays reserved for primary actions */
+  --ring: rgba(249, 249, 249, 0.55);
+
+  /* Elevation */
+  --shadow-raised: 0 18px 40px -28px rgba(0, 0, 0, 0.9);
+  --shadow-float: 0 18px 36px -18px rgba(0, 0, 0, 0.55);
+  --shadow-overlay: 0 28px 60px -24px rgba(0, 0, 0, 0.85);
+  --scrim: rgba(0, 0, 0, 0.6);
+
+  --nav-bg: rgba(10, 15, 26, 0.92);
+  --hero-mesh-a: rgba(255, 255, 255, 0.04);
+  --hero-mesh-b: rgba(26, 34, 51, 0.35);
+
+  /* Flash card faces */
+  --card-face: var(--brand-white);
+  --card-face-fg: var(--brand-black);
   --deck-face: var(--surface-elevated);
   --deck-mid: var(--surface);
   --deck-back: #0d121c;
-  --deck-grad-1: var(--surface-elevated);
-  --deck-grad-2: var(--surface);
-  --deck-grad-3: #0d121c;
+
   --glass: rgba(249, 249, 249, 0.08);
   --glass-strong: rgba(249, 249, 249, 0.12);
-  --glass-border: rgba(249, 249, 249, 0.18);
-  --glass-blur: 8px;
   --pill-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.65);
-  --branding-gradient: linear-gradient(
-    90deg,
-    var(--brand-grad-1) 0%,
-    var(--brand-grad-2) 32%,
-    var(--brand-grad-3) 68%,
-    var(--brand-grad-4) 100%
-  );
 }
 
 @theme inline {
@@ -137,26 +89,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes soft-drift {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(3%, -4%) scale(1.06);
-  }
-}
-
-@keyframes mascot-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
   }
 }
 
@@ -209,13 +141,140 @@ html {
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(42, 58, 92, 0.28), transparent 62%),
+    radial-gradient(ellipse 70% 40% at 100% 100%, rgba(16, 22, 40, 0.55), transparent 58%);
   color: var(--foreground);
   font-family: var(--font-figtree), ui-sans-serif, sans-serif;
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
   position: relative;
+  z-index: 0;
+}
+
+/* Starry, cloudy night. Stars sit under the clouds so the banks hide some of them. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='440'%3E%3Ccircle cx='46' cy='62' r='1.15' fill='%23f4f7fc' fill-opacity='0.72'/%3E%3Ccircle cx='210' cy='28' r='0.7' fill='%23f4f7fc' fill-opacity='0.38'/%3E%3Ccircle cx='318' cy='118' r='0.95' fill='%23e6edf6' fill-opacity='0.5'/%3E%3Ccircle cx='128' cy='176' r='0.6' fill='%23f4f7fc' fill-opacity='0.28'/%3E%3Ccircle cx='262' cy='214' r='1.25' fill='%23f4f7fc' fill-opacity='0.62'/%3E%3Ccircle cx='78' cy='268' r='0.75' fill='%23d5deea' fill-opacity='0.34'/%3E%3Ccircle cx='340' cy='312' r='0.55' fill='%23f4f7fc' fill-opacity='0.22'/%3E%3Ccircle cx='168' cy='356' r='0.9' fill='%23f4f7fc' fill-opacity='0.42'/%3E%3Ccircle cx='24' cy='400' r='0.65' fill='%23f4f7fc' fill-opacity='0.26'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='290' height='360'%3E%3Ccircle cx='36' cy='48' r='0.6' fill='%23f4f7fc' fill-opacity='0.3'/%3E%3Ccircle cx='164' cy='96' r='1.05' fill='%23f4f7fc' fill-opacity='0.55'/%3E%3Ccircle cx='248' cy='40' r='0.7' fill='%23e6edf6' fill-opacity='0.32'/%3E%3Ccircle cx='96' cy='188' r='0.8' fill='%23f4f7fc' fill-opacity='0.24'/%3E%3Ccircle cx='210' cy='250' r='0.55' fill='%23f4f7fc' fill-opacity='0.2'/%3E%3Ccircle cx='40' cy='300' r='0.9' fill='%23f4f7fc' fill-opacity='0.36'/%3E%3C/svg%3E");
+  background-size: 380px 440px, 290px 360px;
+  background-repeat: repeat;
+}
+
+body::after {
+  background-image:
+    radial-gradient(ellipse 34% 15% at 8% 12%, rgba(168, 180, 200, 0.2), transparent 70%),
+    radial-gradient(ellipse 18% 9% at 22% 8%, rgba(156, 168, 188, 0.16), transparent 72%),
+    radial-gradient(ellipse 28% 13% at 92% 24%, rgba(162, 174, 194, 0.18), transparent 70%),
+    radial-gradient(ellipse 14% 8% at 78% 16%, rgba(170, 180, 198, 0.14), transparent 74%),
+    radial-gradient(ellipse 24% 11% at 38% 84%, rgba(156, 168, 188, 0.15), transparent 72%);
+  background-repeat: no-repeat;
+}
+
+/* Short streaks, mostly waiting. Each pass lasts about a second. */
+.shooting-stars {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shooting-stars span {
+  position: absolute;
+  width: 88px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(244, 247, 252, 0.08) 35%,
+    rgba(244, 247, 252, 0.7) 100%
+  );
+  opacity: 0;
+  animation: shooting-star 14s linear infinite;
+}
+
+.shooting-stars span::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 3px;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 50%;
+  background: #f7f9fc;
+  box-shadow: 0 0 6px 1px rgba(244, 247, 252, 0.7);
+}
+
+.shooting-stars span:nth-child(1) {
+  top: 9%;
+  left: 4%;
+  --dx: 26vw;
+  --dy: 16vh;
+  --angle: 32deg;
+  animation-duration: 13s;
+  animation-delay: 1.2s;
+}
+
+.shooting-stars span:nth-child(2) {
+  top: 16%;
+  left: 38%;
+  width: 70px;
+  --dx: 22vw;
+  --dy: 16vh;
+  --angle: 36deg;
+  animation-duration: 16s;
+  animation-delay: 6.4s;
+}
+
+.shooting-stars span:nth-child(3) {
+  top: 6%;
+  left: 58%;
+  width: 104px;
+  --dx: 20vw;
+  --dy: 17vh;
+  --angle: 40deg;
+  animation-duration: 18s;
+  animation-delay: 11s;
+}
+
+@keyframes shooting-star {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(var(--angle));
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  9% {
+    transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--angle));
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--angle));
+    opacity: 0;
+  }
+}
+
+@media print {
+  body::before,
+  body::after,
+  .shooting-stars {
+    display: none !important;
+  }
 }
 
 img,
@@ -237,99 +296,8 @@ code,
   font-family: var(--font-syne), ui-sans-serif, sans-serif;
 }
 
-.text-gradient-aws,
-.text-accent-aws {
-  color: var(--accent);
-  background: none;
-  -webkit-background-clip: unset;
-  background-clip: unset;
-}
-
-.text-brand-gradient {
-  background: var(--branding-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.glass-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  border-radius: 9999px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--pill-shadow);
-  color: var(--foreground);
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.15s ease;
-}
-
-.glass-pill:hover {
-  background: var(--glass-strong);
-  border-color: rgba(249, 249, 249, 0.28);
-}
-
-.glass-pill:active {
-  transform: scale(0.98);
-}
-
-.glass-pill-solid {
-  background: var(--brand-dark-gray);
-  border-color: rgba(249, 249, 249, 0.12);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.glass-pill-solid:hover {
-  background: #3d3d3d;
-  border-color: rgba(249, 249, 249, 0.22);
-}
-
-/* Soft branding atmosphere — pre-softened gradients (no live CSS blur) */
-.atmos-orange {
-  background:
-    radial-gradient(
-      ellipse 80% 60% at 50% 40%,
-      var(--hero-mesh-a),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 55% 45% at 28% 72%,
-      var(--hero-mesh-b),
-      transparent 74%
-    ),
-    radial-gradient(
-      ellipse 48% 40% at 72% 28%,
-      var(--hero-mesh-c),
-      transparent 70%
-    );
-  opacity: 0.85;
-  will-change: auto;
-  contain: paint;
-}
-
-.mark-star {
-  color: var(--foreground);
-}
-
 .animate-fade-up {
   animation: fade-up 0.7s ease-out both;
-}
-
-.animate-pill-in {
-  animation: pill-in 0.55s ease-out 0.1s both;
-}
-
-.animate-soft-drift {
-  animation: soft-drift 16s ease-in-out infinite;
-}
-
-.animate-mascot-float {
-  animation: mascot-float 4.5s ease-in-out infinite;
 }
 
 .animate-deck-in {
@@ -350,42 +318,45 @@ code,
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: var(--surface);
+  background: var(--surface-elevated);
   color: var(--foreground);
-  border: 1px solid var(--border);
   font-weight: 600;
   letter-spacing: -0.02em;
   transition:
     background-color 0.15s ease,
-    border-color 0.15s ease,
+    color 0.15s ease,
     transform 0.12s ease;
-}
-
-.keycap-accent {
-  background: var(--surface-hover);
-  color: var(--foreground);
-  border-color: var(--border-strong);
 }
 
 .keycap:hover {
   background: var(--surface-hover);
 }
 
-.keycap-accent:hover {
-  background: var(--surface-hover);
-  border-color: rgba(249, 249, 249, 0.28);
+/* Answer options wrap to several lines; a pill radius would eat the text at the corners. */
+.keycap-option {
+  border-radius: 1rem;
+  align-items: baseline;
+  justify-content: flex-start;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
-.keycap-correct {
+.keycap-accent,
+.keycap-accent:hover {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-elevated));
+  color: var(--foreground);
+}
+
+.keycap-correct,
+.keycap-correct:hover {
   background: var(--success);
   color: var(--success-fg);
-  border-color: transparent;
 }
 
-.keycap-wrong {
+.keycap-wrong,
+.keycap-wrong:hover {
   background: var(--danger);
   color: var(--danger-fg);
-  border-color: transparent;
 }
 
 @keyframes celebrate-pop {
@@ -429,17 +400,60 @@ code,
   transform: scale(0.98);
 }
 
+/* Session size picker: each mini deck fans out when its option is chosen.
+   Per-card geometry comes from inline custom properties (session-size-picker.tsx). */
+.size-stack-card {
+  --t-rest: translate(calc(-50% + var(--rest-x)), var(--rest-y))
+    rotate(var(--rest-rot));
+  --t-fan: translate(calc(-50% + var(--fan-x)), var(--fan-y))
+    rotate(var(--fan-rot));
+  --t-peek: translate(calc(-50% + var(--peek-x)), var(--peek-y))
+    rotate(var(--peek-rot));
+  transform: var(--t-rest);
+  transform-origin: 50% 100%;
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--delay-out, 0ms),
+    background-color 200ms ease;
+}
+
+.size-option[aria-checked="true"] .size-stack-card {
+  transform: var(--t-fan);
+  transition-delay: var(--delay-in, 0ms), 0ms;
+}
+
+.size-option[aria-checked="false"]:hover .size-stack-card,
+.size-option[aria-checked="false"]:focus-visible .size-stack-card {
+  transform: var(--t-peek);
+  transition-delay: 0ms, 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .size-stack-card,
+  .size-option[aria-checked="true"] .size-stack-card,
+  .size-option[aria-checked="false"]:hover .size-stack-card,
+  .size-option[aria-checked="false"]:focus-visible .size-stack-card {
+    transform: var(--t-rest);
+    transition: background-color 150ms ease;
+  }
+}
+
+/* Arma tu partida: overflow-x: hidden turns these ancestors into scroll
+   containers, which disables the sticky summary column / bottom bar. */
+body:has([data-session-builder]),
+body:has([data-session-builder]) div:has(> main#contenido),
+body:has([data-session-builder]) main#contenido {
+  overflow-x: clip;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
-  .animate-pill-in,
-  .animate-soft-drift,
-  .animate-mascot-float,
   .animate-spin,
   .animate-pulse,
   .animate-deck-in,
   .animate-shimmer,
   .animate-celebrate,
-  .celebrate-dot {
+  .celebrate-dot,
+  .shooting-stars span {
     animation: none;
   }
 }

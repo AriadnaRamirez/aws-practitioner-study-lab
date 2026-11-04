@@ -1,16 +1,18 @@
+import { AdminPage } from "@/components/admin/admin-ui";
 import { ImportPanel } from "./import-panel";
 
 export default function AdminImportPage() {
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Importar / exportar</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          CSV o JSON con upsert por <code className="text-xs">externalKey</code>.
-          Dry-run por defecto.
-        </p>
-      </div>
+    <AdminPage
+      title="Importar / exportar"
+      description={
+        <>
+          Contenido en CSV o JSON con upsert por <code className="font-mono text-xs">externalKey</code>.
+          Las importaciones se simulan por defecto y no modifican nada hasta confirmar.
+        </>
+      }
+    >
       <ImportPanel />
-    </div>
+    </AdminPage>
   );
 }

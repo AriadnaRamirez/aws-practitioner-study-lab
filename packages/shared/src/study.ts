@@ -43,6 +43,12 @@ export function examTimedLimitSec(size: SessionSize): number {
 /** How many cards ahead a miss is re-queued (intra-session miss-repeat). */
 export const MISS_REPEAT_OFFSET = 3;
 
+/**
+ * Max extra appearances of one card after misses in a single session.
+ * Past this, the card waits for Más falladas instead of looping.
+ */
+export const MAX_MISS_REPEATS_PER_ITEM = 2;
+
 /** Consecutive item hits required for mastery (flash / study). */
 export const MASTERY_STREAK = 3;
 
@@ -62,6 +68,8 @@ export interface StudyPrompt {
   variant?: string;
   stem: string;
   choices: [string, string, string, string];
+  /** True when this appearance is a miss-repeat of a card failed earlier. */
+  isRepeat?: boolean;
 }
 
 export interface StartStudySessionRequest {
@@ -72,11 +80,25 @@ export interface StartStudySessionRequest {
   topicIds?: string[];
   /** Snapshot timezone for EXAM_TIMED / daily streak. */
   timezone?: string;
+  /**
+   * FLASH_STUDY "partida rápida": spread cards evenly across `topicIds`
+   * (round-robin). Requires `topicIds`.
+   */
+  balanced?: boolean;
+}
+
+/** Topics a session draws from (empty = whole bank). */
+export interface StudySessionScope {
+  topicIds: string[];
+  /** Partida rápida: cards spread evenly across `topicIds`. */
+  balanced: boolean;
 }
 
 export interface StudySessionView {
   sessionId: string;
   mode: StudyMode;
+  /** FLASH_STUDY only — lets a resumed session show what it covers. */
+  scope?: StudySessionScope;
   /** Requested size (may exceed bank; actual unique count is `uniqueItems`). */
   size: number;
   uniqueItems: number;
@@ -106,6 +128,10 @@ export interface StudySessionSummary {
   missRepeats: number;
   maxSessionStreak: number;
   masteredInSession?: number;
+  /** Distinct cards answered right at least once (flash / weak review). */
+  resolvedItems?: number;
+  /** Distinct cards answered right on their first appearance. */
+  firstTryCorrect?: number;
   accuracyPct: number;
   dailyStreak?: number;
   longestDailyStreak?: number;
@@ -115,6 +141,8 @@ export interface AnswerStudyResponse {
   correct: boolean;
   correctIndex: 0 | 1 | 2 | 3;
   explanation: string;
+  /** On a miss: what the picked option actually is ("KMS: …"), when known. */
+  chosenHint?: string;
   itemMastered?: boolean;
   itemConsecutiveCorrect?: number;
   sessionStreak: number;

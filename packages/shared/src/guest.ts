@@ -48,6 +48,95 @@ export interface AdminUserRow {
   podiumHidden: boolean;
   bannedAt: string | null;
   createdAt: string;
+  /** Study sessions started, all time. */
+  sessionsTotal: number;
+  /** Knowledge items currently mastered. */
+  masteredCount: number;
+  /** startedAt of the latest study session, or null if never studied. */
+  lastActiveAt: string | null;
+  currentStreak: number;
+}
+
+/** One civil day (admin timezone) of student activity. */
+export interface AdminDailyPoint {
+  /** YYYY-MM-DD */
+  date: string;
+  sessions: number;
+  completedSessions: number;
+  activeUsers: number;
+  newUsers: number;
+  answers: number;
+  correctAnswers: number;
+  mastered: number;
+}
+
+/** Current 7-day window vs the 7 days before it. */
+export interface AdminKpi {
+  current: number;
+  previous: number;
+}
+
+export interface AdminMissedItem {
+  itemId: string;
+  name: string;
+  topicName: string;
+  attempts: number;
+  misses: number;
+  /** 0–1 */
+  missRate: number;
+}
+
+export interface AdminRecentSession {
+  id: string;
+  username: string;
+  mode: string;
+  size: number;
+  answered: number;
+  correct: number;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+/** Owner metrics for the admin overview. Students only; admin activity is excluded. */
+export interface AdminMetrics {
+  generatedAt: string;
+  /** IANA timezone used to bucket `daily`. */
+  timezone: string;
+  /** Oldest first; last entry is today. */
+  daily: AdminDailyPoint[];
+  kpis: {
+    activeUsers: AdminKpi;
+    sessions: AdminKpi;
+    /** 0–1 */
+    finishRate: AdminKpi;
+    /** 0–1 */
+    accuracy: AdminKpi;
+    answers: AdminKpi;
+    newUsers: AdminKpi;
+    mastered: AdminKpi;
+  };
+  activeToday: number;
+  funnel: {
+    registered: number;
+    studied: number;
+    mastered: number;
+  };
+  guests: {
+    total: number;
+    converted: number;
+    /** 0–1 */
+    conversionRate: number;
+    sessions: number;
+  };
+  totals: {
+    students: number;
+    admins: number;
+    banned: number;
+    masteredItems: number;
+    publishedItems: number;
+  };
+  mostMissed: AdminMissedItem[];
+  recentSessions: AdminRecentSession[];
 }
 
 export interface AdminUpdateUserRequest {

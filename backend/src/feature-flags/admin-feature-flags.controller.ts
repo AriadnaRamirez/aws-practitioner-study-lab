@@ -5,16 +5,15 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {
-  AdminGuard,
-  ApiAdminTokenHeader,
-} from '../common/guards/admin.guard';
+import { AdminGuard, ApiAdminTokenHeader } from '../common/guards/admin.guard';
 import { UpdateFeatureFlagDto } from './dto/update-feature-flag.dto';
 import { FeatureFlagsService } from './feature-flags.service';
 
 @ApiTags('admin-feature-flags')
 @ApiAdminTokenHeader()
-@ApiUnauthorizedResponse({ description: 'Missing/invalid x-admin-token' })
+@ApiUnauthorizedResponse({
+  description: 'Missing/invalid admin session (Bearer JWT, role ADMIN)',
+})
 @UseGuards(AdminGuard)
 @Controller('admin/feature-flags')
 export class AdminFeatureFlagsController {

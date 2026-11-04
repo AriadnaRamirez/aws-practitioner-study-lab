@@ -69,6 +69,14 @@ export class StartStudySessionDto {
   @IsOptional()
   @IsString()
   timezone?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'FLASH_STUDY: reparte las cartas por igual entre topicIds (partida rápida)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  balanced?: boolean;
 }
 
 export class AnswerStudyDto {

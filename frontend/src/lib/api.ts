@@ -1,7 +1,8 @@
 import type {
-  AdminGuestRow,
-  AdminUserRow,
   AuthResponse,
+  ChangePasswordRequest,
+  CreateUserExamRequest,
+  DeleteUserExamResponse,
   ForgotPasswordRequest,
   GuestProbe,
   LoginRequest,
@@ -13,22 +14,23 @@ import type {
   StartWeakReviewRequest,
   StartWeakReviewResponse,
   StudyHistoryResponse,
-  UsageSummary,
+  UpdateProfileRequest,
+  UpdateUserExamRequest,
+  UserExam,
+  UserExamsResponse,
   WeakItemsResponse,
 } from '@aps/shared';
 import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
+import { loginHref } from '@/lib/route-labels';
 
 // Relative by default so Try Live / port-forward use the same host as the UI
 // (Next rewrites /api/v1 → Nest). Override with NEXT_PUBLIC_API_URL if needed.
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
 
-export const AUTH_TOKEN_KEY = 'aps_access_token';
-export const AUTH_USER_KEY = 'aps_user';
-/** Cookie mirror so previews / hard navigations keep the session. */
+const AUTH_TOKEN_KEY = 'aps_access_token';
+const AUTH_USER_KEY = 'aps_user';
+/** Cookie mirror so previews / hard navigations keep the session (admin server pages read it). */
 export const AUTH_COOKIE = 'aps_access_token';
-
-const ADMIN_TOKEN =
-  process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? 'dev-admin-token';
 
 export function getApiUrl() {
   return API_URL;
@@ -105,6 +107,32 @@ export function getStoredUser(): PublicUser | null {
   }
 }
 
+export const OFFLINE_MESSAGE =
+  'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.';
+export const EXPIRED_MESSAGE = 'Tu sesión expiró. Vuelve a entrar para seguir.';
+
+/**
+ * 401 from the JWT guard (bad/expired token). Wrong-password 401s carry their
+ * own message and must stay on the form.
+ */
+export function isExpiredSession(status: number, message: string): boolean {
+  return (
+    status === 401 &&
+    (message === 'Unauthorized' || message.startsWith('Sesión'))
+  );
+}
+
+/** Drops the dead token and sends the student to login, back here afterwards. */
+export function expireSession() {
+  if (typeof window === 'undefined') return;
+  clearAuth();
+  const here = `${window.location.pathname}${window.location.search}`;
+  const href = loginHref(here);
+  window.location.assign(`${href}${href.includes('?') ? '&' : '?'}expired=1`);
+}
+const SERVER_ERROR_MESSAGE =
+  'Algo falló de nuestro lado. Inténtalo de nuevo en un momento.';
+
 async function parseError(res: Response): Promise<string> {
   try {
     const body = (await res.json()) as {
@@ -126,10 +154,23 @@ async function parseError(res: Response): Promise<string> {
   return `Error ${res.status}`;
 }
 
-async function apiFetch<T>(
-  path: string,
-  init?: RequestInit & { auth?: boolean },
-): Promise<T> {
+type ApiInit = RequestInit & { auth?: boolean };
+
+/** Identical GETs issued while one is still pending share a single request. */
+const inflight = new Map<string, Promise<unknown>>();
+
+function apiFetch<T>(path: string, init?: ApiInit): Promise<T> {
+  const method = (init?.method ?? 'GET').toUpperCase();
+  if (method !== 'GET' || init?.body) return request<T>(path, init);
+  const key = `${init?.auth ? getStoredToken() : ''}|${path}`;
+  const pending = inflight.get(key);
+  if (pending) return pending as Promise<T>;
+  const promise = request<T>(path, init).finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
+}
+
+async function request<T>(path: string, init?: ApiInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (!headers.has('Content-Type') && init?.body) {
     headers.set('Content-Type', 'application/json');
@@ -143,12 +184,16 @@ async function apiFetch<T>(
   try {
     res = await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
-    throw new Error(
-      'No se pudo contactar la API. ¿Está corriendo el backend en :43124?',
-    );
+    throw new Error(OFFLINE_MESSAGE);
   }
   if (!res.ok) {
-    throw new Error(await parseError(res));
+    if (res.status >= 500) throw new Error(SERVER_ERROR_MESSAGE);
+    const message = await parseError(res);
+    if (headers.has('Authorization') && isExpiredSession(res.status, message)) {
+      expireSession();
+      throw new Error(EXPIRED_MESSAGE);
+    }
+    throw new Error(message);
   }
   return res.json() as Promise<T>;
 }
@@ -185,11 +230,7 @@ export function fetchMe() {
   return apiFetch<PublicUser>('/auth/me', { auth: true });
 }
 
-export function updateProfile(body: {
-  timezone?: string;
-  podiumHidden?: boolean;
-  examDate?: string | null;
-}) {
+export function updateProfile(body: UpdateProfileRequest) {
   return apiFetch<PublicUser>('/auth/me', {
     method: 'PATCH',
     auth: true,
@@ -197,16 +238,54 @@ export function updateProfile(body: {
   });
 }
 
-export function changePassword(body: {
-  currentPassword: string;
-  password: string;
-  confirmPassword: string;
-}) {
+export function deleteAccount(body: { password: string }) {
+  return apiFetch<{ message: string }>('/auth/me', {
+    method: 'DELETE',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function fetchMyExams() {
+  return apiFetch<UserExamsResponse>('/me/exams', { auth: true });
+}
+
+export function createMyExam(body: CreateUserExamRequest) {
+  return apiFetch<UserExam>('/me/exams', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateMyExam(id: string, body: UpdateUserExamRequest) {
+  return apiFetch<UserExam>(`/me/exams/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteMyExam(id: string) {
+  return apiFetch<DeleteUserExamResponse>(
+    `/me/exams/${encodeURIComponent(id)}`,
+    { method: 'DELETE', auth: true },
+  );
+}
+
+export function changePassword(body: ChangePasswordRequest) {
   return apiFetch<{ message: string }>('/auth/change-password', {
     method: 'POST',
     auth: true,
     body: JSON.stringify(body),
   });
+}
+
+/** Dispatched on `window` when a session ends so header stats refetch. */
+export const PROGRESS_CHANGED_EVENT = 'aps:progress-changed';
+
+export function notifyProgressChanged() {
+  window.dispatchEvent(new Event(PROGRESS_CHANGED_EVENT));
 }
 
 export function fetchProgressOverview() {
@@ -232,10 +311,6 @@ export function storeGuestProbeId(id: string) {
   window.localStorage.setItem(GUEST_PROBE_STORAGE_KEY, id);
 }
 
-export function clearGuestProbeId() {
-  window.localStorage.removeItem(GUEST_PROBE_STORAGE_KEY);
-}
-
 export function createGuestProbe() {
   return apiFetch<GuestProbe>('/guest/probes', { method: 'POST' });
 }
@@ -248,24 +323,6 @@ export function recordGuestSession(id: string) {
   return apiFetch<GuestProbe>(`/guest/probes/${id}/sessions`, {
     method: 'POST',
   });
-}
-
-async function adminFetch<T>(path: string): Promise<T> {
-  return apiFetch<T>(path, {
-    headers: { 'x-admin-token': ADMIN_TOKEN },
-  });
-}
-
-export function fetchUsageSummary() {
-  return adminFetch<UsageSummary>('/admin/usage');
-}
-
-export function fetchAdminUsers() {
-  return adminFetch<AdminUserRow[]>('/admin/users');
-}
-
-export function fetchAdminGuests() {
-  return adminFetch<AdminGuestRow[]>('/admin/guests');
 }
 
 export function fetchPodium(window: PodiumWindow = 'all') {

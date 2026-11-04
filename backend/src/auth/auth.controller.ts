@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
   Post,
@@ -17,6 +18,7 @@ import type { User } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RegisterDto } from './dto/register.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -67,9 +69,17 @@ export class AuthController {
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Actualizar timezone / podiumHidden' })
+  @ApiOperation({ summary: 'Actualizar usuario / timezone / podiumHidden' })
   updateMe(@Req() req: { user: User }, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(req.user, dto);
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar la cuenta y todo su progreso' })
+  deleteMe(@Req() req: { user: User }, @Body() dto: DeleteAccountDto) {
+    return this.authService.deleteAccount(req.user, dto);
   }
 
   @Post('change-password')
