@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { OsiTcpIpGame } from "@/components/minigames/osi-tcpip-game";
+import { PreciosGame } from "@/components/minigames/quiz-games";
 import { RequireAuth } from "@/components/shell/require-auth";
 
 export const metadata: Metadata = {
-  title: "OSI vs TCP/IP · Minijuegos",
+  title: "¿Cuánto pagas? · Minijuegos",
 };
 
-export default function OsiVsTcpIpPage() {
+export default function CuantoPagasPage() {
   return (
     <RequireAuth>
-      <OsiTcpIpGame />
+      <PreciosGame />
     </RequireAuth>
   );
 }

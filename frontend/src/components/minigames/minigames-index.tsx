@@ -1,18 +1,44 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cardVariants } from "@/components/ui/card";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { PageContainer, PageHeader } from "@/components/ui/page";
+import {
+  GameStatusBadge,
+  TopicProgressBadge,
+  useKnowledgeItems,
+} from "@/components/minigames/game-ui";
 import { MINIGAMES } from "@/lib/minigames";
+import { topicResultId, useGameResults } from "@/lib/minigames/progress";
 import { cn } from "@/lib/utils";
 
 export function MinigamesIndex() {
+  const results = useGameResults();
+  const { items } = useKnowledgeItems();
+
+  function statusBadge(game: (typeof MINIGAMES)[number]) {
+    if (!game.topicIds) return <GameStatusBadge status={results[game.slug]} />;
+    if (!items) return null;
+    const statuses = game
+      .topicIds(items)
+      .map((id) => results[topicResultId(game.slug, id)]);
+    return (
+      <TopicProgressBadge
+        done={statuses.filter((s) => s === "completed").length}
+        played={statuses.filter(Boolean).length}
+        total={statuses.length}
+      />
+    );
+  }
+
   return (
     <PageContainer width="wide">
       <PageHeader
         title="Minijuegos"
-        subtitle="Practica los temas difíciles jugando: arrastra, compara y aprende de cada error."
+        subtitle="Practica los conceptos de AWS más difíciles jugando."
         mascot="laptop"
       />
 
@@ -36,7 +62,10 @@ export function MinigamesIndex() {
                   >
                     <Icon className="size-5" />
                   </span>
-                  <Badge>{game.topic}</Badge>
+                  <span className="flex flex-wrap justify-end gap-1.5">
+                    {statusBadge(game)}
+                    <Badge>{game.topic}</Badge>
+                  </span>
                 </div>
                 <h2 className="mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
                   {game.title}

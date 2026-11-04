@@ -1,4 +1,6 @@
-import { Network, type LucideIcon } from "lucide-react";
+import { Grid3x3, Handshake, PiggyBank, type LucideIcon } from "lucide-react";
+import type { KnowledgeItem } from "@aps/shared";
+import { crosswordTopics } from "@/lib/minigames/crucigrama";
 
 type Minigame = {
   /** Ruta: /minijuegos/<slug>. Crea la carpeta con el mismo nombre en app/(app)/minijuegos. */
@@ -9,17 +11,40 @@ type Minigame = {
   format: string;
   minutes: number;
   icon: LucideIcon;
+  /** For games played per topic: the topics that count toward "completed". */
+  topicIds?: (items: readonly KnowledgeItem[]) => string[];
 };
 
 export const MINIGAMES: readonly Minigame[] = [
   {
-    slug: "osi-vs-tcp-ip",
-    title: "OSI vs TCP/IP",
+    slug: "crucigrama",
+    title: "Crucigrama",
     description:
-      "Lección corta: repasa las capas, ordena OSI, relaciónalo con TCP/IP y ubica tarjetas de funciones, piezas de red y servicios de AWS.",
-    topic: "Redes",
-    format: "Lección guiada en 4 pasos",
+      "Lee la definición y escribe el nombre del servicio o concepto. Algunas letras vienen de pista.",
+    topic: "Cualquier tema",
+    format: "8 palabras",
     minutes: 6,
-    icon: Network,
+    icon: Grid3x3,
+    topicIds: (items) => crosswordTopics(items).map((t) => t.category.id),
+  },
+  {
+    slug: "quien-se-encarga",
+    title: "¿Quién se encarga?",
+    description:
+      "Modelo de responsabilidad compartida: decide si cada tarea es de AWS o tuya.",
+    topic: "Conceptos de la nube",
+    format: "10 tareas",
+    minutes: 4,
+    icon: Handshake,
+  },
+  {
+    slug: "cuanto-pagas",
+    title: "¿Cuánto pagas?",
+    description:
+      "On-Demand, Reserved, Savings Plans, Spot o Dedicated Hosts: elige el modelo de precios para cada caso.",
+    topic: "Precios",
+    format: "10 casos",
+    minutes: 5,
+    icon: PiggyBank,
   },
 ];

@@ -5,6 +5,7 @@ import type {
   DeleteUserExamResponse,
   ForgotPasswordRequest,
   GuestProbe,
+  KnowledgeItem,
   LoginRequest,
   PodiumResponse,
   PodiumWindow,
@@ -323,6 +324,10 @@ export function recordGuestSession(id: string) {
   return apiFetch<GuestProbe>(`/guest/probes/${id}/sessions`, {
     method: 'POST',
   });
+}
+
+export function fetchKnowledgeItems() {
+  return apiFetch<KnowledgeItem[]>('/knowledge-items');
 }
 
 export function fetchPodium(window: PodiumWindow = 'all') {

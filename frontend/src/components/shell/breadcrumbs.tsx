@@ -16,7 +16,9 @@ const STUDENT: Record<string, string> = {
   guias: "Guías",
   cuenta: "Cuenta",
   minijuegos: "Minijuegos",
-  "osi-vs-tcp-ip": "OSI vs TCP/IP",
+  crucigrama: "Crucigrama",
+  "quien-se-encarga": "¿Quién se encarga?",
+  "cuanto-pagas": "¿Cuánto pagas?",
 };
 
 const ADMIN: Record<string, string> = {
@@ -70,17 +72,14 @@ function adminCrumbs(pathname: string): Crumb[] {
 
 export function Breadcrumbs({ scope }: { scope: "student" | "admin" }) {
   const pathname = usePathname();
-  const crumbs = scope === "admin" ? adminCrumbs(pathname) : studentCrumbs(pathname);
+  const crumbs =
+    scope === "admin" ? adminCrumbs(pathname) : studentCrumbs(pathname);
   if (crumbs.length < 2) return null;
 
   return (
     <nav
       aria-label="Migas de pan"
-      className={
-        scope === "student"
-          ? "print:hidden"
-          : "mb-4 print:hidden"
-      }
+      className={scope === "student" ? "print:hidden" : "mb-4 print:hidden"}
     >
       <ol
         className={
@@ -92,7 +91,10 @@ export function Breadcrumbs({ scope }: { scope: "student" | "admin" }) {
         {crumbs.map((crumb, index) => {
           const current = index === crumbs.length - 1;
           return (
-            <li key={`${crumb.href}-${index}`} className="flex min-w-0 items-center gap-1.5">
+            <li
+              key={`${crumb.href}-${index}`}
+              className="flex min-w-0 items-center gap-1.5"
+            >
               {index > 0 ? (
                 <ChevronRight
                   className="size-3.5 shrink-0 text-[var(--foreground-muted)]"
