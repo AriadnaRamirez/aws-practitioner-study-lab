@@ -242,7 +242,12 @@ async function seedFeatureFlags() {
 
 async function main() {
   await seedAdmin();
-  await seedDemoStudents();
+  if (process.env.DEMO_PASSWORD?.trim()) {
+    await seedDemoStudents();
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('Demo students skipped (DEMO_PASSWORD unset)');
+  }
   await seedContent();
   await seedFeatureFlags();
 }

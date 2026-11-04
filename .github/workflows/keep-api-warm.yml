@@ -1,0 +1,16 @@
+# Render's free plan sleeps after 15 min idle; a cold start (~50 s) outlasts
+# Vercel's proxy timeout. Set the repo variable API_HEALTH_URL to enable.
+name: Keep API warm
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    if: ${{ vars.API_HEALTH_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 "${{ vars.API_HEALTH_URL }}"

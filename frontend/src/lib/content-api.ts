@@ -1,10 +1,12 @@
 import type { KnowledgeItem, Topic } from "@aps/shared";
 
+const SERVER_API_ORIGIN = (
+  process.env.APS_API_PROXY_TARGET ?? "http://127.0.0.1:43124"
+).replace(/\/$/, "");
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  (typeof window === "undefined"
-    ? "http://127.0.0.1:43124/api/v1"
-    : "/api/v1");
+  (typeof window === "undefined" ? `${SERVER_API_ORIGIN}/api/v1` : "/api/v1");
 
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {

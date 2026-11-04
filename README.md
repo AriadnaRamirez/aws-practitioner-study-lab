@@ -1,6 +1,6 @@
 # AWS Practitioner Study Lab
 
-**No hay deploy.** El MVP se corre en **tu laptop** (`localhost`). Un Cloud Agent no puede arrancar procesos en tu PC: clona el repo y usa los scripts de abajo.
+Se corre en **tu laptop** (`localhost`) con los scripts de abajo, o en producción con el plan gratuito de Vercel + Render + Neon (ver [Deploy](#deploy)).
 
 Frontend y backend van **por separado** en la raíz (mismo monorepo npm).
 
@@ -43,6 +43,27 @@ docker compose up -d
 npm run db:migrate:deploy
 npm run db:seed
 npm run build -w @aps/shared
+```
+
+## Deploy
+
+| Pieza | Plataforma | Configuración |
+| --- | --- | --- |
+| PostgreSQL | [Neon](https://neon.tech) (región AWS us-east-1) | connection string directa (sin `-pooler`) |
+| API Nest | [Render](https://render.com) (Blueprint) | [`render.yaml`](./render.yaml): aplica migraciones al arrancar |
+| Web Next | [Vercel](https://vercel.com), Root Directory `frontend` | [`frontend/vercel.json`](./frontend/vercel.json) |
+
+Variables:
+
+- Render: `DATABASE_URL` (Neon), `WEB_ORIGIN` y `WEB_PUBLIC_URL` (URL de Vercel). `JWT_SECRET` se genera solo.
+- Vercel: `APS_API_PROXY_TARGET` = URL de Render (sin `/api/v1`). El navegador sigue usando `/api/v1` y Next lo reenvía.
+- GitHub → Settings → Variables: `API_HEALTH_URL` = `https://<api>.onrender.com/api/v1/health` activa [`keep-api-warm`](./.github/workflows/keep-api-warm.yml) para que la API gratuita no se duerma.
+
+Seed de producción (una vez, desde tu laptop; sin `DEMO_PASSWORD` no crea cuentas demo):
+
+```bash
+cd backend
+DATABASE_URL="<neon>" ADMIN_EMAIL="<tu-email>" ADMIN_PASSWORD="<segura>" DEMO_PASSWORD= npx prisma db seed
 ```
 
 ### Auth
