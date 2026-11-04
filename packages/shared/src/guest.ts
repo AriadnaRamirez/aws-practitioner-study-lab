@@ -1,5 +1,7 @@
 /** Guest marketing + owner usage analytics (APS-13). */
 
+import type { StudyMode } from './study';
+
 export const GUEST_PROBE_STORAGE_KEY = 'aps_guest_probe_id';
 
 /** Max recorded guest sessions per probe (limited marketing trial). */
@@ -78,6 +80,9 @@ export interface AdminKpi {
 
 export interface AdminMissedItem {
   itemId: string;
+  /** KNOWLEDGE = carta; EXAM_QUESTION = pregunta del banco. */
+  itemType: 'KNOWLEDGE' | 'EXAM_QUESTION';
+  /** Concept name, or the question stem. */
   name: string;
   topicName: string;
   attempts: number;
@@ -95,6 +100,56 @@ export interface AdminRecentSession {
   correct: number;
   startedAt: string;
   endedAt: string | null;
+  /** 0–100 once finished; null while in progress or abandoned (`endedAt` set). */
+  score: number | null;
+}
+
+/** One study mode over the KPI window (last 7 civil days). */
+export interface AdminModeStat {
+  mode: StudyMode;
+  sessions: number;
+  completedSessions: number;
+  students: number;
+  answers: number;
+  correctAnswers: number;
+}
+
+/** EXAM_TIMED sessions over the daily window. */
+export interface AdminTimedExamStats {
+  started: number;
+  /** Submitted or expired: they have a score. */
+  finished: number;
+  /** 0–100, null without finished exams. */
+  averageScore: number | null;
+  /** Finished exams at or above `passScore`. */
+  passed: number;
+  /** Reference cut: 700/1000 on the real exam. */
+  passScore: number;
+}
+
+export interface AdminMinigameStat {
+  /** MinigameId from @aps/shared. */
+  id: string;
+  /** Students with at least one finished run. */
+  players: number;
+  /** Students with at least one run without mistakes. */
+  completed: number;
+}
+
+export interface AdminUpcomingExam {
+  username: string;
+  examCode: string;
+  /** YYYY-MM-DD */
+  examDate: string;
+  /** Civil days from today (admin timezone); 0 = today. */
+  daysLeft: number;
+}
+
+export interface AdminTrackContent {
+  trackId: string;
+  topics: number;
+  cards: { published: number; draft: number; archived: number };
+  questions: { published: number; draft: number; archived: number };
 }
 
 /** Owner metrics for the admin overview. Students only; admin activity is excluded. */
@@ -134,7 +189,29 @@ export interface AdminMetrics {
     banned: number;
     masteredItems: number;
     publishedItems: number;
+    /** Students whose daily streak is still alive (studied today or yesterday). */
+    activeStreaks: number;
   };
+  /** Runtime toggles that hide parts of the lab from students. */
+  flags: {
+    examModes: boolean;
+    aiTrack: boolean;
+  };
+  /** Every StudyMode, in display order, over the last 7 civil days. */
+  modes: AdminModeStat[];
+  timedExams: AdminTimedExamStats;
+  minigames: {
+    /** Students with any minigame result. */
+    players: number;
+    games: AdminMinigameStat[];
+  };
+  exams: {
+    /** Students with each exam scheduled (any date). */
+    scheduled: { examCode: string; students: number }[];
+    /** Next exams from today, soonest first. */
+    upcoming: AdminUpcomingExam[];
+  };
+  content: AdminTrackContent[];
   mostMissed: AdminMissedItem[];
   recentSessions: AdminRecentSession[];
 }

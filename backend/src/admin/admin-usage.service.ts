@@ -5,13 +5,18 @@ import {
 } from '@nestjs/common';
 import { Role, type User } from '@prisma/client';
 import { randomBytes } from 'crypto';
-import type {
-  AdminGuestRow,
-  AdminMetrics,
-  AdminResetPasswordResponse,
-  AdminUpdateUserRequest,
-  AdminUserRow,
-  UsageSummary,
+import {
+  EXAM_CODES,
+  FEATURE_FLAG_EXAM_MODES,
+  FEATURE_FLAG_EXAM_TRACK_AI,
+  TRACK_IDS,
+  type AdminGuestRow,
+  type AdminMetrics,
+  type AdminResetPasswordResponse,
+  type AdminTrackContent,
+  type AdminUpdateUserRequest,
+  type AdminUserRow,
+  type UsageSummary,
 } from '@aps/shared';
 import { hashPassword } from '../auth/password.util';
 import { PrismaService } from '../prisma/prisma.service';
@@ -20,9 +25,29 @@ import {
   METRICS_TIMEZONE,
   buildDaily,
   buildKpis,
+  buildMinigameStats,
+  buildModeStats,
+  buildTimedExamStats,
+  civilDaysBetween,
   lastCivilDates,
   metricsRatio,
 } from './admin-metrics';
+
+const UPCOMING_EXAMS = 8;
+const MOST_MISSED = 8;
+
+type LabMetrics = Pick<
+  AdminMetrics,
+  'flags' | 'minigames' | 'exams' | 'content'
+> & {
+  activeStreaks: number;
+};
+
+type ContentCounts = AdminTrackContent['cards'];
+
+function emptyCounts(): ContentCounts {
+  return { published: 0, draft: 0, archived: 0 };
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
@@ -131,7 +156,11 @@ export class AdminUsageService {
     const missedSince = new Date(now.getTime() - 30 * DAY_MS);
     const student = { user: { role: Role.STUDENT } };
 
+    const today = dates[dates.length - 1];
+    const yesterday = dates[dates.length - 2];
+
     const [
+      lab,
       sessions,
       newUsers,
       masteredRows,
@@ -150,10 +179,12 @@ export class AdminUsageService {
       attemptMisses,
       recent,
     ] = await Promise.all([
+      this.getLabMetrics(today, yesterday),
       this.prisma.studySession.findMany({
         where: { startedAt: { gte: since }, ...student },
         select: {
           userId: true,
+          mode: true,
           startedAt: true,
           endedAt: true,
           score: true,
@@ -188,22 +219,13 @@ export class AdminUsageService {
       }),
       this.prisma.guestProbe.aggregate({ _sum: { sessionsCount: true } }),
       this.prisma.attempt.groupBy({
-        by: ['itemId'],
-        where: {
-          itemType: 'KNOWLEDGE',
-          createdAt: { gte: missedSince },
-          ...student,
-        },
+        by: ['itemType', 'itemId'],
+        where: { createdAt: { gte: missedSince }, ...student },
         _count: { _all: true },
       }),
       this.prisma.attempt.groupBy({
-        by: ['itemId'],
-        where: {
-          itemType: 'KNOWLEDGE',
-          correct: false,
-          createdAt: { gte: missedSince },
-          ...student,
-        },
+        by: ['itemType', 'itemId'],
+        where: { correct: false, createdAt: { gte: missedSince }, ...student },
         _count: { _all: true },
       }),
       this.prisma.studySession.findMany({
@@ -221,16 +243,15 @@ export class AdminUsageService {
       newUsers.map((u) => u.createdAt),
       masteredRows.flatMap((r) => (r.masteredAt ? [r.masteredAt] : [])),
     );
-    const today = dates[dates.length - 1];
-
     const missesBy = new Map(
-      attemptMisses.map((r) => [r.itemId, r._count._all]),
+      attemptMisses.map((r) => [`${r.itemType}:${r.itemId}`, r._count._all]),
     );
     const missedRanked = attemptTotals
       .map((r) => {
-        const misses = missesBy.get(r.itemId) ?? 0;
+        const misses = missesBy.get(`${r.itemType}:${r.itemId}`) ?? 0;
         return {
           itemId: r.itemId,
+          itemType: r.itemType,
           attempts: r._count._all,
           misses,
           missRate: metricsRatio(misses, r._count._all),
@@ -238,14 +259,32 @@ export class AdminUsageService {
       })
       .filter((r) => r.misses > 0 && r.attempts >= 3)
       .sort((a, b) => b.misses - a.misses || b.missRate - a.missRate)
-      .slice(0, 8);
-    const missedItems = missedRanked.length
-      ? await this.prisma.knowledgeItem.findMany({
-          where: { id: { in: missedRanked.map((r) => r.itemId) } },
-          select: { id: true, name: true, topic: { select: { name: true } } },
-        })
-      : [];
-    const itemById = new Map(missedItems.map((i) => [i.id, i]));
+      .slice(0, MOST_MISSED);
+    const idsOf = (type: 'KNOWLEDGE' | 'EXAM_QUESTION') =>
+      missedRanked.filter((r) => r.itemType === type).map((r) => r.itemId);
+    const [missedCards, missedQuestions] = await Promise.all([
+      idsOf('KNOWLEDGE').length
+        ? this.prisma.knowledgeItem.findMany({
+            where: { id: { in: idsOf('KNOWLEDGE') } },
+            select: { id: true, name: true, topic: { select: { name: true } } },
+          })
+        : [],
+      idsOf('EXAM_QUESTION').length
+        ? this.prisma.examQuestion.findMany({
+            where: { id: { in: idsOf('EXAM_QUESTION') } },
+            select: { id: true, stem: true, topic: { select: { name: true } } },
+          })
+        : [],
+    ]);
+    const itemByKey = new Map([
+      ...missedCards.map(
+        (i) => [`KNOWLEDGE:${i.id}`, { name: i.name, topic: i.topic }] as const,
+      ),
+      ...missedQuestions.map(
+        (q) =>
+          [`EXAM_QUESTION:${q.id}`, { name: q.stem, topic: q.topic }] as const,
+      ),
+    ]);
 
     return {
       generatedAt: now.toISOString(),
@@ -266,9 +305,22 @@ export class AdminUsageService {
         conversionRate: metricsRatio(guestsConverted, guestsTotal),
         sessions: guestSessions._sum.sessionsCount ?? 0,
       },
-      totals: { students, admins, banned, masteredItems, publishedItems },
+      totals: {
+        students,
+        admins,
+        banned,
+        masteredItems,
+        publishedItems,
+        activeStreaks: lab.activeStreaks,
+      },
+      flags: lab.flags,
+      modes: buildModeStats(dates, tz, sessions),
+      timedExams: buildTimedExamStats(sessions),
+      minigames: lab.minigames,
+      exams: lab.exams,
+      content: lab.content,
       mostMissed: missedRanked.flatMap((r) => {
-        const item = itemById.get(r.itemId);
+        const item = itemByKey.get(`${r.itemType}:${r.itemId}`);
         return item
           ? [{ ...r, name: item.name, topicName: item.topic.name }]
           : [];
@@ -282,6 +334,121 @@ export class AdminUsageService {
         correct: s.correctCount,
         startedAt: s.startedAt.toISOString(),
         endedAt: s.endedAt?.toISOString() ?? null,
+        score: s.endedAt && s.score != null ? Math.round(s.score) : null,
+      })),
+    };
+  }
+
+  /** Parts of the lab outside study sessions: games, exam dates, content, flags. */
+  private async getLabMetrics(
+    today: string,
+    yesterday: string,
+  ): Promise<LabMetrics> {
+    const student = { user: { role: Role.STUDENT } };
+    const [
+      flags,
+      activeStreaks,
+      minigameRows,
+      scheduled,
+      upcoming,
+      topics,
+      cards,
+      questions,
+    ] = await Promise.all([
+      this.prisma.featureFlag.findMany({
+        where: {
+          key: { in: [FEATURE_FLAG_EXAM_MODES, FEATURE_FLAG_EXAM_TRACK_AI] },
+        },
+        select: { key: true, enabled: true },
+      }),
+      this.prisma.dailyStreak.count({
+        where: {
+          current: { gt: 0 },
+          lastStudyDate: { in: [today, yesterday] },
+          ...student,
+        },
+      }),
+      this.prisma.minigameResult.findMany({
+        where: student,
+        select: { userId: true, resultId: true, status: true },
+      }),
+      this.prisma.userExam.groupBy({
+        by: ['examCode'],
+        where: student,
+        _count: { _all: true },
+      }),
+      this.prisma.userExam.findMany({
+        where: {
+          examDate: { gte: new Date(`${today}T00:00:00Z`) },
+          user: { role: Role.STUDENT, bannedAt: null },
+        },
+        orderBy: [{ examDate: 'asc' }, { examCode: 'asc' }],
+        take: UPCOMING_EXAMS,
+        select: {
+          examCode: true,
+          examDate: true,
+          user: { select: { username: true } },
+        },
+      }),
+      this.prisma.topic.groupBy({ by: ['trackId'], _count: { _all: true } }),
+      this.prisma.knowledgeItem.groupBy({
+        by: ['trackId', 'status'],
+        _count: { _all: true },
+      }),
+      this.prisma.examQuestion.groupBy({
+        by: ['trackId', 'status'],
+        _count: { _all: true },
+      }),
+    ]);
+
+    const flagOn = (key: string) =>
+      flags.some((f) => f.key === key && f.enabled);
+    const scheduledBy = new Map(
+      scheduled.map((r) => [r.examCode, r._count._all]),
+    );
+    const trackIds = [
+      ...new Set<string>([
+        ...TRACK_IDS,
+        ...topics.map((t) => t.trackId),
+        ...cards.map((c) => c.trackId),
+        ...questions.map((q) => q.trackId),
+      ]),
+    ];
+    const countsFor = (rows: typeof cards, trackId: string): ContentCounts => {
+      const counts = emptyCounts();
+      for (const r of rows) {
+        if (r.trackId === trackId) counts[r.status] = r._count._all;
+      }
+      return counts;
+    };
+
+    return {
+      activeStreaks,
+      flags: {
+        examModes: flagOn(FEATURE_FLAG_EXAM_MODES),
+        aiTrack: flagOn(FEATURE_FLAG_EXAM_TRACK_AI),
+      },
+      minigames: buildMinigameStats(minigameRows),
+      exams: {
+        scheduled: EXAM_CODES.map((examCode) => ({
+          examCode,
+          students: scheduledBy.get(examCode) ?? 0,
+        })),
+        upcoming: upcoming.map((e) => {
+          const examDate = e.examDate.toISOString().slice(0, 10);
+          return {
+            username: e.user.username,
+            examCode: e.examCode,
+            examDate,
+            daysLeft: civilDaysBetween(today, examDate),
+          };
+        }),
+      },
+      content: trackIds.map((trackId) => ({
+        trackId,
+        topics: topics.find((t) => t.trackId === trackId)?._count._all ?? 0,
+        cards: countsFor(cards, trackId),
+        questions: countsFor(questions, trackId),
       })),
     };
   }

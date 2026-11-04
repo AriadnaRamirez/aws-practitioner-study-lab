@@ -1,8 +1,15 @@
 import Link from "next/link";
-import type { AdminKpi, AdminMetrics } from "@aps/shared";
+import { STUDY_MODE_LABELS, type AdminKpi, type AdminMetrics, type StudyMode } from "@aps/shared";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { DailyChart, ShareBar, Sparkline } from "@/components/admin/admin-charts";
 import { ADMIN_GRID, ADMIN_TABLE, AdminPage, AdminSection } from "@/components/admin/admin-ui";
+import {
+  ContentPanel,
+  ExamDatesPanel,
+  MinigamesPanel,
+  ModesPanel,
+  TimedExamsPanel,
+} from "@/components/admin/overview-panels";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardLabel } from "@/components/ui/card";
@@ -26,9 +33,13 @@ function pct(rate: number, digits = 0): string {
  * ├─────┴─────┴─────┼─────┤
  * │ partidas        │ est.│  chart 8 + panel 4
  * ├─────────────────┼─────┤
+ * │ modos           │fecha│
+ * ├─────────────────┼─────┤
  * │ respuestas      │ cont│
  * ├───────────┬─────┴─────┤
- * │ fallados  │ actividad │  tables 6 + 6
+ * │ minijuegos│ simulacros│  6 + 6
+ * ├───────────┼───────────┤
+ * │ fallados  │ actividad │
  * └───────────┴───────────┘
  * Below xl: KPIs two per row, every panel full width.
  */
@@ -115,12 +126,15 @@ function relativeTime(iso: string, now: Date): string {
   return `hace ${days} ${days === 1 ? "día" : "días"}`;
 }
 
-const MODE_LABEL: Record<string, string> = {
-  FLASH_STUDY: "Cartas",
-  WEAK_REVIEW: "Más falladas",
-  EXAM_STUDY: "Examen · estudio",
-  EXAM_TIMED: "Examen · cronometrado",
-};
+function modeLabel(mode: string): string {
+  return STUDY_MODE_LABELS[mode as StudyMode] ?? mode;
+}
+
+function SessionStatus({ s }: { s: AdminMetrics["recentSessions"][number] }) {
+  if (s.score !== null) return <Badge tone="success">Terminada</Badge>;
+  if (s.endedAt) return <Badge>Abandonada</Badge>;
+  return <Badge tone="warning">En curso</Badge>;
+}
 
 function Overview({ m }: { m: AdminMetrics }) {
   const now = new Date(m.generatedAt);
@@ -206,10 +220,11 @@ function Overview({ m }: { m: AdminMetrics }) {
           description="Cuántos avanzan en cada paso."
           className={TILE.side}
         >
-          <dl className="grid grid-cols-3 gap-2">
+          <dl className="grid grid-cols-2 gap-2">
             {[
               { label: "Registrados", value: m.totals.students },
               { label: "Activos hoy", value: m.activeToday },
+              { label: "Con racha viva", value: m.totals.activeStreaks },
               { label: "Suspendidos", value: m.totals.banned },
             ].map((s) => (
               <Stat key={s.label} label={s.label} value={NUMBER.format(s.value)} />
@@ -236,6 +251,9 @@ function Overview({ m }: { m: AdminMetrics }) {
           </Link>
         </AdminSection>
 
+        <ModesPanel m={m} className={TILE.chart} />
+        <ExamDatesPanel m={m} className={TILE.side} />
+
         <AdminSection
           title="Respuestas y precisión"
           description="Respuestas por día y porcentaje de aciertos."
@@ -254,42 +272,14 @@ function Overview({ m }: { m: AdminMetrics }) {
           />
         </AdminSection>
 
-        <AdminSection
-          title="Contenido"
-          description={`${NUMBER.format(m.totals.publishedItems)} conceptos publicados.`}
-          className={TILE.side}
-        >
-          <dl className="space-y-3 text-sm">
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-[var(--foreground-muted)]">Dominios acumulados</dt>
-              <dd className="font-semibold tabular-nums">{NUMBER.format(m.totals.masteredItems)}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-[var(--foreground-muted)]">Promedio por estudiante</dt>
-              <dd className="font-semibold tabular-nums">
-                {m.totals.students > 0
-                  ? (m.totals.masteredItems / m.totals.students).toFixed(1)
-                  : "0"}
-              </dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-[var(--foreground-muted)]">Sesiones de invitados</dt>
-              <dd className="font-semibold tabular-nums">{NUMBER.format(m.guests.sessions)}</dd>
-            </div>
-          </dl>
-          <div className="mt-auto flex flex-wrap gap-2 pt-5">
-            <Link href="/admin/flash" className={buttonVariants({ variant: "secondary", size: "sm" })}>
-              Cartas
-            </Link>
-            <Link href="/admin/import" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-              Importar
-            </Link>
-          </div>
-        </AdminSection>
+        <ContentPanel m={m} className={TILE.side} />
+
+        <MinigamesPanel m={m} className={TILE.half} />
+        <TimedExamsPanel m={m} className={TILE.half} />
 
         <AdminSection
-          title="Conceptos más fallados"
-          description="Últimos 30 días, con al menos 3 intentos. Buenos candidatos para revisar el contenido."
+          title="Lo más fallado"
+          description="Cartas y preguntas de examen, últimos 30 días, con al menos 3 intentos. Buenos candidatos para revisar el contenido."
           className={TILE.half}
         >
           {m.mostMissed.length === 0 ? (
@@ -299,7 +289,7 @@ function Overview({ m }: { m: AdminMetrics }) {
               <table className={ADMIN_TABLE.table}>
                 <thead className={ADMIN_TABLE.thead}>
                   <tr>
-                    <th className={ADMIN_TABLE.th}>Concepto</th>
+                    <th className={ADMIN_TABLE.th}>Carta o pregunta</th>
                     <th className={cn(ADMIN_TABLE.th, "text-right")}>Intentos</th>
                     <th className={cn(ADMIN_TABLE.th, "text-right")}>Fallos</th>
                     <th className={cn(ADMIN_TABLE.th, "w-32")}>% de fallo</th>
@@ -307,10 +297,15 @@ function Overview({ m }: { m: AdminMetrics }) {
                 </thead>
                 <tbody>
                   {m.mostMissed.map((item) => (
-                    <tr key={item.itemId} className={ADMIN_TABLE.tr}>
-                      <td className={ADMIN_TABLE.td}>
-                        <p className="font-medium text-[var(--foreground)]">{item.name}</p>
-                        <p className="text-xs text-[var(--foreground-muted)]">{item.topicName}</p>
+                    <tr key={`${item.itemType}:${item.itemId}`} className={ADMIN_TABLE.tr}>
+                      <td className={cn(ADMIN_TABLE.td, "max-w-72")}>
+                        <p className="line-clamp-2 font-medium text-[var(--foreground)]" title={item.name}>
+                          {item.name}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--foreground-muted)]">
+                          {item.itemType === "EXAM_QUESTION" ? <Badge>Pregunta</Badge> : null}
+                          {item.topicName}
+                        </p>
                       </td>
                       <td className={cn(ADMIN_TABLE.td, "text-right")}>{item.attempts}</td>
                       <td className={cn(ADMIN_TABLE.td, "text-right font-semibold")}>{item.misses}</td>
@@ -353,18 +348,14 @@ function Overview({ m }: { m: AdminMetrics }) {
                       <td className={cn(ADMIN_TABLE.td, "font-medium text-[var(--foreground)]")}>
                         @{s.username}
                       </td>
-                      <td className={cn(ADMIN_TABLE.td, "text-[var(--foreground-muted)]")}>
-                        {MODE_LABEL[s.mode] ?? s.mode} · {s.size}
+                      <td className={cn(ADMIN_TABLE.td, "whitespace-nowrap text-[var(--foreground-muted)]")}>
+                        {modeLabel(s.mode)} · {s.size}
                       </td>
                       <td className={cn(ADMIN_TABLE.td, "text-right")}>
                         {s.correct}/{s.answered}
                       </td>
                       <td className={ADMIN_TABLE.td}>
-                        {s.endedAt ? (
-                          <Badge tone="success">Terminada</Badge>
-                        ) : (
-                          <Badge tone="warning">Sin terminar</Badge>
-                        )}
+                        <SessionStatus s={s} />
                       </td>
                       <td className={cn(ADMIN_TABLE.td, "whitespace-nowrap text-right text-[var(--foreground-muted)]")}>
                         {relativeTime(s.startedAt, now)}

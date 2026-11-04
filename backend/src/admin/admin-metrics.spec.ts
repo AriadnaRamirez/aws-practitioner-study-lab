@@ -1,4 +1,12 @@
-import { buildDaily, buildKpis, lastCivilDates } from './admin-metrics';
+import {
+  buildDaily,
+  buildKpis,
+  buildMinigameStats,
+  buildModeStats,
+  buildTimedExamStats,
+  civilDaysBetween,
+  lastCivilDates,
+} from './admin-metrics';
 
 const TZ = 'America/Mexico_City';
 
@@ -107,5 +115,111 @@ describe('admin metrics', () => {
     expect(kpis.finishRate).toEqual({ current: 0.5, previous: 1 });
     expect(kpis.accuracy).toEqual({ current: 0.5, previous: 1 });
     expect(kpis.answers).toEqual({ current: 20, previous: 4 });
+  });
+
+  it('splits the last 7 days by mode, counting only scored sessions as finished', () => {
+    const now = new Date('2026-10-28T18:00:00Z');
+    const dates = lastCivilDates(now, 14, TZ);
+    const stats = buildModeStats(dates, TZ, [
+      {
+        userId: 'a',
+        mode: 'FLASH_STUDY',
+        startedAt: new Date('2026-10-28T15:00:00Z'),
+        endedAt: new Date('2026-10-28T15:10:00Z'),
+        score: 80,
+        answeredCount: 10,
+        correctCount: 8,
+      },
+      {
+        userId: 'a',
+        mode: 'FLASH_STUDY',
+        startedAt: new Date('2026-10-27T15:00:00Z'),
+        endedAt: new Date('2026-10-27T15:02:00Z'),
+        score: null,
+        answeredCount: 2,
+        correctCount: 1,
+      },
+      {
+        userId: 'b',
+        mode: 'WEAK_REVIEW',
+        startedAt: new Date('2026-10-26T15:00:00Z'),
+        endedAt: new Date('2026-10-26T15:05:00Z'),
+        score: 100,
+        answeredCount: 5,
+        correctCount: 5,
+      },
+      {
+        userId: 'c',
+        mode: 'FLASH_STUDY',
+        startedAt: new Date('2026-10-18T15:00:00Z'),
+        endedAt: null,
+        answeredCount: 9,
+        correctCount: 9,
+      },
+    ]);
+
+    expect(stats.map((s) => s.mode)).toEqual([
+      'FLASH_STUDY',
+      'EXAM_STUDY',
+      'EXAM_TIMED',
+      'WEAK_REVIEW',
+    ]);
+    expect(stats[0]).toEqual({
+      mode: 'FLASH_STUDY',
+      sessions: 2,
+      completedSessions: 1,
+      students: 1,
+      answers: 12,
+      correctAnswers: 9,
+    });
+    expect(stats[1].sessions).toBe(0);
+    expect(stats[3]).toMatchObject({ sessions: 1, completedSessions: 1 });
+  });
+
+  it('summarizes simulacros against the 70% reference', () => {
+    const base = {
+      userId: 'a',
+      startedAt: new Date('2026-10-28T15:00:00Z'),
+      answeredCount: 0,
+      correctCount: 0,
+    };
+    const ended = new Date('2026-10-28T16:00:00Z');
+    expect(
+      buildTimedExamStats([
+        { ...base, mode: 'EXAM_TIMED', endedAt: ended, score: 75 },
+        { ...base, mode: 'EXAM_TIMED', endedAt: ended, score: 60 },
+        { ...base, mode: 'EXAM_TIMED', endedAt: null, score: null },
+        { ...base, mode: 'FLASH_STUDY', endedAt: ended, score: 100 },
+      ]),
+    ).toEqual({
+      started: 3,
+      finished: 2,
+      averageScore: 67.5,
+      passed: 1,
+      passScore: 70,
+    });
+    expect(buildTimedExamStats([]).averageScore).toBeNull();
+  });
+
+  it('counts each student once per minigame across topics', () => {
+    const stats = buildMinigameStats([
+      { userId: 'a', resultId: 'crucigrama:cloud-concepts', status: 'PLAYED' },
+      { userId: 'a', resultId: 'crucigrama:security', status: 'COMPLETED' },
+      { userId: 'b', resultId: 'crucigrama:security', status: 'PLAYED' },
+      { userId: 'b', resultId: 'cuanto-pagas', status: 'COMPLETED' },
+      { userId: 'c', resultId: 'memorama', status: 'COMPLETED' },
+    ]);
+    expect(stats.players).toBe(2);
+    expect(stats.games).toEqual([
+      { id: 'crucigrama', players: 2, completed: 1 },
+      { id: 'quien-se-encarga', players: 0, completed: 0 },
+      { id: 'cuanto-pagas', players: 1, completed: 1 },
+    ]);
+  });
+
+  it('counts civil days to an exam date', () => {
+    expect(civilDaysBetween('2026-11-04', '2026-11-04')).toBe(0);
+    expect(civilDaysBetween('2026-11-04', '2026-11-09')).toBe(5);
+    expect(civilDaysBetween('2026-12-31', '2027-01-01')).toBe(1);
   });
 });

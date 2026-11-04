@@ -99,6 +99,11 @@ export {
   type AdminKpi,
   type AdminMissedItem,
   type AdminRecentSession,
+  type AdminModeStat,
+  type AdminTimedExamStats,
+  type AdminMinigameStat,
+  type AdminUpcomingExam,
+  type AdminTrackContent,
   type AdminMetrics,
 } from './guest';
 export {
