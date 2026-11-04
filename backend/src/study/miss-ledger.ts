@@ -18,8 +18,12 @@ export function parseLedger(raw: unknown): MissLedger {
       r.missesByItem && typeof r.missesByItem === 'object'
         ? { ...r.missesByItem }
         : {},
-    resolvedItemIds: Array.isArray(r.resolvedItemIds) ? [...r.resolvedItemIds] : [],
-    firstTryItemIds: Array.isArray(r.firstTryItemIds) ? [...r.firstTryItemIds] : [],
+    resolvedItemIds: Array.isArray(r.resolvedItemIds)
+      ? [...r.resolvedItemIds]
+      : [],
+    firstTryItemIds: Array.isArray(r.firstTryItemIds)
+      ? [...r.firstTryItemIds]
+      : [],
   };
 }
 
@@ -34,7 +38,8 @@ export function recordOutcome(
 ): { requeue: boolean } {
   const misses = ledger.missesByItem[itemId] ?? 0;
   if (correct) {
-    if (!ledger.resolvedItemIds.includes(itemId)) ledger.resolvedItemIds.push(itemId);
+    if (!ledger.resolvedItemIds.includes(itemId))
+      ledger.resolvedItemIds.push(itemId);
     if (misses === 0 && !ledger.firstTryItemIds.includes(itemId)) {
       ledger.firstTryItemIds.push(itemId);
     }

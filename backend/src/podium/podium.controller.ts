@@ -47,10 +47,7 @@ export class PodiumController {
     description: 'all = histórico; week = últimos 7×24h (masteredAt)',
   })
   @ApiOkResponse({ description: 'Podio + posición del usuario actual' })
-  getPodium(
-    @Req() req: { user: User },
-    @Query('window') windowRaw?: string,
-  ) {
+  getPodium(@Req() req: { user: User }, @Query('window') windowRaw?: string) {
     return this.podiumService.getPodium(parseWindow(windowRaw), req.user);
   }
 }

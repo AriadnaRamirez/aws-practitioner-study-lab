@@ -29,11 +29,11 @@ type Props = {
 
 function Glyph({ correct }: { correct: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d={correct ? "M5 12.5l4.5 4.5L19 7" : "M7 7l10 10M17 7L7 17"}
         stroke="currentColor"
-        strokeWidth="2.6"
+        strokeWidth="3.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -93,13 +93,18 @@ export function AnswerFeedback({
       <div className="min-w-0">
         <span
           className={cn(
-            "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
-            correct
-              ? "bg-[var(--success)] text-[var(--success-fg)]"
-              : "bg-[var(--danger)] text-[var(--danger-fg)]",
+            "animate-celebrate inline-flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3.5 text-sm font-bold",
+            correct ? "status-success" : "status-danger",
           )}
         >
-          <Glyph correct={correct} />
+          <span
+            className={cn(
+              "status-mark",
+              correct ? "status-mark-success" : "status-mark-danger",
+            )}
+          >
+            <Glyph correct={correct} />
+          </span>
           {correct ? "¡Correcto!" : "Incorrecto"}
         </span>
 
@@ -112,7 +117,10 @@ export function AnswerFeedback({
             className="mt-3 flex items-center gap-3 [@media(max-height:500px)]:mt-2"
             aria-label={`${streakTowardMastery} de ${MASTERY_STREAK} aciertos seguidos para dominarlo`}
           >
-            <p className="text-sm font-semibold text-[var(--foreground)]" aria-hidden>
+            <p
+              className="text-sm font-semibold text-[var(--foreground)]"
+              aria-hidden
+            >
               {streakTowardMastery}/{MASTERY_STREAK}
             </p>
             <ol className="flex gap-1.5" aria-hidden>
@@ -144,11 +152,15 @@ export function AnswerFeedback({
             </p>
             {chosenHint ? (
               <p>
-                <span className="text-[var(--foreground-muted)]">Elegiste: </span>
+                <span className="text-[var(--foreground-muted)]">
+                  Elegiste:{" "}
+                </span>
                 {chosenHint}
               </p>
             ) : null}
-            <p className="text-xs text-[var(--foreground-muted)]">{missNote ?? missLine(requeued)}</p>
+            <p className="text-xs text-[var(--foreground-muted)]">
+              {missNote ?? missLine(requeued)}
+            </p>
           </div>
         ) : null}
       </div>
@@ -157,7 +169,10 @@ export function AnswerFeedback({
         <Card
           variant="inset"
           padding="sm"
-          className={cn("mt-4", wide && "lg:mt-0 [@media(max-height:500px)]:md:mt-0")}
+          className={cn(
+            "mt-4",
+            wide && "lg:mt-0 [@media(max-height:500px)]:md:mt-0",
+          )}
         >
           <CardLabel as="p">Explicación</CardLabel>
           <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">

@@ -6,8 +6,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
-import { AuthService } from './auth.service';
-import { hashPassword, validatePasswordStrength } from './password.util';
+import { AuthService, issuedBeforePasswordChange } from './auth.service';
+import {
+  hashPassword,
+  validatePasswordStrength,
+  verifyPassword,
+} from './password.util';
 
 describe('password.util', () => {
   it('rejects short or weak passwords', () => {
@@ -25,7 +29,6 @@ describe('password.util', () => {
   });
 
   it('hashes and verifies with bcrypt', async () => {
-    const { verifyPassword } = require('./password.util') as typeof import('./password.util');
     const hash = await hashPassword('Segura123');
     expect(hash).not.toBe('Segura123');
     await expect(verifyPassword('Segura123', hash)).resolves.toBe(true);
@@ -52,11 +55,6 @@ describe('AuthService', () => {
       findUnique: jest.Mock;
       create: jest.Mock;
     };
-    passwordResetToken: {
-      create: jest.Mock;
-      findUnique: jest.Mock;
-      update: jest.Mock;
-    };
     $transaction: jest.Mock;
   };
   let jwt: { sign: jest.Mock };
@@ -71,12 +69,7 @@ describe('AuthService', () => {
         findUnique: jest.fn(),
         create: jest.fn(),
       },
-      passwordResetToken: {
-        create: jest.fn(),
-        findUnique: jest.fn(),
-        update: jest.fn(),
-      },
-      $transaction: jest.fn(async (ops: unknown) => ops),
+      $transaction: jest.fn((ops: unknown) => Promise.resolve(ops)),
     };
     jwt = { sign: jest.fn().mockReturnValue('jwt-token') };
     guest = { markConverted: jest.fn().mockResolvedValue(undefined) };
@@ -105,7 +98,7 @@ describe('AuthService', () => {
           email: 'ana@example.com',
           username: 'ana',
           role: Role.STUDENT,
-        }),
+        }) as unknown,
       }),
     );
     expect(guest.markConverted).not.toHaveBeenCalled();
@@ -174,8 +167,8 @@ describe('AuthService', () => {
       },
       userExam: { upsert: jest.fn(), deleteMany: jest.fn() },
     };
-    prisma.$transaction.mockImplementation(
-      async (fn: (t: typeof tx) => unknown) => fn(tx),
+    prisma.$transaction.mockImplementation((fn: (t: typeof tx) => unknown) =>
+      Promise.resolve(fn(tx)),
     );
 
     const result = await service.updateProfile(user as never, {
@@ -195,8 +188,8 @@ describe('AuthService', () => {
       user: { update: jest.fn().mockResolvedValue(user) },
       userExam: { upsert: jest.fn(), deleteMany: jest.fn() },
     };
-    prisma.$transaction.mockImplementation(
-      async (fn: (t: typeof tx) => unknown) => fn(tx),
+    prisma.$transaction.mockImplementation((fn: (t: typeof tx) => unknown) =>
+      Promise.resolve(fn(tx)),
     );
 
     await service.updateProfile(user as never, { examDate: null });
@@ -209,7 +202,7 @@ describe('AuthService', () => {
   describe('updateProfile({ username })', () => {
     beforeEach(() => {
       (prisma.user as Record<string, jest.Mock>).update = jest.fn(
-        async ({ data }: { data: object }) => ({ ...user, ...data }),
+        ({ data }: { data: object }) => Promise.resolve({ ...user, ...data }),
       );
     });
 
@@ -273,6 +266,70 @@ describe('AuthService', () => {
           password: 'Segura123',
         }),
       ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+  });
+
+  describe('changePassword', () => {
+    beforeEach(() => {
+      (prisma.user as Record<string, jest.Mock>).update = jest.fn(
+        ({ data }: { data: object }) => Promise.resolve({ ...user, ...data }),
+      );
+    });
+
+    it('signs out other devices but keeps this one with a fresh token', async () => {
+      const result = await service.changePassword(user as never, {
+        currentPassword: 'Segura123',
+        password: 'Nueva1234',
+        confirmPassword: 'Nueva1234',
+      });
+
+      const calls = (prisma.user as Record<string, jest.Mock>).update.mock
+        .calls as [{ data: { passwordChangedAt?: Date } }][];
+      expect(calls[0][0].data.passwordChangedAt).toBeInstanceOf(Date);
+      expect(result.tokens.accessToken).toBe('jwt-token');
+      expect(result.message).toBe('Contraseña actualizada');
+    });
+
+    it('rejects a wrong current password without changing anything', async () => {
+      await expect(
+        service.changePassword(user as never, {
+          currentPassword: 'nope',
+          password: 'Nueva1234',
+          confirmPassword: 'Nueva1234',
+        }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(
+        (prisma.user as Record<string, jest.Mock>).update,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('issuedBeforePasswordChange', () => {
+    const changedAt = new Date('2026-11-04T03:00:00.500Z');
+    const changedSec = Math.floor(changedAt.getTime() / 1000);
+
+    it('keeps sessions when the password never changed', () => {
+      expect(
+        issuedBeforePasswordChange({ iat: 1 }, { passwordChangedAt: null }),
+      ).toBe(false);
+    });
+
+    it('rejects tokens issued before the change', () => {
+      expect(
+        issuedBeforePasswordChange(
+          { iat: changedSec - 1 },
+          { passwordChangedAt: changedAt },
+        ),
+      ).toBe(true);
+    });
+
+    it('keeps the token issued in the same second as the change', () => {
+      expect(
+        issuedBeforePasswordChange(
+          { iat: changedSec },
+          { passwordChangedAt: changedAt },
+        ),
+      ).toBe(false);
     });
   });
 

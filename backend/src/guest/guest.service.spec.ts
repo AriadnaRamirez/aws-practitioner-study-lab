@@ -39,7 +39,10 @@ describe('GuestService', () => {
   });
 
   it('increments sessions until the soft cap', async () => {
-    prisma.guestProbe.findUnique.mockResolvedValue({ ...base, sessionsCount: 1 });
+    prisma.guestProbe.findUnique.mockResolvedValue({
+      ...base,
+      sessionsCount: 1,
+    });
     prisma.guestProbe.update.mockResolvedValue({
       ...base,
       sessionsCount: 2,

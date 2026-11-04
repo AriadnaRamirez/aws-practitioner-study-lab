@@ -55,7 +55,7 @@ npm run build -w @aps/shared
 
 Variables:
 
-- Render: `DATABASE_URL` (Neon), `WEB_ORIGIN` y `WEB_PUBLIC_URL` (URL de Vercel). `JWT_SECRET` se genera solo.
+- Render: `DATABASE_URL` (Neon) y `WEB_ORIGIN` (URL de Vercel). `JWT_SECRET` se genera solo.
 - Vercel: `APS_API_PROXY_TARGET` = URL de Render (sin `/api/v1`). El navegador sigue usando `/api/v1` y Next lo reenvía.
 - GitHub → Settings → Variables: `API_HEALTH_URL` = `https://<api>.onrender.com/api/v1/health` activa [`keep-api-warm`](./.github/workflows/keep-api-warm.yml) para que la API gratuita no se duerma.
 
@@ -71,8 +71,9 @@ DATABASE_URL="<neon>" ADMIN_EMAIL="<tu-email>" ADMIN_PASSWORD="<segura>" DEMO_PA
 | Tema | Detalle |
 | --- | --- |
 | Registro / login | email **o** username + password |
-| Tokens | JWT access Bearer |
-| Reset | forgot/reset password |
+| Tokens | JWT access Bearer; cambiar la contraseña cierra las demás sesiones |
+| Contraseña olvidada | no hay recuperación por correo; la admin asigna una temporal desde el panel |
+| Límite de intentos | login y registro por IP, y login también por cuenta (429 en español) |
 
 ### Contenido
 

@@ -20,42 +20,41 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { LoginDto } from './dto/login.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { AUTH_LIMITS, ClientIp, RateLimiter } from './rate-limit';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly limiter: RateLimiter,
+  ) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Registro con correo + usuario + contraseña' })
   @ApiOkResponse({ description: 'Usuario creado + JWT' })
-  register(@Body() dto: RegisterDto) {
+  register(@Body() dto: RegisterDto, @ClientIp() ip: string) {
+    this.limiter.consume(`register:ip:${ip}`, AUTH_LIMITS.registerPerIp);
     return this.authService.register(dto);
   }
 
   @Post('login')
   @ApiOperation({ summary: 'Entrar con correo o usuario + contraseña' })
   @ApiOkResponse({ description: 'JWT de acceso' })
-  login(@Body() dto: LoginDto) {
+  login(@Body() dto: LoginDto, @ClientIp() ip: string) {
+    this.limiter.consume(`login:ip:${ip}`, AUTH_LIMITS.loginPerIp);
+    const account = (dto.identifier ?? dto.login ?? dto.email ?? '')
+      .trim()
+      .toLowerCase();
+    if (account) {
+      this.limiter.consume(
+        `login:account:${account}`,
+        AUTH_LIMITS.loginPerAccount,
+      );
+    }
     return this.authService.login(dto);
-  }
-
-  @Post('forgot-password')
-  @ApiOperation({
-    summary: 'Solicitar reset (en dev el link se imprime en el log de la API)',
-  })
-  forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(dto);
-  }
-
-  @Post('reset-password')
-  @ApiOperation({ summary: 'Restablecer contraseña con token de un solo uso' })
-  resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.authService.resetPassword(dto);
   }
 
   @Get('me')
@@ -86,10 +85,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cambiar contraseña (sesión activa)' })
-  changePassword(
-    @Req() req: { user: User },
-    @Body() dto: ChangePasswordDto,
-  ) {
+  changePassword(@Req() req: { user: User }, @Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(req.user, dto);
   }
 }

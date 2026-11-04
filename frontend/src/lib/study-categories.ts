@@ -15,7 +15,9 @@ export type StudyCategoryId =
   | "cloud-concepts"
   | "linux"
   | "net-basics"
-  | "sec-basics";
+  | "sec-basics"
+  | "sysops"
+  | "architecture";
 
 /** "aws" = Servicios de AWS; "module" = Conceptos por módulo de estudio. */
 export type StudyCategoryGroup = "aws" | "module";
@@ -66,7 +68,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de cómputo",
     shortTitle: "Cómputo",
-    subtitle: "EC2, AMI, Lambda",
+    subtitle: "EC2, Lambda, ECS, tipos de instancia",
     topicIds: ["topic-compute"],
     tone: "orange",
     glyph: "cloud",
@@ -76,7 +78,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de almacenamiento",
     shortTitle: "Almacenamiento",
-    subtitle: "S3, EBS, EFS",
+    subtitle: "S3 y sus clases, EBS, EFS, familia Snow",
     topicIds: ["topic-storage"],
     tone: "ink",
     glyph: "cloud",
@@ -86,7 +88,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de bases de datos",
     shortTitle: "Bases de datos",
-    subtitle: "DynamoDB, RDS",
+    subtitle: "RDS, DynamoDB, DMS",
     topicIds: ["topic-databases"],
     tone: "slate",
     glyph: "cloud",
@@ -96,7 +98,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de redes y entrega",
     shortTitle: "Redes y entrega",
-    subtitle: "VPC, CloudFront, Route 53",
+    subtitle: "VPC, subredes, gateways, CloudFront…",
     topicIds: ["topic-networking"],
     tone: "cream",
     glyph: "network",
@@ -116,7 +118,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "aws",
     title: "Servicios de gestión y monitoreo",
     shortTitle: "Gestión y monitoreo",
-    subtitle: "CloudWatch, CloudTrail, CLI, SNS…",
+    subtitle: "CloudWatch, CloudFormation, costos…",
     topicIds: ["topic-management"],
     tone: "ink",
     glyph: "cloud",
@@ -126,7 +128,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de la nube",
     shortTitle: "La nube",
-    subtitle: "Modelo de responsabilidad compartida",
+    subtitle: "Modelos, precios, regiones, responsabilidad",
     topicIds: ["topic-cloud-fundamentals"],
     tone: "cream",
     glyph: "book",
@@ -136,7 +138,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de Linux",
     shortTitle: "Linux",
-    subtitle: "Amazon Linux, AMI, SSH, user data",
+    subtitle: "Comandos, permisos, procesos, logs",
     topicIds: ["topic-linux"],
     tone: "slate",
     glyph: "linux",
@@ -146,7 +148,7 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de redes",
     shortTitle: "Redes",
-    subtitle: "OSI, IP, subredes, DNS, TCP/UDP",
+    subtitle: "OSI, TCP/UDP, IP, CIDR, DNS",
     topicIds: ["topic-net-basics"],
     tone: "ink",
     glyph: "network",
@@ -156,10 +158,30 @@ export const STUDY_CATEGORIES: StudyCategory[] = [
     group: "module",
     title: "Conceptos de seguridad",
     shortTitle: "Seguridad",
-    subtitle: "Tríada CIA, MFA, cifrado, amenazas",
+    subtitle: "Amenazas, controles, cifrado, recuperación",
     topicIds: ["topic-sec-basics"],
     tone: "orange",
     glyph: "book",
+  },
+  {
+    id: "sysops",
+    group: "module",
+    title: "Conceptos de operaciones del sistema",
+    shortTitle: "Operaciones",
+    subtitle: "Automatización, AWS CLI, solución de problemas",
+    topicIds: ["topic-sysops"],
+    tone: "cream",
+    glyph: "book",
+  },
+  {
+    id: "architecture",
+    group: "module",
+    title: "Conceptos de arquitectura de AWS",
+    shortTitle: "Arquitectura",
+    subtitle: "CAF, Well-Architected, alta disponibilidad, soporte",
+    topicIds: ["topic-architecture"],
+    tone: "slate",
+    glyph: "cloud",
   },
 ];
 
@@ -181,13 +203,13 @@ export const AWS_SERVICES_CATEGORY: StudyCategory = {
   glyph: "cloud",
 };
 
-/** Todos los conceptos: los 4 módulos de estudio juntos. */
+/** Todos los conceptos: los 6 módulos de estudio juntos. */
 const CONCEPTS_CATEGORY: StudyCategory = {
   id: "concepts",
   group: "module",
   title: "Conceptos por módulo de estudio",
   shortTitle: "Todos los conceptos",
-  subtitle: "Nube, Linux, redes y seguridad",
+  subtitle: "Nube, Linux, redes, seguridad, operaciones y arquitectura",
   topicIds: topicIdsOfGroup("module"),
   tone: "ink",
   glyph: "book",
@@ -204,7 +226,9 @@ export function categoriesInGroup(group: StudyCategoryGroup): StudyCategory[] {
   return STUDY_CATEGORIES.filter((c) => c.group === group);
 }
 
-export function categoryById(id: string | null | undefined): StudyCategory | null {
+export function categoryById(
+  id: string | null | undefined,
+): StudyCategory | null {
   if (!id) return null;
   return (
     GROUP_CATEGORIES.find((c) => c.id === id) ??

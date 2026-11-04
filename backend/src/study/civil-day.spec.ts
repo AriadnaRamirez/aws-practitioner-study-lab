@@ -1,8 +1,4 @@
-import {
-  TODAY_LOOKBACK_MS,
-  civilDateInTz,
-  countOnCivilDay,
-} from './civil-day';
+import { TODAY_LOOKBACK_MS, civilDateInTz, countOnCivilDay } from './civil-day';
 
 const at = (iso: string) => new Date(iso);
 

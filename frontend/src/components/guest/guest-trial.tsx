@@ -178,7 +178,7 @@ function Benefits() {
           key={text}
           className="flex items-start gap-2.5 text-sm text-[var(--foreground)] sm:text-base"
         >
-          <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--success-soft)] text-[var(--success-text)]">
+          <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[var(--success-text)] ring-1 ring-inset ring-[var(--success-border)]">
             <Check className="size-3.5" aria-hidden />
           </span>
           {text}

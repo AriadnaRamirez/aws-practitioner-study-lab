@@ -11,13 +11,7 @@ describe('requeueMiss', () => {
     ];
     const miss = { queueItemId: 'm', itemId: 'x' };
     const next = requeueMiss(queue, miss, 3);
-    expect(next.map((e) => e.queueItemId)).toEqual([
-      'a',
-      'b',
-      'c',
-      'm',
-      'd',
-    ]);
+    expect(next.map((e) => e.queueItemId)).toEqual(['a', 'b', 'c', 'm', 'd']);
   });
 
   it('clamps to end when queue is shorter than offset', () => {

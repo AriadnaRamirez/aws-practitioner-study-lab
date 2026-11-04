@@ -49,11 +49,7 @@ import {
   serializeTimed,
 } from './exam-session-state';
 import { sampleBalancedByTopic } from './balanced-sampler';
-import {
-  TODAY_LOOKBACK_MS,
-  civilDateInTz,
-  countOnCivilDay,
-} from './civil-day';
+import { TODAY_LOOKBACK_MS, civilDateInTz, countOnCivilDay } from './civil-day';
 import {
   describeWrongChoice,
   flashExplanation,
@@ -110,8 +106,7 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 function dayDiff(a: string, b: string): number {
-  const ms =
-    Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`);
+  const ms = Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`);
   return Math.round(ms / 86_400_000);
 }
 
@@ -208,7 +203,8 @@ type TrackableItems = {
 @Injectable()
 export class StudyService {
   private knowledgeCache: { at: number; items: KnowledgeItem[] } | null = null;
-  private topicTypeCache: { at: number; types: Map<string, string> } | null = null;
+  private topicTypeCache: { at: number; types: Map<string, string> } | null =
+    null;
   /** Serialize answer mutations per session (prevents queueItemId races). */
   private readonly sessionAnswerTail = new Map<string, Promise<unknown>>();
 
@@ -228,7 +224,9 @@ export class StudyService {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const chained: Promise<unknown> = prev.catch(() => undefined).then(() => gate);
+    const chained: Promise<unknown> = prev
+      .catch(() => undefined)
+      .then(() => gate);
     this.sessionAnswerTail.set(sessionId, chained);
     await prev.catch(() => undefined);
     try {
@@ -305,7 +303,7 @@ export class StudyService {
     }
     if (opts.mode !== 'EXAM_STUDY') {
       throw new BadRequestException(
-        `Mode ${opts.mode} not available yet`,
+        `Mode ${String(opts.mode)} not available yet`,
       );
     }
     if (!(STUDY_SIZES as readonly number[]).includes(opts.size)) {
@@ -329,7 +327,7 @@ export class StudyService {
     const picked = shuffle(questions).slice(
       0,
       Math.min(studySize, questions.length),
-    ) as ExamQuestion[];
+    );
 
     const bank: StudySessionRecord['bank'] = new Map();
     const queue: QueueEntry[] = [];
@@ -488,8 +486,7 @@ export class StudyService {
 
     const correct = choiceIndex === item.correctIndex;
     const itemType =
-      (session.itemTypes?.get(current.itemId) as StudyItemType | undefined) ??
-      StudyItemType.EXAM_QUESTION;
+      session.itemTypes?.get(current.itemId) ?? StudyItemType.EXAM_QUESTION;
 
     await this.prisma.attempt.create({
       data: {
@@ -657,7 +654,7 @@ export class StudyService {
 
     const picked = opts.balanced
       ? sampleBalancedByTopic(pool, topicIds, opts.size)
-      : shuffle(pool).slice(0, Math.min(opts.size as StudySize, pool.length));
+      : shuffle(pool).slice(0, Math.min(opts.size, pool.length));
     const queue: FlashQueueEntry[] = picked.map((item) => ({
       queueItemId: crypto.randomUUID(),
       itemId: item.id,
@@ -828,7 +825,11 @@ export class StudyService {
     const answeredItem = pool.find((k) => k.id === current.itemId);
     const chosenHint =
       !correct && answeredItem
-        ? describeWrongChoice(current.choices[dto.choiceIndex] ?? '', answeredItem, pool)
+        ? describeWrongChoice(
+            current.choices[dto.choiceIndex] ?? '',
+            answeredItem,
+            pool,
+          )
         : null;
 
     return {
@@ -866,7 +867,12 @@ export class StudyService {
       const next = state.queue.shift()!;
       const item = pool.find((k) => k.id === next.itemId);
       if (!item) continue;
-      const rendered = renderFlashVariant(item, next.variant, pool, topicTypeOf);
+      const rendered = renderFlashVariant(
+        item,
+        next.variant,
+        pool,
+        topicTypeOf,
+      );
       state.current = {
         queueItemId: next.queueItemId,
         itemId: next.itemId,
@@ -883,7 +889,10 @@ export class StudyService {
   /** SERVICE vs CONCEPT per topic, so fallback distractors stay in kind. */
   private async topicTypeOf(): Promise<TopicTypeOf> {
     const now = Date.now();
-    if (!this.topicTypeCache || now - this.topicTypeCache.at >= KNOWLEDGE_CACHE_TTL_MS) {
+    if (
+      !this.topicTypeCache ||
+      now - this.topicTypeCache.at >= KNOWLEDGE_CACHE_TTL_MS
+    ) {
       const topics = await this.content.listTopics({ allTracks: true });
       this.topicTypeCache = {
         at: now,
@@ -912,8 +921,7 @@ export class StudyService {
 
     if (!existing) {
       const consecutiveCorrect = correct ? 1 : 0;
-      const mastered =
-        consecutiveCorrect >= MASTERY_STREAK ? new Date() : null;
+      const mastered = consecutiveCorrect >= MASTERY_STREAK ? new Date() : null;
       return this.prisma.itemProgress.create({
         data: {
           userId,
@@ -927,9 +935,7 @@ export class StudyService {
       });
     }
 
-    const consecutiveCorrect = correct
-      ? existing.consecutiveCorrect + 1
-      : 0;
+    const consecutiveCorrect = correct ? existing.consecutiveCorrect + 1 : 0;
     const justMastered =
       !existing.masteredAt && consecutiveCorrect >= MASTERY_STREAK;
 
@@ -1039,7 +1045,7 @@ export class StudyService {
   ): StudySessionView {
     return {
       sessionId: session.id,
-      mode: session.mode as StudyMode,
+      mode: session.mode,
       scope: flashScopeOf(session.scopeJson, state),
       size: session.size,
       uniqueItems: session.uniqueItems,
@@ -1061,9 +1067,7 @@ export class StudyService {
     opts: { size: SessionSize; topicIds?: string[]; timezone?: string },
   ): Promise<ExamTimedSessionView> {
     if (!(EXAM_TIMED_SIZES as readonly number[]).includes(opts.size)) {
-      throw new BadRequestException(
-        'EXAM_TIMED admite 10/20/30/50/65',
-      );
+      throw new BadRequestException('EXAM_TIMED admite 10/20/30/50/65');
     }
 
     const questions = await this.pickTimedQuestions(opts.size, opts.topicIds);
@@ -1437,16 +1441,20 @@ export class StudyService {
     const open = await this.prisma.studySession.findMany({
       where: {
         userId,
-        mode: mode as PrismaStudyMode,
+        mode: mode,
         endedAt: null,
       },
       select: { id: true, answeredCount: true },
     });
     if (!open.length) return;
-    const untouched = open.filter((o) => o.answeredCount === 0).map((o) => o.id);
+    const untouched = open
+      .filter((o) => o.answeredCount === 0)
+      .map((o) => o.id);
     const partial = open.filter((o) => o.answeredCount > 0).map((o) => o.id);
     if (untouched.length) {
-      await this.prisma.studySession.deleteMany({ where: { id: { in: untouched } } });
+      await this.prisma.studySession.deleteMany({
+        where: { id: { in: untouched } },
+      });
     }
     if (partial.length) {
       await this.prisma.studySession.updateMany({
@@ -1574,7 +1582,7 @@ export class StudyService {
         (streak?.longest ?? 0) > 0,
       activeSessions: activeRows.map((r) => ({
         id: r.id,
-        mode: r.mode as StudyMode,
+        mode: r.mode,
         size: r.size,
         answered: r.answeredCount,
         startedAt: r.startedAt.toISOString(),
@@ -1629,10 +1637,7 @@ export class StudyService {
     return { topics: topicsOut };
   }
 
-  async listWeakItems(
-    userId: string,
-    limit = 50,
-  ): Promise<WeakItemsResponse> {
+  async listWeakItems(userId: string, limit = 50): Promise<WeakItemsResponse> {
     const rows = await this.prisma.itemProgress.findMany({
       where: { userId, failCount: { gt: 0 } },
       orderBy: [{ failCount: 'desc' }, { updatedAt: 'desc' }],
@@ -1781,7 +1786,7 @@ export class StudyService {
 
     return {
       id: a.id,
-      itemType: a.itemType as SharedStudyItemType,
+      itemType: a.itemType,
       itemId: a.itemId,
       correct: a.correct,
       choiceIndex: a.choiceIndex,
@@ -1831,7 +1836,12 @@ export class StudyService {
             publishedOnly: true,
           });
           const variant = pickVariant(k);
-          const rendered = renderFlashVariant(k, variant, knowledgePool, topicTypeOf);
+          const rendered = renderFlashVariant(
+            k,
+            variant,
+            knowledgePool,
+            topicTypeOf,
+          );
           bank.set(k.id, {
             stem: rendered.stem,
             choices: rendered.choices,
@@ -1932,15 +1942,17 @@ export class StudyService {
         : null;
     return {
       id: row.id,
-      mode: row.mode as StudyMode,
+      mode: row.mode,
       size: row.size,
       timezone: row.timezone,
       startedAt: row.startedAt.toISOString(),
       endedAt: row.endedAt?.toISOString() ?? null,
-      scoreCorrect: row.correctCount > 0 || row.endedAt ? row.correctCount : null,
+      scoreCorrect:
+        row.correctCount > 0 || row.endedAt ? row.correctCount : null,
       scoreTotal:
         row.answeredCount > 0 || row.endedAt ? row.answeredCount : null,
-      maxStreak: row.maxSessionStreak > 0 || row.endedAt ? row.maxSessionStreak : null,
+      maxStreak:
+        row.maxSessionStreak > 0 || row.endedAt ? row.maxSessionStreak : null,
       durationMs,
     };
   }

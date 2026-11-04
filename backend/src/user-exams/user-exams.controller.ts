@@ -41,7 +41,9 @@ export class UserExamsController {
   @Post()
   @ApiOperation({ summary: 'Programar un examen del catálogo' })
   @ApiCreatedResponse({ description: 'UserExam creado' })
-  @ApiBadRequestResponse({ description: 'examCode desconocido o fecha inválida' })
+  @ApiBadRequestResponse({
+    description: 'examCode desconocido o fecha inválida',
+  })
   @ApiConflictResponse({ description: 'Ese examen ya está programado' })
   create(@Req() req: { user: User }, @Body() dto: CreateUserExamDto) {
     return this.userExams.create(req.user.id, dto);

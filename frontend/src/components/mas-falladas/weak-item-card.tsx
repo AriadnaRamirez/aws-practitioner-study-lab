@@ -191,7 +191,7 @@ export function WeakItemDialog({
       ) : null}
 
       {item.confusedWith ? (
-        <div className="min-w-0 rounded-xl bg-[var(--danger-soft)] px-4 py-3">
+        <div className="status-danger min-w-0 rounded-xl px-4 py-3">
           <p className={labelClass}>
             Elegiste
             {item.confusedCount > 1 ? (

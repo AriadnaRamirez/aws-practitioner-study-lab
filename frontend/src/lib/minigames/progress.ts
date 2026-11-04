@@ -1,36 +1,77 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStoredUser } from "@/lib/api";
+import {
+  isMinigameResultId,
+  type MinigameResults,
+  type MinigameStatus,
+} from "@aps/shared";
+import {
+  fetchMinigameResults,
+  getStoredToken,
+  getStoredUser,
+  recordMinigameResult,
+} from "@/lib/api";
 
 /**
- * Per-user minigame results in localStorage. Deliberately separate from study
- * progress: games never touch mastery, streaks or Más falladas.
+ * Per-user minigame tags, saved by the API so they follow the account across
+ * devices. Deliberately separate from study progress: games never touch
+ * mastery, streaks or Más falladas.
  */
 
 /** "played" = finished with mistakes; "completed" = finished without any. */
-export type GameStatus = "played" | "completed";
+export type GameStatus = MinigameStatus;
 
-type GameResults = Readonly<Record<string, GameStatus>>;
+type GameResults = Readonly<MinigameResults>;
 
-const EVENT = "aps:minigames-progress";
+const listeners = new Set<(results: GameResults) => void>();
 
-function storageKey(): string | null {
-  const user = getStoredUser();
-  return user ? `aps_minigames_${user.id}` : null;
+function publish(results: GameResults) {
+  listeners.forEach((listener) => listener(results));
 }
 
-function readResults(): GameResults {
-  const key = storageKey();
-  if (!key) return {};
+/** Tags this browser kept in localStorage before they lived in the database. */
+const legacyImports = new Map<string, Promise<void>>();
+
+async function importLegacyResults(userId: string) {
+  const key = `aps_minigames_${userId}`;
+  const raw = window.localStorage.getItem(key);
+  if (raw === null) return;
+  let parsed: unknown = null;
   try {
-    const parsed: unknown = JSON.parse(
-      window.localStorage.getItem(key) ?? "{}",
-    );
-    return parsed && typeof parsed === "object" ? (parsed as GameResults) : {};
+    parsed = JSON.parse(raw);
   } catch {
-    return {};
+    /* unreadable: nothing worth importing */
   }
+  const entries =
+    parsed && typeof parsed === "object" ? Object.entries(parsed) : [];
+  await Promise.all(
+    entries
+      .filter(
+        ([id, status]) =>
+          isMinigameResultId(id) &&
+          (status === "played" || status === "completed"),
+      )
+      .map(([resultId, status]) =>
+        recordMinigameResult({ resultId, perfect: status === "completed" }),
+      ),
+  );
+  window.localStorage.removeItem(key);
+}
+
+async function loadResults(): Promise<GameResults> {
+  const user = getStoredUser();
+  if (user) {
+    let pending = legacyImports.get(user.id);
+    if (!pending) {
+      pending = importLegacyResults(user.id).catch(() => {
+        legacyImports.delete(user.id);
+      });
+      legacyImports.set(user.id, pending);
+    }
+    await pending;
+  }
+  return fetchMinigameResults();
 }
 
 /** Result id for games played per topic, like the crossword. */
@@ -39,29 +80,29 @@ export const topicResultId = (gameId: string, topicId: string) =>
 
 /** Saves a finished game. A completed entry never goes back to played. */
 export function recordGameResult(perfect: boolean, id: string) {
-  const key = storageKey();
-  if (!key) return;
-  const next: Record<string, GameStatus> = { ...readResults() };
-  if (next[id] !== "completed") next[id] = perfect ? "completed" : "played";
-  try {
-    window.localStorage.setItem(key, JSON.stringify(next));
-    window.dispatchEvent(new Event(EVENT));
-  } catch {
-    /* storage full or blocked: the badge just won't show */
-  }
+  if (!getStoredToken()) return;
+  recordMinigameResult({ resultId: id, perfect }).then(publish, () => {
+    /* offline or API down: the tag just won't update this time */
+  });
 }
 
-/** Results for the signed-in user; empty until mounted to match the server render. */
+/** Results for the signed-in user; empty until loaded to match the server render. */
 export function useGameResults(): GameResults {
   const [results, setResults] = useState<GameResults>({});
   useEffect(() => {
-    const sync = () => setResults(readResults());
-    sync();
-    window.addEventListener(EVENT, sync);
-    window.addEventListener("storage", sync);
+    let active = true;
+    const update = (next: GameResults) => {
+      if (active) setResults(next);
+    };
+    listeners.add(update);
+    if (getStoredToken()) {
+      loadResults().then(update, () => {
+        /* tags are optional decoration; the games work without them */
+      });
+    }
     return () => {
-      window.removeEventListener(EVENT, sync);
-      window.removeEventListener("storage", sync);
+      active = false;
+      listeners.delete(update);
     };
   }, []);
   return results;

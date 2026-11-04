@@ -41,7 +41,7 @@ export const MINIGAMES: readonly Minigame[] = [
     slug: "cuanto-pagas",
     title: "¿Cuánto pagas?",
     description:
-      "On-Demand, Reserved, Savings Plans, Spot o Dedicated Hosts: elige el modelo de precios para cada caso.",
+      "Bajo demanda, reservada o Spot: elige cómo pagar la instancia EC2 en cada caso.",
     topic: "Precios",
     format: "10 casos",
     minutes: 5,

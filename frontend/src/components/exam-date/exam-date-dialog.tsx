@@ -375,7 +375,7 @@ export function ExamDateDialog({
                   onClick={() => setConfirmRemove(true)}
                   disabled={saving}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger-text)]",
+                    "flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--foreground)]",
                     FOCUS_RING,
                   )}
                 >

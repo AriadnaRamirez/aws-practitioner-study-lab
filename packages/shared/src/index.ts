@@ -134,3 +134,12 @@ export {
   type TopicProgressRow,
   type TopicProgressResponse,
 } from './progress';
+export {
+  MINIGAME_IDS,
+  MINIGAME_RESULT_ID_MAX_LENGTH,
+  isMinigameResultId,
+  type MinigameId,
+  type MinigameStatus,
+  type MinigameResults,
+  type RecordMinigameResultRequest,
+} from './minigames';

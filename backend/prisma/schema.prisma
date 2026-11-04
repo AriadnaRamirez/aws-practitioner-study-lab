@@ -38,25 +38,27 @@ enum StudyItemType {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  username     String    @unique
-  passwordHash String
-  role         Role      @default(STUDENT)
-  timezone     String    @default("UTC")
-  podiumHidden Boolean   @default(false)
+  id                String    @id @default(cuid())
+  email             String    @unique
+  username          String    @unique
+  passwordHash      String
+  role              Role      @default(STUDENT)
+  timezone          String    @default("UTC")
+  podiumHidden      Boolean   @default(false)
   /// Target AWS certification exam day (civil date, no time).
-  examDate     DateTime? @db.Date
+  examDate          DateTime? @db.Date
   /// Soft-ban: login rejected while set (admin owner tool).
-  bannedAt     DateTime?
-  createdAt    DateTime  @default(now())
+  bannedAt          DateTime?
+  /// Tokens issued before this instant are rejected (password changed).
+  passwordChangedAt DateTime?
+  createdAt         DateTime  @default(now())
 
-  passwordResetTokens PasswordResetToken[]
   studySessions       StudySession[]
   attempts            Attempt[]
   itemProgress        ItemProgress[]
   dailyStreak         DailyStreak?
   exams               UserExam[]
+  minigameResults     MinigameResult[]
 
   @@index([email])
   @@index([username])
@@ -78,16 +80,23 @@ model UserExam {
   @@index([userId, examDate])
 }
 
-model PasswordResetToken {
-  id        String    @id @default(cuid())
-  tokenHash String    @unique
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
+enum MinigameStatus {
+  PLAYED
+  COMPLETED
+}
 
-  @@index([userId])
+/// Minijuegos tag per user; never feeds study progress.
+model MinigameResult {
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// `<gameId>` or `<gameId>:<topicId>` (@aps/shared isMinigameResultId).
+  resultId  String
+  /// COMPLETED is never downgraded to PLAYED.
+  status    MinigameStatus
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@id([userId, resultId])
 }
 
 /// Taxonomy node under an exam track (maestro §5 / §10).
@@ -167,30 +176,30 @@ model GuestProbe {
 
 /// Runtime study/exam session (maestro §10). FLASH_STUDY persists here; EXAM_* may use store until migrated.
 model StudySession {
-  id               String     @id @default(cuid())
+  id               String    @id @default(cuid())
   userId           String
-  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   guestId          String?
   mode             StudyMode
   size             Int
   /// JSON string[] of topicIds (empty = mixto).
-  scopeJson        String     @default("[]")
+  scopeJson        String    @default("[]")
   timeLimitSec     Int?
   /// Snapshot of user IANA tz at start (daily streak civil date).
-  timezone         String     @default("UTC")
+  timezone         String    @default("UTC")
   /// Remaining queue + current prompt state (server-owned).
-  stateJson        String     @default("{}")
-  startedAt        DateTime   @default(now())
+  stateJson        String    @default("{}")
+  startedAt        DateTime  @default(now())
   endedAt          DateTime?
   score            Float?
   /// JSON summary written on completion.
   summaryJson      String?
-  sessionStreak    Int        @default(0)
-  maxSessionStreak Int        @default(0)
-  answeredCount    Int        @default(0)
-  correctCount     Int        @default(0)
-  missRepeatCount  Int        @default(0)
-  uniqueItems      Int        @default(0)
+  sessionStreak    Int       @default(0)
+  maxSessionStreak Int       @default(0)
+  answeredCount    Int       @default(0)
+  correctCount     Int       @default(0)
+  missRepeatCount  Int       @default(0)
+  uniqueItems      Int       @default(0)
 
   attempts Attempt[]
 

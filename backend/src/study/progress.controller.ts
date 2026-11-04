@@ -22,10 +22,7 @@ export class ProgressController {
     summary: 'Ítems más fallados del usuario (failCount DESC)',
   })
   @ApiOkResponse({ description: 'Lista weak items enriquecida' })
-  listWeak(
-    @Req() req: { user: User },
-    @Query() query: ListLimitQueryDto,
-  ) {
+  listWeak(@Req() req: { user: User }, @Query() query: ListLimitQueryDto) {
     return this.studyService.listWeakItems(req.user.id, query.limit ?? 50);
   }
 

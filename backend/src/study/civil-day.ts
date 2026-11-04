@@ -24,6 +24,5 @@ export function countOnCivilDay(
   timeZone: string,
 ): number {
   const today = civilDateInTz(now, timeZone);
-  return timestamps.filter((t) => civilDateInTz(t, timeZone) === today)
-    .length;
+  return timestamps.filter((t) => civilDateInTz(t, timeZone) === today).length;
 }

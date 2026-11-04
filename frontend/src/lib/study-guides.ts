@@ -18,7 +18,9 @@ export type StudyGuideId =
   | "conceptos-nube"
   | "conceptos-linux"
   | "conceptos-redes"
-  | "conceptos-seguridad";
+  | "conceptos-seguridad"
+  | "conceptos-operaciones"
+  | "conceptos-arquitectura";
 
 export type StudyGuide = {
   id: StudyGuideId;
@@ -59,6 +61,8 @@ const STUDY_GUIDES: StudyGuide[] = [
   moduleGuide("conceptos-linux", "linux"),
   moduleGuide("conceptos-redes", "net-basics"),
   moduleGuide("conceptos-seguridad", "sec-basics"),
+  moduleGuide("conceptos-operaciones", "sysops"),
+  moduleGuide("conceptos-arquitectura", "architecture"),
 ];
 
 export function guideById(id: string): StudyGuide | null {

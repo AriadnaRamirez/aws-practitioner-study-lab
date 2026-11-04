@@ -5,20 +5,16 @@ import {
 } from '@nestjs/common';
 import {
   AI_TRACK_ID,
-  type ContentStatus,
   type ExamChoices,
   type ExamQuestion,
   type FlashVariant,
   type KnowledgeItem,
   type Topic,
-  type TopicType,
 } from '@aps/shared';
 import type {
-  ContentStatus as PrismaContentStatus,
   ExamQuestion as PrismaExamQuestion,
   KnowledgeItem as PrismaKnowledgeItem,
   Topic as PrismaTopic,
-  TopicType as PrismaTopicType,
 } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { FeatureFlagsService } from '../feature-flags/feature-flags.service';
@@ -42,7 +38,7 @@ function asStringArray(value: Prisma.JsonValue, field: string): string[] {
   if (!Array.isArray(value) || !value.every((v) => typeof v === 'string')) {
     throw new BadRequestException(`${field} must be a JSON string array`);
   }
-  return value as string[];
+  return value;
 }
 
 function toIso(d: Date): string {
@@ -53,7 +49,7 @@ function mapTopic(row: PrismaTopic): Topic {
   return {
     id: row.id,
     trackId: row.trackId,
-    type: row.type as TopicType,
+    type: row.type,
     name: row.name,
     parentId: row.parentId,
     sortOrder: row.sortOrder,
@@ -75,7 +71,7 @@ function mapKnowledge(row: PrismaKnowledgeItem): KnowledgeItem {
       row.allowedVariants,
       'allowedVariants',
     ) as FlashVariant[],
-    status: row.status as ContentStatus,
+    status: row.status,
     externalKey: row.externalKey,
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
@@ -97,7 +93,7 @@ function mapQuestion(row: PrismaExamQuestion): ExamQuestion {
     choices,
     correctIndex: correctIndex as 0 | 1 | 2 | 3,
     explanation: row.explanation,
-    status: row.status as ContentStatus,
+    status: row.status,
     externalKey: row.externalKey,
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
@@ -143,7 +139,7 @@ export class ContentService {
     const row = await this.prisma.topic.create({
       data: {
         trackId: dto.trackId,
-        type: dto.type as PrismaTopicType,
+        type: dto.type,
         name: dto.name,
         parentId: dto.parentId ?? null,
         sortOrder: dto.sortOrder ?? 0,
@@ -161,9 +157,7 @@ export class ContentService {
       where: { id },
       data: {
         ...(dto.trackId !== undefined ? { trackId: dto.trackId } : {}),
-        ...(dto.type !== undefined
-          ? { type: dto.type as PrismaTopicType }
-          : {}),
+        ...(dto.type !== undefined ? { type: dto.type } : {}),
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.parentId !== undefined ? { parentId: dto.parentId } : {}),
         ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder } : {}),
@@ -226,7 +220,7 @@ export class ContentService {
         distractors: dto.distractors,
         explanation: dto.explanation,
         allowedVariants: dto.allowedVariants,
-        status: dto.status as PrismaContentStatus,
+        status: dto.status,
         externalKey: dto.externalKey ?? null,
       },
     });
@@ -258,9 +252,7 @@ export class ContentService {
         ...(dto.allowedVariants !== undefined
           ? { allowedVariants: dto.allowedVariants }
           : {}),
-        ...(dto.status !== undefined
-          ? { status: dto.status as PrismaContentStatus }
-          : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
         ...(dto.externalKey !== undefined
           ? { externalKey: dto.externalKey }
           : {}),
@@ -323,7 +315,7 @@ export class ContentService {
         choices: dto.choices,
         correctIndex: dto.correctIndex,
         explanation: dto.explanation,
-        status: dto.status as PrismaContentStatus,
+        status: dto.status,
         externalKey: dto.externalKey ?? null,
       },
     });
@@ -356,9 +348,7 @@ export class ContentService {
         ...(dto.explanation !== undefined
           ? { explanation: dto.explanation }
           : {}),
-        ...(dto.status !== undefined
-          ? { status: dto.status as PrismaContentStatus }
-          : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
         ...(dto.externalKey !== undefined
           ? { externalKey: dto.externalKey }
           : {}),

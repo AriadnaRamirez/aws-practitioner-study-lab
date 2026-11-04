@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Check, X } from "lucide-react";
 import {
   STUDY_SIZES,
   type AnswerStudyResponse,
@@ -120,7 +121,10 @@ export function ExamStudyPanel() {
       {error ? (
         <Notice tone="danger" boxed className="mt-6">
           {error}{" "}
-          <Link href={loginHref("/estudiar/examen")} className="font-semibold underline">
+          <Link
+            href={loginHref("/estudiar/examen")}
+            className="font-semibold underline"
+          >
             Entrar
           </Link>
         </Notice>
@@ -207,12 +211,23 @@ export function ExamStudyPanel() {
         <section className="animate-fade-up mt-10">
           <p
             className={cn(
-              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
-              feedback.correct
-                ? "bg-[var(--success)] text-[var(--success-fg)]"
-                : "bg-[var(--danger)] text-[var(--danger-fg)]",
+              "inline-flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3.5 text-sm font-bold",
+              feedback.correct ? "status-success" : "status-danger",
             )}
           >
+            <span
+              aria-hidden
+              className={cn(
+                "status-mark",
+                feedback.correct ? "status-mark-success" : "status-mark-danger",
+              )}
+            >
+              {feedback.correct ? (
+                <Check className="size-3" strokeWidth={3} />
+              ) : (
+                <X className="size-3" strokeWidth={3} />
+              )}
+            </span>
             {feedback.correct ? "¡Correcto!" : "Incorrecto"}
           </p>
           {!feedback.correct ? (

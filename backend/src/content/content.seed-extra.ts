@@ -81,7 +81,11 @@ export const EXTRA_CLF_FACTS: SeedFact[] = [
     key: 'pillar-perf',
     stem: 'Performance Efficiency trata de…',
     correct: 'Usar recursos de cómputo/almacenamiento/red de forma eficiente',
-    wrong: ['Pagar siempre on-demand max', 'Evitar caché', 'Una sola Región global'],
+    wrong: [
+      'Pagar siempre on-demand max',
+      'Evitar caché',
+      'Una sola Región global',
+    ],
     explanation: 'Concepto CLF: pillar perf.',
   },
   {
@@ -97,15 +101,24 @@ export const EXTRA_CLF_FACTS: SeedFact[] = [
     key: 'pillar-sustain',
     stem: 'Sustainability pillar busca…',
     correct: 'Minimizar impacto ambiental de las cargas en cloud',
-    wrong: ['Maximizar idle EC2', 'Replicar a 20 regiones sin necesidad', 'Apagar CloudTrail'],
+    wrong: [
+      'Maximizar idle EC2',
+      'Replicar a 20 regiones sin necesidad',
+      'Apagar CloudTrail',
+    ],
     explanation: 'Concepto CLF: pillar sustain.',
   },
   {
     topicId: 'topic-cloud-fundamentals',
     key: 'az-isolation',
     stem: 'Las AZs están…',
-    correct: 'Aisladas físicamente pero conectadas con baja latencia en una Región',
-    wrong: ['En continentes distintos siempre', 'Sin red entre sí', 'Solo para S3'],
+    correct:
+      'Aisladas físicamente pero conectadas con baja latencia en una Región',
+    wrong: [
+      'En continentes distintos siempre',
+      'Sin red entre sí',
+      'Solo para S3',
+    ],
     explanation: 'Concepto CLF: az isolation.',
   },
   {
@@ -121,7 +134,11 @@ export const EXTRA_CLF_FACTS: SeedFact[] = [
     key: 'edge-loc',
     stem: 'Edge locations sirven principalmente para…',
     correct: 'Acercar contenido/DNS/WAF al usuario final',
-    wrong: ['Hospedar RDS primario', 'Guardar EBS root', 'Ejecutar Step Functions'],
+    wrong: [
+      'Hospedar RDS primario',
+      'Guardar EBS root',
+      'Ejecutar Step Functions',
+    ],
     explanation: 'Concepto CLF: edge loc.',
   },
   {
@@ -145,7 +162,11 @@ export const EXTRA_CLF_FACTS: SeedFact[] = [
     key: 'loose-coupling',
     stem: 'Desacoplar componentes mejora…',
     correct: 'Resiliencia y escalado independiente (p.ej. colas)',
-    wrong: ['Acoplamiento fuerte TCP', 'Monolito obligatorio', 'Sin reintentos'],
+    wrong: [
+      'Acoplamiento fuerte TCP',
+      'Monolito obligatorio',
+      'Sin reintentos',
+    ],
     explanation: 'Concepto CLF: loose coupling.',
   },
   {
@@ -169,7 +190,11 @@ export const EXTRA_CLF_FACTS: SeedFact[] = [
     key: 'manage-as-code',
     stem: 'Automatiza cambios para…',
     correct: 'Reducir error humano y aumentar consistencia',
-    wrong: ['Evitar CloudFormation', 'SSH a producción ad hoc', 'Sin pipelines'],
+    wrong: [
+      'Evitar CloudFormation',
+      'SSH a producción ad hoc',
+      'Sin pipelines',
+    ],
     explanation: 'Concepto CLF: manage as code.',
   },
   {
@@ -193,7 +218,11 @@ export const EXTRA_CLF_FACTS: SeedFact[] = [
     key: 'managed-service',
     stem: 'Usar un servicio gestionado reduce…',
     correct: 'Carga operativa de parches/alta disponibilidad del motor',
-    wrong: ['La necesidad de IAM', 'Todo el costo a cero', 'La necesidad de cifrado'],
+    wrong: [
+      'La necesidad de IAM',
+      'Todo el costo a cero',
+      'La necesidad de cifrado',
+    ],
     explanation: 'Concepto CLF: managed service.',
   },
 ];
@@ -204,7 +233,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'supervised',
     stem: 'El aprendizaje supervisado usa…',
     correct: 'Datos etiquetados para entrenar el modelo',
-    wrong: ['Solo clusters sin etiqueta', 'Únicamente reinforcement', 'Sin features'],
+    wrong: [
+      'Solo clusters sin etiqueta',
+      'Únicamente reinforcement',
+      'Sin features',
+    ],
     explanation: 'Concepto AIF: supervised.',
     trackId: AI_TRACK_ID,
   },
@@ -222,7 +255,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'inference',
     stem: 'Inferencia es…',
     correct: 'Usar un modelo entrenado para predicciones',
-    wrong: ['Solo recoger datos crudos', 'Solo facturar GPU', 'Solo versionar git'],
+    wrong: [
+      'Solo recoger datos crudos',
+      'Solo facturar GPU',
+      'Solo versionar git',
+    ],
     explanation: 'Concepto AIF: inference.',
     trackId: AI_TRACK_ID,
   },
@@ -231,7 +268,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'training',
     stem: 'Entrenamiento es…',
     correct: 'Ajustar parámetros del modelo con datos',
-    wrong: ['Solo desplegar endpoint', 'Solo comprar Reserved', 'Solo crear VPC'],
+    wrong: [
+      'Solo desplegar endpoint',
+      'Solo comprar Reserved',
+      'Solo crear VPC',
+    ],
     explanation: 'Concepto AIF: training.',
     trackId: AI_TRACK_ID,
   },
@@ -321,7 +362,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'transcribe',
     stem: 'Amazon Transcribe convierte…',
     correct: 'Audio a texto',
-    wrong: ['Texto a voz (eso es Polly)', 'Imagen a caption solo', 'VPC a JSON'],
+    wrong: [
+      'Texto a voz (eso es Polly)',
+      'Imagen a caption solo',
+      'VPC a JSON',
+    ],
     explanation: 'Concepto AIF: transcribe.',
     trackId: AI_TRACK_ID,
   },
@@ -339,7 +384,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'bias',
     stem: 'Sesgo en ML puede venir de…',
     correct: 'Datos de entrenamiento no representativos',
-    wrong: ['Solo el color del dashboard', 'Solo el nombre del bucket', 'Solo la AZ'],
+    wrong: [
+      'Solo el color del dashboard',
+      'Solo el nombre del bucket',
+      'Solo la AZ',
+    ],
     explanation: 'Concepto AIF: bias.',
     trackId: AI_TRACK_ID,
   },
@@ -357,7 +406,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'privacy',
     stem: 'Privacidad en IA requiere…',
     correct: 'Proteger datos personales usados en train/infer',
-    wrong: ['Publicar PII en S3 public', 'Desactivar KMS', 'Root keys en prompts'],
+    wrong: [
+      'Publicar PII en S3 public',
+      'Desactivar KMS',
+      'Root keys en prompts',
+    ],
     explanation: 'Concepto AIF: privacy.',
     trackId: AI_TRACK_ID,
   },
@@ -375,7 +428,11 @@ export const AIF_FACTS: SeedFact[] = [
     key: 'eval',
     stem: 'Evaluar modelos incluye…',
     correct: 'Métricas de calidad, robustez y riesgo según el caso',
-    wrong: ['Solo mirar el logo', 'Solo el precio GPU', 'Solo el tamaño del prompt'],
+    wrong: [
+      'Solo mirar el logo',
+      'Solo el precio GPU',
+      'Solo el tamaño del prompt',
+    ],
     explanation: 'Concepto AIF: eval.',
     trackId: AI_TRACK_ID,
   },
@@ -434,9 +491,17 @@ export function buildExtraKnowledge(): KnowledgeItem[] {
       trackId: AI_TRACK_ID,
       name: 'Amazon Bedrock',
       definition: 'API gestionada a foundation models.',
-      distractors: ['Solo SageMaker notebooks', 'Rekognition vision', 'Polly TTS'],
+      distractors: [
+        'Solo SageMaker notebooks',
+        'Rekognition vision',
+        'Polly TTS',
+      ],
       explanation: 'FM vía API sin gestionar infra.',
-      allowedVariants: ['NAME_TO_DEFINITION', 'DEFINITION_TO_NAME', 'NAME_FOCUS'],
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
       status: 'published',
       externalKey: 'aif.ki-bedrock',
       createdAt: now,
@@ -450,7 +515,11 @@ export function buildExtraKnowledge(): KnowledgeItem[] {
       definition: 'Plataforma ML end-to-end en AWS.',
       distractors: ['Solo Bedrock chat', 'Solo Comprehend', 'Solo Textract'],
       explanation: 'Train/deploy/monitor modelos.',
-      allowedVariants: ['NAME_TO_DEFINITION', 'DEFINITION_TO_NAME', 'NAME_FOCUS'],
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
       status: 'published',
       externalKey: 'aif.ki-sagemaker',
       createdAt: now,
@@ -464,7 +533,11 @@ export function buildExtraKnowledge(): KnowledgeItem[] {
       definition: 'Retrieval-Augmented Generation.',
       distractors: ['Solo fine-tuning', 'Solo prompt vacío', 'Solo batch ETL'],
       explanation: 'Recupera contexto + genera respuesta.',
-      allowedVariants: ['NAME_TO_DEFINITION', 'DEFINITION_TO_NAME', 'NAME_FOCUS'],
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
       status: 'published',
       externalKey: 'aif.ki-rag',
       createdAt: now,
@@ -478,7 +551,11 @@ export function buildExtraKnowledge(): KnowledgeItem[] {
       definition: 'Modelo base multipropósito preentrenado.',
       distractors: ['Modelo lineal simple solo', 'Regla if/else', 'Cron job'],
       explanation: 'Se adapta a muchas tareas.',
-      allowedVariants: ['NAME_TO_DEFINITION', 'DEFINITION_TO_NAME', 'NAME_FOCUS'],
+      allowedVariants: [
+        'NAME_TO_DEFINITION',
+        'DEFINITION_TO_NAME',
+        'NAME_FOCUS',
+      ],
       status: 'published',
       externalKey: 'aif.ki-fm',
       createdAt: now,
@@ -495,10 +572,10 @@ function rotateChoices(
   const all = [correct, ...wrong];
   const offset = rotate % 4;
   const choices = [
-    all[(0 + offset) % 4]!,
-    all[(1 + offset) % 4]!,
-    all[(2 + offset) % 4]!,
-    all[(3 + offset) % 4]!,
+    all[(0 + offset) % 4],
+    all[(1 + offset) % 4],
+    all[(2 + offset) % 4],
+    all[(3 + offset) % 4],
   ] as ExamChoices;
   const correctIndex = choices.indexOf(correct) as 0 | 1 | 2 | 3;
   return { choices, correctIndex };

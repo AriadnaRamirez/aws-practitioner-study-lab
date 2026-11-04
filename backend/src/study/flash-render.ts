@@ -71,13 +71,20 @@ function rankedNames(
   pool: KnowledgeItem[],
   topicTypeOf?: TopicTypeOf,
 ): string[] {
-  const others = pool.filter((k) => k.id !== item.id && k.name.trim() !== item.name.trim());
+  const others = pool.filter(
+    (k) => k.id !== item.id && k.name.trim() !== item.name.trim(),
+  );
   const kind = topicTypeOf?.(item.topicId);
   const sameTopic = others.filter((k) => k.topicId === item.topicId);
   const sameKind = others.filter(
-    (k) => k.topicId !== item.topicId && kind != null && topicTypeOf?.(k.topicId) === kind,
+    (k) =>
+      k.topicId !== item.topicId &&
+      kind != null &&
+      topicTypeOf?.(k.topicId) === kind,
   );
-  const rest = others.filter((k) => !sameTopic.includes(k) && !sameKind.includes(k));
+  const rest = others.filter(
+    (k) => !sameTopic.includes(k) && !sameKind.includes(k),
+  );
   const ranked = [
     ...shuffleInPlace([...sameTopic]),
     ...shuffleInPlace([...sameKind]),
@@ -94,7 +101,10 @@ export function flashExplanation(item: KnowledgeItem): string {
   const definition = item.definition.trim();
   const full = item.explanation.trim();
   if (!definition || !full.includes(definition)) return full;
-  const rest = full.replace(definition, '').replace(/\s{2,}/g, ' ').trim();
+  const rest = full
+    .replace(definition, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
   return rest.length >= 12 ? rest : full;
 }
 
@@ -119,7 +129,7 @@ export function pickVariant(item: KnowledgeItem): FlashVariant {
     (FLASH_VARIANTS as readonly string[]).includes(v),
   );
   const list = allowed.length ? allowed : [...FLASH_VARIANTS];
-  return list[Math.floor(Math.random() * list.length)]!;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 /**
@@ -176,7 +186,7 @@ export function renderFlashVariant(
     }
     default: {
       const _exhaustive: never = variant;
-      throw new Error(`Unknown flash variant: ${_exhaustive}`);
+      throw new Error(`Unknown flash variant: ${String(_exhaustive)}`);
     }
   }
 }

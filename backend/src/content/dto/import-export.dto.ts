@@ -25,7 +25,8 @@ export class RunImportDto {
   content!: string;
 
   @ApiPropertyOptional({
-    description: 'When true, validate and report actions without mutating store',
+    description:
+      'When true, validate and report actions without mutating store',
     default: true,
   })
   @IsOptional()

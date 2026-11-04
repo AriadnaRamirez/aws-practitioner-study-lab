@@ -44,7 +44,12 @@ export function parseState(raw: string): SessionRuntimeState {
       ledger: parseLedger(parsed.ledger),
     };
   } catch {
-    return { queue: [], current: null, masteredItemIds: [], ledger: parseLedger(null) };
+    return {
+      queue: [],
+      current: null,
+      masteredItemIds: [],
+      ledger: parseLedger(null),
+    };
   }
 }
 

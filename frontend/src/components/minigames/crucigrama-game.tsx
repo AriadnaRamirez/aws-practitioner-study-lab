@@ -490,18 +490,15 @@ function CrosswordBoard({
             const tone = cn(
               "size-full rounded-md text-center text-base font-bold uppercase transition-colors sm:text-xl",
               isWrong
-                ? "bg-[var(--danger-soft)] text-[var(--danger-text)] ring-2 ring-[var(--danger)] ring-inset"
+                ? "status-danger ring-2 ring-[var(--danger)] ring-inset"
                 : activeKeys.has(key)
                   ? "bg-[var(--accent-soft)]"
                   : isDone
-                    ? "bg-[var(--success-soft)]"
+                    ? "status-success"
                     : "bg-[var(--surface-elevated)]",
-              !isWrong &&
-                (isGiven
-                  ? "text-[var(--accent)]"
-                  : isDone
-                    ? "text-[var(--success-text)]"
-                    : "text-[var(--foreground)]"),
+              !isWrong && isGiven
+                ? "text-[var(--accent)]"
+                : "text-[var(--foreground)]",
             );
             return (
               <div key={key} className="relative aspect-square">
@@ -632,7 +629,7 @@ function CrosswordBoard({
                       <span className="w-5 shrink-0 font-semibold text-[var(--foreground)]">
                         {solved[index] ? (
                           <Check
-                            className="mt-0.5 size-4 text-[var(--success)]"
+                            className="mt-0.5 size-4 text-[var(--success-text)]"
                             aria-label="Resuelta"
                           />
                         ) : (

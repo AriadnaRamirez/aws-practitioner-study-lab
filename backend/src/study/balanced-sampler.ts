@@ -17,7 +17,9 @@ function shuffleWith<T>(items: readonly T[], rng: Rng): T[] {
  * The result is shuffled again so topics interleave randomly.
  * Items whose topic is not in `topicIds` are ignored.
  */
-export function sampleBalancedByTopic<T extends { id: string; topicId: string }>(
+export function sampleBalancedByTopic<
+  T extends { id: string; topicId: string },
+>(
   pool: readonly T[],
   topicIds: readonly string[],
   size: number,

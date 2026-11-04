@@ -14,7 +14,11 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Correo inválido' })
   email!: string;
 
-  @ApiProperty({ example: 'ariadna', minLength: USERNAME_MIN, maxLength: USERNAME_MAX })
+  @ApiProperty({
+    example: 'ariadna',
+    minLength: USERNAME_MIN,
+    maxLength: USERNAME_MAX,
+  })
   @IsString()
   @MinLength(USERNAME_MIN, {
     message: `Usuario: mínimo ${USERNAME_MIN} caracteres`,

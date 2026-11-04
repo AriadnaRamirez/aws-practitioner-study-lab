@@ -1,9 +1,5 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GuestService } from './guest.service';
 
 @ApiTags('guest')
@@ -28,8 +24,7 @@ export class GuestController {
 
   @Post('probes/:id/sessions')
   @ApiOperation({
-    summary:
-      'Registrar una sesión guest completada (tope GUEST_MAX_SESSIONS)',
+    summary: 'Registrar una sesión guest completada (tope GUEST_MAX_SESSIONS)',
   })
   recordSession(@Param('id') id: string) {
     return this.guest.recordSession(id);

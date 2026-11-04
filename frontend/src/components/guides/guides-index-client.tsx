@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
+  Building2,
   Cloud,
   Download,
   Network,
   ServerCog,
   ShieldCheck,
   Terminal,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import type { KnowledgeItem } from "@aps/shared";
@@ -37,6 +39,8 @@ const GUIDE_ICONS: Record<StudyGuideId, LucideIcon> = {
   "conceptos-linux": Terminal,
   "conceptos-redes": Network,
   "conceptos-seguridad": ShieldCheck,
+  "conceptos-operaciones": Wrench,
+  "conceptos-arquitectura": Building2,
 };
 
 /**

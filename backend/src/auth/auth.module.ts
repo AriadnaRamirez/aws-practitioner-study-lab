@@ -6,6 +6,7 @@ import { GuestModule } from '../guest/guest.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { RateLimiter } from './rate-limit';
 
 @Module({
   imports: [
@@ -23,7 +24,11 @@ import { JwtStrategy } from './jwt.strategy';
     GuestModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    { provide: RateLimiter, useFactory: () => new RateLimiter() },
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -2,7 +2,9 @@ import { normalizeTimezone } from './timezone.util';
 
 describe('normalizeTimezone', () => {
   it('keeps valid IANA timezones', () => {
-    expect(normalizeTimezone('America/Mexico_City')).toBe('America/Mexico_City');
+    expect(normalizeTimezone('America/Mexico_City')).toBe(
+      'America/Mexico_City',
+    );
     expect(normalizeTimezone(' Europe/Madrid ')).toBe('Europe/Madrid');
   });
 

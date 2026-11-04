@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils";
 
 const TONE = {
   neutral: "bg-[var(--surface-hover)] text-[var(--foreground-muted)]",
-  accent: "bg-[var(--accent-soft)] text-[var(--accent)]",
-  success: "bg-[var(--success-soft)] text-[var(--success-text)]",
-  danger: "bg-[var(--danger-soft)] text-[var(--danger-text)]",
+  accent:
+    "bg-[var(--accent-soft)] text-[var(--foreground)] [&>svg]:text-[var(--accent)]",
+  success: "status-success [&>svg]:text-[var(--success-text)]",
+  danger: "status-danger [&>svg]:text-[var(--danger-text)]",
   warning: "bg-[var(--warning-soft)] text-[var(--warning-text)]",
 } as const;
 

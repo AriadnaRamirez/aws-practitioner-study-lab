@@ -36,10 +36,7 @@ export class StudyController {
   @Get('sessions')
   @ApiOperation({ summary: 'Historial de sesiones del usuario' })
   @ApiOkResponse({ description: 'Lista de sesiones (más recientes primero)' })
-  listSessions(
-    @Req() req: { user: User },
-    @Query() query: ListLimitQueryDto,
-  ) {
+  listSessions(@Req() req: { user: User }, @Query() query: ListLimitQueryDto) {
     return this.study.listSessions(req.user.id, query.limit ?? 50);
   }
 
@@ -65,10 +62,7 @@ export class StudyController {
     summary: 'Iniciar sesión WEAK_REVIEW con las más falladas',
   })
   @ApiOkResponse({ description: 'Sesión creada con cola de refuerzo' })
-  startWeakReview(
-    @Req() req: { user: User },
-    @Body() dto: StartWeakReviewDto,
-  ) {
+  startWeakReview(@Req() req: { user: User }, @Body() dto: StartWeakReviewDto) {
     return this.study
       .startWeakReview(req.user, dto.limit)
       .then((session) => ({ session }));

@@ -70,7 +70,7 @@ export function PreciosGame() {
       gameId="cuanto-pagas"
       title="¿Cuánto pagas?"
       subtitle="Elige el modelo de precios de EC2 que mejor encaja con cada caso."
-      cheatSheetTitle="Repaso rápido: los 5 modelos de precios"
+      cheatSheetTitle="Repaso rápido: las 3 formas de pagar EC2"
       deal={() => quizRound(PRECIOS_QUESTIONS, PRECIOS_ROUND)}
     />
   );

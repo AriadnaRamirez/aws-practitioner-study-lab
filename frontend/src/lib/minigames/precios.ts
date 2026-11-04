@@ -6,46 +6,33 @@ import {
 
 export const PRECIOS_ROUND = 10;
 
+/** Las tres formas de pagar EC2 que cubren los apuntes del curso. */
 const OPTIONS: QuizOption[] = [
   {
     id: "on-demand",
-    label: "On-Demand",
+    label: "Bajo demanda",
     tag: "Sin compromiso",
     summary:
-      "Pagas por segundo o por hora, sin compromiso ni pago por adelantado. Ideal para cargas cortas, impredecibles o de prueba que no pueden interrumpirse.",
+      "Pagas por hora de uso, sin compromiso ni pago por adelantado. Ideal para cargas cortas, impredecibles o de prueba que no pueden interrumpirse.",
   },
   {
     id: "reserved",
-    label: "Reserved Instances",
-    tag: "1 o 3 años · instancia fija",
+    label: "Reservada",
+    tag: "1 o 3 años · hasta 72 %",
     summary:
-      "Compromiso de 1 o 3 años con un tipo de instancia a cambio de hasta 72 % de descuento. Las de zona reservan capacidad y las Standard se pueden revender en el Marketplace.",
-  },
-  {
-    id: "savings-plans",
-    label: "Savings Plans",
-    tag: "1 o 3 años · gasto por hora",
-    summary:
-      "Te comprometes a gastar una cantidad por hora durante 1 o 3 años (hasta 72 % de descuento). Compute Savings Plans aplica el descuento aunque cambies de familia, de región o uses Fargate y Lambda.",
+      "Te comprometes a usar la instancia 1 o 3 años y pagas hasta 72 % menos que bajo demanda. Conviene cuando el uso es estable y predecible.",
   },
   {
     id: "spot",
     label: "Spot",
     tag: "Hasta 90 % · interrumpible",
     summary:
-      "Capacidad sobrante con hasta 90 % de descuento; AWS puede recuperarla con 2 minutos de aviso. Solo para cargas que toleran interrupciones.",
-  },
-  {
-    id: "dedicated-hosts",
-    label: "Dedicated Hosts",
-    tag: "Servidor físico tuyo",
-    summary:
-      "Un servidor físico completo para ti, con visibilidad de sockets y núcleos. Útil para licencias por núcleo o socket (BYOL) y requisitos de cumplimiento.",
+      "Usas capacidad sobrante de AWS con hasta 90 % de descuento, pero no es tuya: AWS puede recuperarla con 2 minutos de aviso. Solo para trabajos que toleran interrupciones.",
   },
 ];
 
 const SCENARIOS: Scenario[] = [
-  // On-Demand
+  // Bajo demanda
   {
     prompt:
       "Vas a probar una app nueva durante 2 semanas y no sabes cuánta capacidad necesitarás.",
@@ -58,7 +45,7 @@ const SCENARIOS: Scenario[] = [
       "Esperas un pico de tráfico impredecible por una campaña de fin de semana y el servicio no puede cortarse.",
     answer: "on-demand",
     clue: "no puede cortarse",
-    why: "Es temporal (descarta compromisos) y no tolera cortes (descarta Spot).",
+    why: "Es temporal (descarta la reserva) y no tolera cortes (descarta Spot).",
   },
   {
     prompt:
@@ -72,93 +59,92 @@ const SCENARIOS: Scenario[] = [
       "Una startup lanza su primer producto y aún no sabe si su uso será estable dentro de un año.",
     answer: "on-demand",
     clue: "aún no sabe si su uso será estable",
-    why: "Primero se mide el uso con On-Demand; los compromisos llegan cuando el uso es predecible.",
+    why: "Primero se mide el uso; la reserva llega cuando el uso es predecible.",
   },
   {
     prompt:
       "Tienes un trabajo urgente de un solo día que no puede detenerse a la mitad.",
     answer: "on-demand",
     clue: "no puede detenerse a la mitad",
-    why: "Un solo día descarta compromisos, y como no tolera interrupciones, Spot tampoco sirve.",
+    why: "Un solo día descarta la reserva, y como no tolera interrupciones, Spot tampoco sirve.",
   },
   {
     prompt:
-      "Quieres pagar solo los segundos que usas tu instancia Linux, sin pagos por adelantado ni contratos.",
+      "Quieres pagar solo las horas que usas tu instancia, sin pagos por adelantado ni contratos.",
     answer: "on-demand",
     clue: "sin pagos por adelantado ni contratos",
-    why: "On-Demand cobra por segundo en Linux y no pide ningún compromiso.",
+    why: "Bajo demanda es el pago por uso puro: 1 hora de uso, 1 hora de pago.",
   },
-  // Reserved Instances
   {
     prompt:
-      "Necesitas garantizar capacidad de un tipo de instancia en una zona de disponibilidad concreta durante 1 año.",
+      "Clonas toda tu arquitectura durante 1 hora para una prueba de estrés y después la borras.",
+    answer: "on-demand",
+    clue: "durante 1 hora",
+    why: "Probar a escala de producción sale barato porque pagas solo el tiempo de la prueba.",
+  },
+  {
+    prompt:
+      "Atenderás a los clientes de un evento de 3 días y una interrupción haría perder ventas.",
+    answer: "on-demand",
+    clue: "evento de 3 días",
+    why: "Es corto y crítico: sin compromiso y sin riesgo de que AWS recupere la instancia.",
+  },
+  // Reservada
+  {
+    prompt:
+      "Tu servidor web atiende tráfico estable las 24 horas y seguirá así al menos 3 años.",
     answer: "reserved",
-    clue: "garantizar capacidad",
-    why: "Las Reserved Instances de zona reservan capacidad; los Savings Plans dan descuento pero no reservan capacidad.",
+    clue: "al menos 3 años",
+    why: "Uso estable y largo: comprometerte 3 años da el mayor descuento (hasta 72 %).",
   },
   {
     prompt:
-      "Compraste una reserva de 3 años que ya no usarás y quieres vendérsela a otra empresa.",
+      "La base de datos de tu empresa corre todo el día, todos los días, y no cambiará en el próximo año.",
     answer: "reserved",
-    clue: "vendérsela a otra empresa",
-    why: "Las Reserved Instances Standard se pueden vender en el Reserved Instance Marketplace; los Savings Plans no.",
+    clue: "no cambiará en el próximo año",
+    why: "Un uso continuo y predecible durante 1 año es el caso ideal para reservar.",
   },
   {
     prompt:
-      "Una app crítica debe poder lanzar 10 instancias c5 en us-east-1a aunque haya mucha demanda, y quieres descuento.",
+      "Ya mediste tu uso durante meses: siempre necesitas 4 instancias encendidas y quieres pagar menos.",
     answer: "reserved",
-    clue: "aunque haya mucha demanda",
-    why: "Asegurar capacidad en una zona concreta con descuento es lo que hace una Reserved Instance de zona.",
+    clue: "siempre necesitas 4 instancias encendidas",
+    why: "Cuando el uso mínimo es conocido, la reserva convierte esa base en descuento.",
   },
   {
     prompt:
-      "Tu reserva Standard de 1 año sobra porque migraste la app; quieres recuperar parte de lo pagado.",
+      "Tu sistema de nómina debe estar disponible sin interrupciones los próximos 3 años y buscas ahorrar.",
     answer: "reserved",
-    clue: "recuperar parte de lo pagado",
-    why: "Solo las Reserved Instances Standard se revenden en el Marketplace.",
-  },
-  // Savings Plans
-  {
-    prompt:
-      "Tu uso de cómputo es estable, pero este año moverás cargas de EC2 a Fargate y Lambda.",
-    answer: "savings-plans",
-    clue: "de EC2 a Fargate y Lambda",
-    why: "Compute Savings Plans cubre EC2, Fargate y Lambda; las Reserved Instances solo cubren EC2.",
+    clue: "los próximos 3 años",
+    why: "No tolera interrupciones (descarta Spot) y es de largo plazo (reserva).",
   },
   {
     prompt:
-      "Quieres comprometer un gasto fijo por hora y que el descuento siga aunque cambies de región o de familia de instancias.",
-    answer: "savings-plans",
-    clue: "gasto fijo por hora",
-    why: "Te comprometes a un gasto ($/hora), no a una instancia concreta.",
+      "Finanzas acepta pagar por adelantado un año de uso a cambio de un descuento grande.",
+    answer: "reserved",
+    clue: "pagar por adelantado un año",
+    why: "Comprometerte por adelantado es justo lo que premia la instancia reservada.",
   },
   {
     prompt:
-      "Quieres un descuento por compromiso que también cubra tus funciones Lambda.",
-    answer: "savings-plans",
-    clue: "también cubra tus funciones Lambda",
-    why: "Lambda no tiene Reserved Instances; el descuento por compromiso llega con Compute Savings Plans.",
+      "Una app interna que usan todos los empleados corre sin parar y lleva años con el mismo tamaño.",
+    answer: "reserved",
+    clue: "lleva años con el mismo tamaño",
+    why: "Uso constante y sin cambios: el descuento por compromiso es puro ahorro.",
   },
   {
     prompt:
-      "Tu equipo cambia a menudo de tipo de instancia, pero el gasto total en cómputo es estable mes a mes.",
-    answer: "savings-plans",
-    clue: "cambia a menudo de tipo de instancia",
-    why: "Una Reserved Instance te ata a un tipo de instancia; un Savings Plan sigue aplicando aunque cambies.",
+      "Tu web corporativa tiene una carga base constante que no se ha movido en dos años.",
+    answer: "reserved",
+    clue: "carga base constante",
+    why: "La carga base estable se reserva; los picos ocasionales se cubren bajo demanda.",
   },
   {
     prompt:
-      "Quieres ahorrar con un compromiso de 3 años sin tener que elegir hoy qué instancias usarás.",
-    answer: "savings-plans",
-    clue: "sin tener que elegir hoy qué instancias",
-    why: "Con Compute Savings Plans solo eliges cuánto gastas por hora, no qué instancias.",
-  },
-  {
-    prompt:
-      "Tienes servidores en dos regiones y planeas pasar parte de ellos a contenedores en Fargate.",
-    answer: "savings-plans",
-    clue: "contenedores en Fargate",
-    why: "Compute Savings Plans cubre varias regiones y también Fargate.",
+      "Firmaste un contrato de 3 años con un cliente que exige el servicio siempre encendido.",
+    answer: "reserved",
+    clue: "siempre encendido",
+    why: "Sabes que lo usarás 3 años sin parar: reservarlo cuesta mucho menos que bajo demanda.",
   },
   // Spot
   {
@@ -170,10 +156,10 @@ const SCENARIOS: Scenario[] = [
   },
   {
     prompt:
-      "Entrenas modelos de ML que guardan checkpoints y buscas el mayor descuento posible.",
+      "Entrenas modelos de machine learning que guardan su avance y buscas el mayor descuento posible.",
     answer: "spot",
-    clue: "guardan checkpoints",
-    why: "Con checkpoints, si AWS recupera la instancia retomas desde el último punto guardado.",
+    clue: "guardan su avance",
+    why: "Si AWS recupera la instancia, retomas desde el último punto guardado.",
   },
   {
     prompt:
@@ -198,46 +184,24 @@ const SCENARIOS: Scenario[] = [
   },
   {
     prompt:
-      "Tu integración continua (CI) ejecuta pruebas que se repiten solas si el servidor desaparece.",
+      "Tus pruebas automáticas se repiten solas si el servidor desaparece a la mitad.",
     answer: "spot",
     clue: "se repiten solas",
-    why: "Las tareas de CI que se reintentan solas son un caso clásico de Spot.",
-  },
-  // Dedicated Hosts
-  {
-    prompt:
-      "Tu licencia de software se cobra por núcleo físico y quieres usar la que ya tienes.",
-    answer: "dedicated-hosts",
-    clue: "por núcleo físico",
-    why: "Solo un Dedicated Host te deja ver los núcleos físicos para aplicar tu licencia (BYOL).",
+    why: "Las tareas que se reintentan solas son un caso clásico de Spot.",
   },
   {
     prompt:
-      "Una norma exige que tus instancias corran en un servidor físico solo para tu empresa, donde puedas ver sus sockets y núcleos.",
-    answer: "dedicated-hosts",
-    clue: "ver sus sockets y núcleos",
-    why: "Ver sockets y núcleos de un servidor físico propio es exclusivo de Dedicated Hosts.",
+      "Un trabajo de cálculo puede correr de 5:30 a 7:00 a. m. o cuando haya capacidad; si lo apagan con 2 minutos de aviso, no pasa nada.",
+    answer: "spot",
+    clue: "con 2 minutos de aviso, no pasa nada",
+    why: "Spot avisa con 2 minutos antes de recuperar la instancia; si eso no te afecta, es lo más barato.",
   },
   {
     prompt:
-      "Quieres traer a AWS tus licencias de Windows Server, que se cobran por socket.",
-    answer: "dedicated-hosts",
-    clue: "se cobran por socket",
-    why: "Las licencias por socket o núcleo necesitan un servidor físico visible: Dedicated Hosts.",
-  },
-  {
-    prompt:
-      "Una auditoría te pide controlar en qué servidor físico concreto se colocan tus instancias.",
-    answer: "dedicated-hosts",
-    clue: "en qué servidor físico concreto",
-    why: "Con Dedicated Hosts eliges y ves el servidor físico donde corren tus instancias.",
-  },
-  {
-    prompt:
-      "Tu base de datos Oracle tiene una licencia que se paga según los núcleos del servidor físico.",
-    answer: "dedicated-hosts",
-    clue: "según los núcleos del servidor físico",
-    why: "Licencia por núcleo físico = Dedicated Hosts.",
+      "Conviertes videos a otros formatos en una cola; si una conversión se corta, vuelve a la cola.",
+    answer: "spot",
+    clue: "vuelve a la cola",
+    why: "Una cola que reintenta tolera interrupciones: Spot ahorra hasta 90 %.",
   },
 ];
 

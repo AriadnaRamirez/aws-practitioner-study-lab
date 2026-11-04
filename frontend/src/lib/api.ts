@@ -3,15 +3,15 @@ import type {
   ChangePasswordRequest,
   CreateUserExamRequest,
   DeleteUserExamResponse,
-  ForgotPasswordRequest,
   GuestProbe,
   KnowledgeItem,
   LoginRequest,
+  MinigameResults,
   PodiumResponse,
   PodiumWindow,
   PublicUser,
+  RecordMinigameResultRequest,
   RegisterRequest,
-  ResetPasswordRequest,
   StartWeakReviewRequest,
   StartWeakReviewResponse,
   StudyHistoryResponse,
@@ -213,20 +213,6 @@ export function login(body: LoginRequest) {
   });
 }
 
-export function forgotPassword(body: ForgotPasswordRequest) {
-  return apiFetch<{ message: string }>('/auth/forgot-password', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-}
-
-export function resetPassword(body: ResetPasswordRequest) {
-  return apiFetch<{ message: string }>('/auth/reset-password', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-}
-
 export function fetchMe() {
   return apiFetch<PublicUser>('/auth/me', { auth: true });
 }
@@ -274,8 +260,21 @@ export function deleteMyExam(id: string) {
   );
 }
 
+export function fetchMinigameResults() {
+  return apiFetch<MinigameResults>('/me/minigames', { auth: true });
+}
+
+export function recordMinigameResult(body: RecordMinigameResultRequest) {
+  return apiFetch<MinigameResults>('/me/minigames/results', {
+    method: 'POST',
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+/** Other devices get signed out; the returned session replaces this one's. */
 export function changePassword(body: ChangePasswordRequest) {
-  return apiFetch<{ message: string }>('/auth/change-password', {
+  return apiFetch<AuthResponse & { message: string }>('/auth/change-password', {
     method: 'POST',
     auth: true,
     body: JSON.stringify(body),

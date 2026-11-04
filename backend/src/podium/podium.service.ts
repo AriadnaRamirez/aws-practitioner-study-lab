@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { User } from '@prisma/client';
-import type {
-  PodiumEntry,
-  PodiumResponse,
-  PodiumWindow,
-} from '@aps/shared';
+import type { PodiumEntry, PodiumResponse, PodiumWindow } from '@aps/shared';
 import { PrismaService } from '../prisma/prisma.service';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;

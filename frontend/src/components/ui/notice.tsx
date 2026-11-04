@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 
 const TONE = {
   danger: {
-    box: "bg-[var(--danger-soft)] text-[var(--danger-text)]",
+    box: "status-danger [&>svg]:text-[var(--danger-text)]",
     text: "text-[var(--danger-text)]",
     icon: AlertCircle,
   },
   success: {
-    box: "bg-[var(--success-soft)] text-[var(--success-text)]",
+    box: "status-success [&>svg]:text-[var(--success-text)]",
     text: "text-[var(--success-text)]",
     icon: CheckCircle2,
   },

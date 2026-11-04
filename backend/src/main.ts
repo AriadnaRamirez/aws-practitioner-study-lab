@@ -68,11 +68,11 @@ async function bootstrap() {
   // Bind all interfaces so Cursor port-forward / preview can reach the API.
   const host = process.env.HOST ?? '0.0.0.0';
   await app.listen(port, host);
-  // eslint-disable-next-line no-console
+
   console.log(
     `${APP_NAME} API listening on http://${host}:${port}/${API_PREFIX}`,
   );
-  // eslint-disable-next-line no-console
+
   console.log(`Swagger UI: http://127.0.0.1:${port}/docs`);
 }
 

@@ -286,10 +286,8 @@ export function ChoiceQuiz({
                     "flex min-h-14 w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors",
                     state === "idle" &&
                       "bg-[var(--surface-elevated)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]",
-                    state === "right" &&
-                      "bg-[var(--success-soft)] text-[var(--success-text)]",
-                    state === "wrong" &&
-                      "bg-[var(--danger-soft)] text-[var(--danger-text)]",
+                    state === "right" && "status-success",
+                    state === "wrong" && "status-danger",
                     state === "dim" &&
                       "bg-[var(--surface-elevated)] text-[var(--foreground-muted)] opacity-60",
                     answered && "cursor-default",
@@ -307,9 +305,21 @@ export function ChoiceQuiz({
                     <span className="block text-xs opacity-80">{o.tag}</span>
                   </span>
                   {state === "right" ? (
-                    <Check className="size-4 shrink-0" aria-label="Correcta" />
+                    <span className="status-mark status-mark-success">
+                      <Check
+                        className="size-3"
+                        strokeWidth={3}
+                        aria-label="Correcta"
+                      />
+                    </span>
                   ) : state === "wrong" ? (
-                    <X className="size-4 shrink-0" aria-label="Tu respuesta" />
+                    <span className="status-mark status-mark-danger">
+                      <X
+                        className="size-3"
+                        strokeWidth={3}
+                        aria-label="Tu respuesta"
+                      />
+                    </span>
                   ) : null}
                 </button>
               </li>
@@ -322,12 +332,23 @@ export function ChoiceQuiz({
             <div
               className={cn(
                 "mt-5 rounded-xl px-4 py-3 text-sm leading-relaxed",
-                isRight
-                  ? "bg-[var(--success-soft)] text-[var(--success-text)]"
-                  : "bg-[var(--danger-soft)] text-[var(--danger-text)]",
+                isRight ? "status-success" : "status-danger",
               )}
             >
-              <p className="font-semibold">
+              <p className="flex items-center gap-2 font-semibold">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "status-mark",
+                    isRight ? "status-mark-success" : "status-mark-danger",
+                  )}
+                >
+                  {isRight ? (
+                    <Check className="size-3" strokeWidth={3} />
+                  ) : (
+                    <X className="size-3" strokeWidth={3} />
+                  )}
+                </span>
                 {isRight ? "¡Correcto!" : `No: era ${right.label}.`}
               </p>
               {question.why ? (

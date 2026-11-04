@@ -48,23 +48,21 @@ export function serializeExamQueue(session: StudySessionRecord): string {
   return JSON.stringify(payload);
 }
 
-export function parseExamQueueState(
-  row: {
-    id: string;
-    userId: string;
-    mode: string;
-    size: number;
-    uniqueItems: number;
-    sessionStreak: number;
-    maxSessionStreak: number;
-    answeredCount: number;
-    correctCount: number;
-    missRepeatCount: number;
-    startedAt: Date;
-    endedAt: Date | null;
-    stateJson: string;
-  },
-): StudySessionRecord {
+export function parseExamQueueState(row: {
+  id: string;
+  userId: string;
+  mode: string;
+  size: number;
+  uniqueItems: number;
+  sessionStreak: number;
+  maxSessionStreak: number;
+  answeredCount: number;
+  correctCount: number;
+  missRepeatCount: number;
+  startedAt: Date;
+  endedAt: Date | null;
+  stateJson: string;
+}): StudySessionRecord {
   const raw = JSON.parse(row.stateJson) as ExamQueueStateJson;
   if (raw.kind !== 'exam_queue') {
     throw new Error('stateJson is not exam_queue');
@@ -119,20 +117,18 @@ export function serializeTimed(record: TimedSessionRecord): string {
   return JSON.stringify(payload);
 }
 
-export function parseTimedState(
-  row: {
-    id: string;
-    userId: string;
-    size: number;
-    timeLimitSec: number | null;
-    timezone: string;
-    startedAt: Date;
-    endedAt: Date | null;
-    score: number | null;
-    summaryJson: string | null;
-    stateJson: string;
-  },
-): TimedSessionRecord {
+export function parseTimedState(row: {
+  id: string;
+  userId: string;
+  size: number;
+  timeLimitSec: number | null;
+  timezone: string;
+  startedAt: Date;
+  endedAt: Date | null;
+  score: number | null;
+  summaryJson: string | null;
+  stateJson: string;
+}): TimedSessionRecord {
   const raw = JSON.parse(row.stateJson) as ExamTimedStateJson;
   if (raw.kind !== 'exam_timed') {
     throw new Error('stateJson is not exam_timed');
@@ -163,7 +159,9 @@ export function parseTimedState(
   };
   if (row.summaryJson) {
     try {
-      record.summary = JSON.parse(row.summaryJson);
+      record.summary = JSON.parse(
+        row.summaryJson,
+      ) as TimedSessionRecord['summary'];
     } catch {
       /* ignore */
     }

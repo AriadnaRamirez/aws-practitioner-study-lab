@@ -81,10 +81,7 @@ export class GuestService {
       createdAt: probe.createdAt.toISOString(),
       sessionsCount: probe.sessionsCount,
       convertedUserId: probe.convertedUserId,
-      sessionsRemaining: Math.max(
-        0,
-        GUEST_MAX_SESSIONS - probe.sessionsCount,
-      ),
+      sessionsRemaining: Math.max(0, GUEST_MAX_SESSIONS - probe.sessionsCount),
     };
   }
 }

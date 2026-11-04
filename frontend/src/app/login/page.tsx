@@ -141,7 +141,9 @@ function LoginForm() {
                 />
                 <IconButton
                   className="absolute right-2 top-1/2 -translate-y-1/2"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  aria-label={
+                    showPassword ? "Ocultar contraseña" : "Ver contraseña"
+                  }
                   aria-pressed={showPassword}
                   onClick={() => setShowPassword((v) => !v)}
                 >
@@ -152,22 +154,15 @@ function LoginForm() {
 
             {error ? <Notice tone="danger">{error}</Notice> : null}
 
-            <Button type="submit" size="lg" pending={pending} className="mt-1 w-full">
+            <Button
+              type="submit"
+              size="lg"
+              pending={pending}
+              className="mt-1 w-full"
+            >
               {pending ? "Entrando…" : "Entrar"}
             </Button>
           </form>
-
-          <p className="mt-4 text-right text-sm">
-            <Link
-              href="/forgot-password"
-              className={cn(
-                "rounded-sm text-[var(--foreground-muted)] underline-offset-4 hover:text-[var(--foreground)] hover:underline",
-                FOCUS_RING,
-              )}
-            >
-              Olvidé mi contraseña
-            </Link>
-          </p>
 
           <p className="mt-8 text-center text-sm text-[var(--foreground-muted)]">
             <Link href="/register" className={LINK}>

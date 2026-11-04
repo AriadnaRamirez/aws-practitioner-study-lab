@@ -11,14 +11,20 @@ export class CreateUserExamDto {
   })
   examCode!: ExamCode;
 
-  @ApiProperty({ description: 'Fecha del examen (YYYY-MM-DD)', example: '2026-12-15' })
+  @ApiProperty({
+    description: 'Fecha del examen (YYYY-MM-DD)',
+    example: '2026-12-15',
+  })
   @IsString({ message: 'examDate es obligatorio' })
   @Matches(EXAM_DATE_PATTERN, { message: 'examDate debe ser YYYY-MM-DD' })
   examDate!: string;
 }
 
 export class UpdateUserExamDto {
-  @ApiProperty({ description: 'Fecha del examen (YYYY-MM-DD)', example: '2026-12-15' })
+  @ApiProperty({
+    description: 'Fecha del examen (YYYY-MM-DD)',
+    example: '2026-12-15',
+  })
   @IsString({ message: 'examDate es obligatorio' })
   @Matches(EXAM_DATE_PATTERN, { message: 'examDate debe ser YYYY-MM-DD' })
   examDate!: string;

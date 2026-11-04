@@ -105,10 +105,9 @@ export class ImportExportService {
     entities?: string[];
   }): Promise<ContentExportBundle> {
     const wanted = new Set(
-      (
-        opts?.entities?.length
-          ? opts.entities
-          : ['topics', 'knowledge', 'questions']
+      (opts?.entities?.length
+        ? opts.entities
+        : ['topics', 'knowledge', 'questions']
       ).map((e) => e.trim().toLowerCase()),
     );
     return {
@@ -271,7 +270,7 @@ export class ImportExportService {
     if (!trimmed) throw new BadRequestException('content is empty');
     if (format === 'json') return this.parseJson(trimmed);
     if (format === 'csv') return this.parseCsv(trimmed);
-    throw new BadRequestException(`Unsupported format: ${format}`);
+    throw new BadRequestException(`Unsupported format: ${String(format)}`);
   }
 
   private parseJson(raw: string): ParsedBundle {
@@ -710,9 +709,7 @@ export class ImportExportService {
     if (
       !Array.isArray(row.allowedVariants) ||
       row.allowedVariants.length < 1 ||
-      row.allowedVariants.some(
-        (v: FlashVariant) => !FLASH_VARIANTS.includes(v),
-      )
+      row.allowedVariants.some((v: FlashVariant) => !FLASH_VARIANTS.includes(v))
     ) {
       throw new Error('knowledge.allowedVariants invalid');
     }

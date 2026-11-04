@@ -82,6 +82,13 @@ describe('UserExamsService', () => {
   };
   let service: UserExamsService;
 
+  const userUpdateCall = (i = 0) =>
+    (
+      prisma.user.update.mock.calls as [
+        { where: { id: string }; data: { examDate: Date } },
+      ][]
+    )[i][0];
+
   beforeEach(() => {
     prisma = {
       userExam: {
@@ -93,8 +100,8 @@ describe('UserExamsService', () => {
         delete: jest.fn(),
       },
       user: { update: jest.fn() },
-      $transaction: jest.fn(async (fn: (tx: unknown) => unknown) =>
-        fn(prisma),
+      $transaction: jest.fn((fn: (tx: unknown) => unknown) =>
+        Promise.resolve(fn(prisma)),
       ),
     };
     service = new UserExamsService(prisma as never);
@@ -150,7 +157,11 @@ describe('UserExamsService', () => {
 
   it('creating AIF-C01 does not touch legacy User.examDate', async () => {
     prisma.userExam.create.mockResolvedValue(
-      row({ id: 'ue_2', examCode: 'AIF-C01', examDate: new Date('2026-12-01') }),
+      row({
+        id: 'ue_2',
+        examCode: 'AIF-C01',
+        examDate: new Date('2026-12-01'),
+      }),
     );
     await expect(
       service.create('user_1', { examCode: 'AIF-C01', examDate: '2026-12-01' }),
@@ -168,7 +179,7 @@ describe('UserExamsService', () => {
       examCode: 'CLF-C02',
       examDate: '2026-11-07',
     });
-    const call = prisma.user.update.mock.calls[0][0];
+    const call = userUpdateCall();
     expect(call.where).toEqual({ id: 'user_1' });
     expect(call.data.examDate.toISOString().slice(0, 10)).toBe('2026-11-07');
   });
@@ -182,11 +193,9 @@ describe('UserExamsService', () => {
       examDate: '2026-11-20',
     });
     expect(result.examDate).toBe('2026-11-20');
-    expect(
-      prisma.user.update.mock.calls[0][0].data.examDate
-        .toISOString()
-        .slice(0, 10),
-    ).toBe('2026-11-20');
+    expect(userUpdateCall().data.examDate.toISOString().slice(0, 10)).toBe(
+      '2026-11-20',
+    );
   });
 
   it('cannot update or delete exams owned by someone else', async () => {

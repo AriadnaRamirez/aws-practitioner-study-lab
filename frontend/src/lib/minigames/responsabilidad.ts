@@ -12,62 +12,67 @@ const OPTIONS: QuizOption[] = [
     label: "AWS",
     tag: "Seguridad DE la nube",
     summary:
-      "AWS se encarga de la seguridad DE la nube: centros de datos, hardware, red global, virtualización y los servicios que administra por ti.",
+      "AWS se encarga de la seguridad DE la nube: lo físico (centros de datos y hardware), su mantenimiento, la energía y la climatización, y la virtualización.",
   },
   {
     id: "tu",
     label: "Tú",
     tag: "Seguridad EN la nube",
     summary:
-      "Tú te encargas de la seguridad EN la nube: tus datos, identidades y permisos, la configuración de red y lo que instalas o programas.",
+      "Tú te encargas de la seguridad EN la nube: tus datos y su cifrado, los usuarios y accesos, la configuración de tu red y de tus sistemas, y tu código.",
   },
 ];
 
-/** Modelo de responsabilidad compartida: cada tarea tiene un solo dueño. */
+/** Modelo de responsabilidad compartida, según los apuntes: cada tarea tiene un solo dueño. */
 const SCENARIOS: Scenario[] = [
   // AWS
   {
-    prompt: "Vigilar el acceso físico a los centros de datos.",
+    prompt: "Vigilar quién entra físicamente a los centros de datos.",
     answer: "aws",
-    clue: "acceso físico",
+    clue: "físicamente",
+    why: "Es un control heredado: confías en que AWS cuida sus edificios.",
   },
   {
     prompt: "Reemplazar un disco duro dañado en un servidor de AWS.",
     answer: "aws",
-    clue: "disco duro dañado",
+    clue: "servidor de AWS",
+    why: "El mantenimiento del hardware es parte de la seguridad DE la nube.",
   },
   {
-    prompt:
-      "Mantener la red global que conecta regiones y zonas de disponibilidad.",
-    answer: "aws",
-    clue: "red global",
-  },
-  {
-    prompt: "Actualizar el hipervisor que ejecuta las instancias EC2.",
+    prompt: "Mantener el hipervisor que divide los servidores en instancias.",
     answer: "aws",
     clue: "hipervisor",
-    why: "El hipervisor es la capa de virtualización bajo tus instancias: tú nunca tienes acceso a ella.",
+    why: "La virtualización es la capa bajo tus instancias: tú nunca tienes acceso a ella.",
+  },
+  {
+    prompt: "Asegurar la energía eléctrica de los centros de datos.",
+    answer: "aws",
+    clue: "energía eléctrica",
+  },
+  {
+    prompt: "Mantener la climatización de las salas de servidores.",
+    answer: "aws",
+    clue: "climatización",
   },
   {
     prompt:
-      "Aplicar parches al sistema operativo de los servidores de Amazon RDS.",
+      "Proteger los edificios de las zonas de disponibilidad contra incendios e inundaciones.",
     answer: "aws",
-    clue: "servidores de Amazon RDS",
-    why: "RDS es un servicio administrado: AWS parchea el sistema operativo y el motor; tú solo eliges la ventana de mantenimiento.",
+    clue: "edificios",
   },
   {
     prompt:
-      "Parchear los servidores y el entorno de ejecución donde corre AWS Lambda.",
+      "Aplicar parches al firmware de los servidores físicos donde corren las instancias.",
     answer: "aws",
-    clue: "donde corre AWS Lambda",
-    why: "En Lambda no administras servidores: AWS mantiene la infraestructura y los runtimes administrados.",
+    clue: "servidores físicos",
+    why: "La gestión de parches es un control compartido: la infraestructura física la parchea AWS.",
   },
   {
     prompt:
-      "Guardar copias de los objetos de S3 en varias zonas de disponibilidad para que no se pierdan.",
+      "Capacitar al personal de los centros de datos en sus procedimientos de seguridad.",
     answer: "aws",
-    clue: "para que no se pierdan",
-    why: "La durabilidad de S3 es parte del servicio: AWS replica los objetos dentro de la región.",
+    clue: "personal de los centros de datos",
+    why: "La formación es un control compartido: AWS forma a su gente y tú a la tuya.",
   },
   {
     prompt: "Destruir de forma segura los discos que se retiran del servicio.",
@@ -76,108 +81,41 @@ const SCENARIOS: Scenario[] = [
   },
   {
     prompt:
-      "Asegurar la energía y la refrigeración de las zonas de disponibilidad.",
+      "Mantener el cableado y los equipos de red que conectan los centros de datos.",
     answer: "aws",
-    clue: "energía y la refrigeración",
-  },
-  {
-    prompt: "Escalar y mantener los servidores que hay detrás de DynamoDB.",
-    answer: "aws",
-    clue: "servidores que hay detrás",
-    why: "DynamoDB es serverless: tú no ves ni administras sus servidores.",
-  },
-  {
-    prompt: "Mantener los routers y switches físicos de los centros de datos.",
-    answer: "aws",
-    clue: "routers y switches físicos",
+    clue: "cableado y los equipos de red",
   },
   {
     prompt:
-      "Verificar los antecedentes del personal que trabaja en los centros de datos.",
+      "Aislar las instancias de distintos clientes que comparten el mismo servidor físico.",
     answer: "aws",
-    clue: "personal que trabaja en los centros de datos",
+    clue: "mismo servidor físico",
+    why: "Ese aislamiento lo da la virtualización, que administra AWS.",
   },
   {
     prompt:
-      "Proteger los centros de datos contra incendios, inundaciones y cortes de luz.",
+      "Mantener los puntos de presencia que usa CloudFront para entregar contenido.",
     answer: "aws",
-    clue: "incendios, inundaciones y cortes de luz",
+    clue: "puntos de presencia",
   },
   {
     prompt:
-      "Mantener los servidores donde corren tus contenedores de AWS Fargate.",
-    answer: "aws",
-    clue: "servidores donde corren",
-    why: "Con Fargate no administras servidores: AWS mantiene los hosts y tú solo defines los contenedores.",
-  },
-  {
-    prompt:
-      "Aislar entre sí las instancias de distintos clientes que comparten un mismo servidor físico.",
-    answer: "aws",
-    clue: "distintos clientes",
-    why: "El aislamiento entre clientes lo garantiza la virtualización de AWS.",
-  },
-  {
-    prompt:
-      "Obtener certificaciones como ISO 27001 para la infraestructura de AWS.",
-    answer: "aws",
-    clue: "para la infraestructura de AWS",
-    why: "AWS certifica su infraestructura y publica los informes en AWS Artifact; tus apps las certificas tú.",
-  },
-  {
-    prompt: "Actualizar el firmware de los servidores físicos.",
+      "Renovar los servidores físicos cuando llegan al final de su vida útil.",
     answer: "aws",
     clue: "servidores físicos",
   },
-  {
-    prompt:
-      "Agregar servidores a Amazon SQS cuando envías millones de mensajes más.",
-    answer: "aws",
-    clue: "Agregar servidores a Amazon SQS",
-    why: "SQS es administrado: escala solo y tú no ves sus servidores.",
-  },
-  {
-    prompt:
-      "Mantener el hardware de las ubicaciones de borde (edge locations) de CloudFront.",
-    answer: "aws",
-    clue: "hardware de las ubicaciones de borde",
-  },
-  {
-    prompt:
-      "Proteger la infraestructura de AWS contra ataques DDoS de red comunes (Shield Standard).",
-    answer: "aws",
-    clue: "Shield Standard",
-    why: "Shield Standard viene activado sin costo para todos los clientes y lo opera AWS.",
-  },
-  {
-    prompt:
-      "Parchear el sistema operativo de los servidores que almacenan los objetos de S3.",
-    answer: "aws",
-    clue: "servidores que almacenan los objetos de S3",
-  },
-  {
-    prompt:
-      "Mantener disponibles los servidores que hacen funcionar el servicio de IAM.",
-    answer: "aws",
-    clue: "servidores que hacen funcionar",
-    why: "IAM como servicio lo opera AWS; cómo lo usas (usuarios, políticas) es tuyo.",
-  },
   // Tú
   {
-    prompt: "Aplicar parches al sistema operativo de tu instancia EC2.",
+    prompt: "Cifrar los datos que guardas en tus buckets de S3.",
     answer: "tu",
-    clue: "tu instancia EC2",
-    why: "En EC2 tú controlas el sistema operativo invitado, así que sus parches son tuyos.",
+    clue: "Cifrar los datos",
   },
   {
-    prompt: "Configurar los security groups de tus instancias EC2.",
+    prompt:
+      "Decidir qué usuarios IAM pueden leer la base de datos de clientes.",
     answer: "tu",
-    clue: "Configurar los security groups",
-  },
-  {
-    prompt: "Crear usuarios de IAM y darles solo los permisos que necesitan.",
-    answer: "tu",
-    clue: "darles solo los permisos",
+    clue: "qué usuarios IAM pueden leer",
+    why: "Es un control específico del cliente: tú das los permisos sobre tus datos.",
   },
   {
     prompt: "Activar MFA en el usuario raíz de tu cuenta.",
@@ -185,147 +123,89 @@ const SCENARIOS: Scenario[] = [
     clue: "Activar MFA",
   },
   {
-    prompt: "Decidir si un bucket de S3 es público o privado.",
+    prompt:
+      "Aplicar los parches de seguridad al sistema operativo de tus instancias EC2.",
     answer: "tu",
-    clue: "Decidir si",
+    clue: "sistema operativo de tus instancias",
+    why: "La gestión de parches es compartida: AWS parchea la infraestructura y tú el sistema operativo que instalaste.",
   },
   {
     prompt:
-      "Activar el cifrado de tus datos y decidir quién puede usar las claves de KMS.",
+      "Crear tu VPC con sus subredes públicas y privadas y sus tablas de rutas.",
     answer: "tu",
-    clue: "decidir quién puede usar",
-    why: "AWS ofrece las herramientas de cifrado, pero activarlas y controlar el acceso a las claves es tu decisión.",
-  },
-  {
-    prompt: "Revisar el código de tu función Lambda y sus dependencias.",
-    answer: "tu",
-    clue: "el código de tu función",
-    why: "AWS mantiene el entorno de Lambda, pero el código que subes es tuyo.",
+    clue: "Crear tu VPC",
+    why: "La gestión de configuración es compartida: configurar tu propia red te toca a ti.",
   },
   {
     prompt:
-      "Elegir en qué región se guardan tus datos para cumplir una ley local.",
+      "Abrir en un Security Group solo los puertos de HTTP y HTTPS de tu servidor web.",
     answer: "tu",
-    clue: "Elegir en qué región",
-  },
-  {
-    prompt: "Rotar las claves de acceso de tus usuarios de IAM.",
-    answer: "tu",
-    clue: "tus usuarios de IAM",
+    clue: "Security Group",
   },
   {
     prompt:
-      "Instalar un antivirus en el sistema operativo de tu instancia EC2.",
+      "Definir las reglas de permiso y denegación de las ACL de tus subredes.",
     answer: "tu",
-    clue: "tu instancia EC2",
-  },
-  {
-    prompt: "Hacer snapshots de los volúmenes EBS de tu aplicación.",
-    answer: "tu",
-    clue: "Hacer snapshots",
-    why: "AWS replica EBS dentro de la zona, pero los respaldos (snapshots) los programas tú.",
-  },
-  {
-    prompt: "Configurar las tablas de rutas y las network ACL de tu VPC.",
-    answer: "tu",
-    clue: "de tu VPC",
-  },
-  {
-    prompt: "Definir qué usuarios pueden leer una tabla de DynamoDB.",
-    answer: "tu",
-    clue: "qué usuarios pueden leer",
-    why: "Aunque DynamoDB es administrado, los permisos de acceso a tus datos siempre son tuyos.",
-  },
-  {
-    prompt: "Instalar y actualizar el software de tu aplicación en EC2.",
-    answer: "tu",
-    clue: "software de tu aplicación",
+    clue: "ACL de tus subredes",
   },
   {
     prompt:
-      "Elegir una contraseña fuerte para el usuario raíz y guardarla en un lugar seguro.",
+      "Revisar que el código de tu aplicación no sea vulnerable a inyección SQL.",
     answer: "tu",
-    clue: "contraseña fuerte",
+    clue: "código de tu aplicación",
   },
   {
     prompt:
-      "Crear un trail de CloudTrail para guardar la actividad de tu cuenta más de 90 días.",
-    answer: "tu",
-    clue: "Crear un trail",
-    why: "CloudTrail guarda 90 días de eventos por defecto; para conservar más, tú creas un trail.",
-  },
-  {
-    prompt:
-      "Usar HTTPS para cifrar el tráfico entre tus usuarios y tu aplicación.",
-    answer: "tu",
-    clue: "Usar HTTPS",
-  },
-  {
-    prompt:
-      "Decidir cuántos días se conservan los backups automáticos de tu base de datos RDS.",
-    answer: "tu",
-    clue: "Decidir cuántos días",
-    why: "AWS ejecuta los backups de RDS, pero tú configuras cuánto tiempo se conservan.",
-  },
-  {
-    prompt: "Darle a tu función Lambda un rol con los permisos justos.",
-    answer: "tu",
-    clue: "un rol con los permisos justos",
-  },
-  {
-    prompt:
-      "Clasificar tus datos según su sensibilidad (públicos, internos, confidenciales).",
-    answer: "tu",
-    clue: "Clasificar tus datos",
-  },
-  {
-    prompt:
-      "Eliminar los usuarios de IAM de personas que ya no trabajan en tu empresa.",
-    answer: "tu",
-    clue: "Eliminar los usuarios de IAM",
-  },
-  {
-    prompt: "Configurar el firewall del sistema operativo de tu instancia EC2.",
-    answer: "tu",
-    clue: "firewall del sistema operativo",
-  },
-  {
-    prompt:
-      "Proteger tu aplicación web contra inyección SQL en el código que escribes.",
-    answer: "tu",
-    clue: "el código que escribes",
-  },
-  {
-    prompt: "Decidir si tu base de datos RDS acepta conexiones desde internet.",
-    answer: "tu",
-    clue: "Decidir si",
-    why: "El acceso público de RDS es una opción de configuración que eliges tú.",
-  },
-  {
-    prompt:
-      "Actualizar las librerías dentro de las imágenes de contenedor que despliegas en ECS.",
-    answer: "tu",
-    clue: "imágenes de contenedor que despliegas",
-    why: "AWS mantiene la plataforma, pero lo que va dentro de tus contenedores es tuyo.",
-  },
-  {
-    prompt:
-      "Activar el versionado de un bucket de S3 para recuperar archivos borrados por error.",
-    answer: "tu",
-    clue: "Activar el versionado",
-  },
-  {
-    prompt:
-      "Activar Multi-AZ en tu base de datos RDS para que siga funcionando si falla una zona.",
-    answer: "tu",
-    clue: "Activar Multi-AZ",
-    why: "AWS hace la conmutación automática, pero activar Multi-AZ es tu decisión.",
-  },
-  {
-    prompt:
-      "Evitar que las claves de acceso queden escritas en el código de un repositorio público.",
+      "Evitar que tus claves de acceso queden escritas en un repositorio público.",
     answer: "tu",
     clue: "claves de acceso",
+  },
+  {
+    prompt:
+      "Dar a cada empleado solo los permisos indispensables para su trabajo.",
+    answer: "tu",
+    clue: "permisos indispensables",
+  },
+  {
+    prompt:
+      "Capacitar a tu equipo para que reconozca malware y ataques de ingeniería social.",
+    answer: "tu",
+    clue: "Capacitar a tu equipo",
+    why: "La formación es compartida: la de tu equipo te toca a ti.",
+  },
+  {
+    prompt:
+      "Configurar el cifrado TLS de la conexión entre tu app y tus usuarios.",
+    answer: "tu",
+    clue: "cifrado TLS",
+  },
+  {
+    prompt: "Decidir si un bucket de S3 puede ser público o no.",
+    answer: "tu",
+    clue: "Decidir si",
+  },
+  {
+    prompt: "Agrupar a tus desarrolladores en un grupo IAM con sus permisos.",
+    answer: "tu",
+    clue: "grupo IAM",
+  },
+  {
+    prompt:
+      "Cambiar los permisos de los archivos dentro de tu instancia Linux.",
+    answer: "tu",
+    clue: "dentro de tu instancia",
+  },
+  {
+    prompt: "Rotar la contraseña de la base de datos que usa tu aplicación.",
+    answer: "tu",
+    clue: "Rotar la contraseña",
+  },
+  {
+    prompt:
+      "Elegir una región cuyas leyes permitan guardar los datos de tus clientes.",
+    answer: "tu",
+    clue: "Elegir una región",
+    why: "La región define qué leyes se cumplen; elegir dónde viven tus datos es tu decisión.",
   },
 ];
 

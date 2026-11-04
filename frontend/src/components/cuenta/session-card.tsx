@@ -56,13 +56,13 @@ export function SessionCard({ user }: { user: PublicUser }) {
       </div>
 
       {isAdmin ? null : (
-        <div className="mt-6 rounded-xl bg-[var(--danger-soft)] p-4">
-          <p className="text-sm font-semibold text-[var(--danger-text)]">
+        <div className="status-danger mt-6 rounded-xl p-4">
+          <p className="text-sm font-semibold text-[var(--foreground)]">
             Eliminar cuenta
           </p>
           <p className="mt-1 text-xs leading-relaxed text-[var(--foreground-muted)]">
-            Se borran para siempre tu progreso, historial, racha, fecha de examen y tu
-            lugar en el podio. No se puede deshacer.
+            Se borran para siempre tu progreso, historial, racha, fecha de
+            examen y tu lugar en el podio. No se puede deshacer.
           </p>
 
           {confirming ? (

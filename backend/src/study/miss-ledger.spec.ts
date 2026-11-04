@@ -1,5 +1,10 @@
 import { MAX_MISS_REPEATS_PER_ITEM } from '@aps/shared';
-import { emptyLedger, ledgerSummary, parseLedger, recordOutcome } from './miss-ledger';
+import {
+  emptyLedger,
+  ledgerSummary,
+  parseLedger,
+  recordOutcome,
+} from './miss-ledger';
 
 describe('miss ledger', () => {
   it('re-queues a miss at most MAX_MISS_REPEATS_PER_ITEM times', () => {
@@ -18,7 +23,10 @@ describe('miss ledger', () => {
     recordOutcome(ledger, 'b', false);
     recordOutcome(ledger, 'b', true);
     recordOutcome(ledger, 'c', false);
-    expect(ledgerSummary(ledger)).toEqual({ resolvedItems: 2, firstTryCorrect: 1 });
+    expect(ledgerSummary(ledger)).toEqual({
+      resolvedItems: 2,
+      firstTryCorrect: 1,
+    });
   });
 
   it('survives a JSON round trip and tolerates missing fields', () => {

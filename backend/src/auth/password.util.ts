@@ -24,7 +24,9 @@ interface PasswordStrengthResult {
   errors: string[];
 }
 
-export function validatePasswordStrength(password: string): PasswordStrengthResult {
+export function validatePasswordStrength(
+  password: string,
+): PasswordStrengthResult {
   const errors: string[] = [];
 
   if (!password || password.length < PASSWORD_MIN) {

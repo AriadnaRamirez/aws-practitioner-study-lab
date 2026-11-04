@@ -6,6 +6,7 @@ import { ContentModule } from './content/content.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { GuestModule } from './guest/guest.module';
 import { HealthModule } from './health/health.module';
+import { MinigamesModule } from './minigames/minigames.module';
 import { PodiumModule } from './podium/podium.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StudyModule } from './study/study.module';
@@ -24,6 +25,7 @@ import { UserExamsModule } from './user-exams/user-exams.module';
     PodiumModule,
     FeatureFlagsModule,
     UserExamsModule,
+    MinigamesModule,
   ],
 })
 export class AppModule {}

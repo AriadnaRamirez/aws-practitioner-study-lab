@@ -27,5 +27,3 @@ services:
       # Vercel URL, e.g. https://aws-practitioner-study-lab.vercel.app
       - key: WEB_ORIGIN
         sync: false
-      - key: WEB_PUBLIC_URL
-        sync: false

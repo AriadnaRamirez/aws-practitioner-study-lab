@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardLabel } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
-import { changePassword } from "@/lib/api";
+import { changePassword, storeAuth } from "@/lib/api";
 import { FIELD_LABEL, errorMessage } from "./cuenta-ui";
 
 export function SecurityCard() {
@@ -27,8 +27,15 @@ export function SecurityCard() {
     setError(null);
     setNotice(null);
     try {
-      const res = await changePassword({ currentPassword, password, confirmPassword });
-      setNotice(`${res.message}. La próxima vez entra con la nueva.`);
+      const res = await changePassword({
+        currentPassword,
+        password,
+        confirmPassword,
+      });
+      storeAuth(res);
+      setNotice(
+        `${res.message}. Aquí sigues dentro; en tus otros dispositivos tendrás que entrar con la nueva.`,
+      );
       setCurrentPassword("");
       setPassword("");
       setConfirmPassword("");
@@ -90,7 +97,12 @@ export function SecurityCard() {
         ) : null}
         {error ? <Notice tone="danger">{error}</Notice> : null}
         {notice ? <Notice tone="success">{notice}</Notice> : null}
-        <Button type="submit" variant="secondary" disabled={mismatch} pending={pending}>
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={mismatch}
+          pending={pending}
+        >
           {pending ? "Actualizando…" : "Cambiar contraseña"}
         </Button>
       </form>
