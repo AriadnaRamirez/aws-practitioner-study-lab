@@ -1,13 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Check,
-  Lightbulb,
-  Layers,
-  Play,
-  type LucideIcon,
-} from "lucide-react";
+import { Check, Lightbulb, Layers, Play, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   GUEST_MAX_SESSIONS,
@@ -18,11 +12,11 @@ import {
 import { Logo } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
 import { SiteCredits } from "@/components/shell/site-credits";
-import { CelebrateBurst } from "@/components/study/celebrate-burst";
+import { AnswerFeedback } from "@/components/study/answer-feedback";
 import { FlashDeck } from "@/components/study/flash-deck";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardLabel } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { Notice } from "@/components/ui/notice";
 import { PAGE_TITLE, PageContainer } from "@/components/ui/page";
@@ -36,6 +30,7 @@ import {
   storeGuestProbeId,
 } from "@/lib/api";
 import { getKnowledgeItems, MOCK_KNOWLEDGE } from "@/lib/content-api";
+import { STUDY_CATEGORIES } from "@/lib/study-categories";
 import { cn } from "@/lib/utils";
 
 type Phase = "loading" | "intro" | "quiz" | "done" | "capped" | "error";
@@ -46,6 +41,8 @@ type SampleQ = {
   choices: string[];
   correctIndex: number;
   explanation: string;
+  /** Definition of each wrong option, to say what the pick actually is. */
+  hints: Record<string, string>;
 };
 
 const HERO_TITLE =
@@ -65,35 +62,70 @@ function shuffle<T>(list: readonly T[]): T[] {
   return out;
 }
 
-/** Wrong options are names of other concepts (same topic first), never definitions. */
-function distractorNames(item: KnowledgeItem, items: KnowledgeItem[]): string[] {
+const GROUP_OF_TOPIC = new Map(
+  STUDY_CATEGORIES.flatMap((c) =>
+    c.topicIds.map((id) => [id, c.group] as const),
+  ),
+);
+
+/**
+ * Wrong options are names of other concepts, never definitions: same topic first,
+ * then the same family (AWS services vs. course modules) so none is guessable by elimination.
+ */
+function distractorNames(
+  item: KnowledgeItem,
+  items: KnowledgeItem[],
+): string[] {
   const others = items.filter((o) => o.name !== item.name);
+  const group = GROUP_OF_TOPIC.get(item.topicId);
+  const sameTopic = others.filter((o) => o.topicId === item.topicId);
+  const sameGroup = others.filter(
+    (o) =>
+      o.topicId !== item.topicId &&
+      group &&
+      GROUP_OF_TOPIC.get(o.topicId) === group,
+  );
+  const rest = others.filter(
+    (o) => !sameTopic.includes(o) && !sameGroup.includes(o),
+  );
   const ranked = [
-    ...shuffle(others.filter((o) => o.topicId === item.topicId)),
-    ...shuffle(others.filter((o) => o.topicId !== item.topicId)),
+    ...shuffle(sameTopic),
+    ...shuffle(sameGroup),
+    ...shuffle(rest),
   ];
   return [...new Set(ranked.map((o) => o.name))].slice(0, 3);
 }
 
+/** The intro promises exam questions, so the sample comes from AWS services, not course modules. */
 function buildSamples(items: KnowledgeItem[]): SampleQ[] {
-  return shuffle(items)
+  const aws = items.filter(
+    (item) => GROUP_OF_TOPIC.get(item.topicId) === "aws",
+  );
+  return shuffle(aws.length >= GUEST_SAMPLE_SIZE ? aws : items)
     .slice(0, GUEST_SAMPLE_SIZE)
     .map((item) => {
-      const pool = [item.name, ...distractorNames(item, items)];
-      const choices = shuffle(pool);
+      const wrong = distractorNames(item, items);
+      const choices = shuffle([item.name, ...wrong]);
+      const hints: Record<string, string> = {};
+      for (const name of wrong) {
+        const def = items.find((o) => o.name === name)?.definition;
+        if (def) hints[name] = `${name}: ${def}`;
+      }
       return {
         id: item.id,
         prompt: item.definition,
         choices,
         correctIndex: choices.indexOf(item.name),
         explanation: item.explanation,
+        hints,
       };
     });
 }
 
 function resultCopy(correct: number, total: number) {
   if (total > 0 && correct === total) return "¡Perfecto! Vas listo para más";
-  if (correct / Math.max(total, 1) >= 0.6) return "¡Muy bien! Ya tienes buena base";
+  if (correct / Math.max(total, 1) >= 0.6)
+    return "¡Muy bien! Ya tienes buena base";
   return "Buen comienzo: aquí se aprende fallando";
 }
 
@@ -115,12 +147,18 @@ function GuestHeader({ registerHref }: { registerHref: string }) {
         <Link
           href="/"
           aria-label="AWS Study Lab"
-          className={cn("inline-flex min-w-0 items-center rounded-lg", FOCUS_RING)}
+          className={cn(
+            "inline-flex min-w-0 items-center rounded-lg",
+            FOCUS_RING,
+          )}
         >
           <Logo size={28} withWordmark />
         </Link>
         <nav aria-label="Cuenta" className="flex shrink-0 items-center gap-2">
-          <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <Link
+            href="/login"
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             Entrar
           </Link>
           <Link href={registerHref} className={buttonVariants({ size: "sm" })}>
@@ -136,7 +174,10 @@ function Benefits() {
   return (
     <ul className="space-y-2.5">
       {BENEFITS.map((text) => (
-        <li key={text} className="flex items-start gap-2.5 text-sm text-[var(--foreground)] sm:text-base">
+        <li
+          key={text}
+          className="flex items-start gap-2.5 text-sm text-[var(--foreground)] sm:text-base"
+        >
           <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--success-soft)] text-[var(--success-text)]">
             <Check className="size-3.5" aria-hidden />
           </span>
@@ -168,10 +209,7 @@ function ConversionCard({
     >
       <div className="flex justify-center">{visual}</div>
       <div className="min-w-0">
-        <h1
-          id="prueba-cierre"
-          className={PAGE_TITLE}
-        >
+        <h1 id="prueba-cierre" className={PAGE_TITLE}>
           {title}
         </h1>
         <p className="mt-3 text-base leading-relaxed text-[var(--foreground-muted)]">
@@ -229,7 +267,9 @@ export function GuestTrial() {
         setProbe(next);
         if (next.convertedUserId) {
           setPhase("error");
-          setError("Esta prueba ya se convirtió en una cuenta. Entra para seguir estudiando.");
+          setError(
+            "Esta prueba ya se convirtió en una cuenta. Entra para seguir estudiando.",
+          );
         } else if (next.sessionsRemaining <= 0) {
           setPhase("capped");
         } else {
@@ -237,7 +277,9 @@ export function GuestTrial() {
         }
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "No se pudo iniciar la prueba");
+        setError(
+          err instanceof Error ? err.message : "No se pudo iniciar la prueba",
+        );
         setPhase("error");
       }
     })();
@@ -253,7 +295,9 @@ export function GuestTrial() {
       setProbe(updated);
       setPhase("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo registrar la sesión");
+      setError(
+        err instanceof Error ? err.message : "No se pudo registrar la sesión",
+      );
       setPhase("error");
     }
   }
@@ -294,6 +338,7 @@ export function GuestTrial() {
   const current = phase === "quiz" ? samples[index] : undefined;
   const isLast = index + 1 >= samples.length;
   const wasCorrect = revealed && selected === current?.correctIndex;
+  const cardsLeft = samples.length - index - (revealed ? 1 : 0);
 
   const primaryCta = (
     <Link href={registerHref} className={buttonVariants({ size: "lg" })}>
@@ -314,7 +359,10 @@ export function GuestTrial() {
       <GuestHeader registerHref={registerHref} />
 
       <main id="contenido" className="flex w-full min-w-0 flex-1 flex-col">
-        <PageContainer width="wide" className="flex flex-1 flex-col justify-center">
+        <PageContainer
+          width="wide"
+          className="flex flex-1 flex-col justify-center"
+        >
           {phase === "loading" || phase === "intro" ? (
             <section
               aria-labelledby="prueba-titulo"
@@ -322,20 +370,21 @@ export function GuestTrial() {
               className="grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] md:gap-12"
             >
               <div className="min-w-0 animate-fade-up">
-                <Badge tone="accent">
-                  Sin registro
-                </Badge>
+                <Badge tone="accent">Sin registro</Badge>
                 <h1 id="prueba-titulo" className={cn(HERO_TITLE, "mt-4")}>
                   Pruébalo en 2 minutos
                 </h1>
                 <p className="mt-4 max-w-lg text-base leading-relaxed text-[var(--foreground-muted)] sm:text-lg">
-                  Responde {GUEST_SAMPLE_SIZE} preguntas del examen AWS Certified Cloud
-                  Practitioner y mira cómo se estudia aquí.
+                  Responde {GUEST_SAMPLE_SIZE} preguntas del examen AWS
+                  Certified Cloud Practitioner y mira cómo se estudia aquí.
                 </p>
 
                 <ul className="mt-6 space-y-3">
                   {PREVIEW.map(({ icon: Icon, text }) => (
-                    <li key={text} className="flex items-center gap-3 text-sm text-[var(--foreground)] sm:text-base">
+                    <li
+                      key={text}
+                      className="flex items-center gap-3 text-sm text-[var(--foreground)] sm:text-base"
+                    >
                       <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                         <Icon className="size-4" aria-hidden />
                       </span>
@@ -358,7 +407,10 @@ export function GuestTrial() {
                         <Play className="size-4 fill-current" aria-hidden />
                         Empezar la prueba
                       </Button>
-                      <Link href={registerHref} className={cn(TEXT_LINK, "text-sm")}>
+                      <Link
+                        href={registerHref}
+                        className={cn(TEXT_LINK, "text-sm")}
+                      >
                         o crea tu cuenta
                       </Link>
                     </>
@@ -382,8 +434,16 @@ export function GuestTrial() {
           ) : null}
 
           {phase === "error" ? (
-            <section aria-labelledby="prueba-error" className="mx-auto w-full max-w-lg text-center">
-              <Mascot pose="laptop" size="lg" glow={false} className="mx-auto h-36 w-44" />
+            <section
+              aria-labelledby="prueba-error"
+              className="mx-auto w-full max-w-lg text-center"
+            >
+              <Mascot
+                pose="laptop"
+                size="lg"
+                glow={false}
+                className="mx-auto h-36 w-44"
+              />
               <h1 id="prueba-error" className={cn(PAGE_TITLE, "mt-6")}>
                 No pudimos abrir la prueba
               </h1>
@@ -396,7 +456,10 @@ export function GuestTrial() {
                 </Link>
                 <Link
                   href={registerHref}
-                  className={buttonVariants({ variant: "secondary", size: "lg" })}
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "lg",
+                  })}
                 >
                   Crear cuenta
                 </Link>
@@ -407,7 +470,12 @@ export function GuestTrial() {
           {phase === "capped" ? (
             <ConversionCard
               visual={
-                <Mascot pose="laptop" size="lg" glow={false} className="h-40 w-48 md:h-52 md:w-56" />
+                <Mascot
+                  pose="laptop"
+                  size="lg"
+                  glow={false}
+                  className="h-40 w-48 md:h-52 md:w-56"
+                />
               }
               title={`Ya usaste tus ${GUEST_MAX_SESSIONS} pruebas`}
               text={`Crea tu cuenta y sigue estudiando ${concepts}, sin límite.`}
@@ -418,14 +486,22 @@ export function GuestTrial() {
           ) : null}
 
           {current ? (
-            <section aria-labelledby="prueba-titulo" className="mx-auto w-full min-w-0 md:max-w-xl lg:max-w-4xl">
+            <section
+              aria-labelledby="prueba-titulo"
+              className="mx-auto w-full min-w-0 md:max-w-xl lg:max-w-4xl"
+            >
               <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-                <h1 id="prueba-titulo" className="font-semibold text-[var(--foreground)]">
+                <h1
+                  id="prueba-titulo"
+                  className="font-semibold text-[var(--foreground)]"
+                >
                   Prueba
                 </h1>
                 <p className="tabular-nums text-[var(--foreground-muted)]">
-                  {correctCount} {correctCount === 1 ? "acierto" : "aciertos"} · {index + 1}/
-                  {samples.length}
+                  {correctCount} {correctCount === 1 ? "acierto" : "aciertos"} ·{" "}
+                  {cardsLeft > 0
+                    ? `Quedan ${cardsLeft} ${cardsLeft === 1 ? "carta" : "cartas"}`
+                    : "¡Listo!"}
                 </p>
               </div>
               <ProgressBar
@@ -440,54 +516,33 @@ export function GuestTrial() {
                   wide
                   eyebrow="¿Qué servicio o concepto es?"
                   title={current.prompt}
-                  footer={`${index + 1} de ${samples.length}`}
                   flipped={revealed}
                   back={
                     revealed ? (
-                      <div
-                        role="status"
-                        className="relative flex h-full flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8"
-                      >
-                        {wasCorrect ? <CelebrateBurst /> : null}
-                        <div className="min-w-0">
-                          <span
-                            className={cn(
-                              "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
-                              wasCorrect
-                                ? "bg-[var(--success)] text-[var(--success-fg)]"
-                                : "bg-[var(--danger)] text-[var(--danger-fg)]",
-                            )}
-                          >
-                            {wasCorrect ? "¡Correcto!" : "Incorrecto"}
-                          </span>
-                          <p className="mt-4 text-sm leading-snug text-[var(--foreground)]">
-                            <span className="text-[var(--foreground-muted)]">Respuesta: </span>
-                            <span className="font-semibold">
-                              {String.fromCharCode(65 + current.correctIndex)}.{" "}
-                              {current.choices[current.correctIndex]}
-                            </span>
-                          </p>
-                        </div>
-                        <div className="min-w-0">
-                          <Card variant="inset" padding="sm" className="mt-4 lg:mt-0">
-                            <CardLabel as="p">Explicación</CardLabel>
-                            <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
-                              {current.explanation?.trim() ||
-                                `La respuesta es «${current.choices[current.correctIndex]}».`}
-                            </p>
-                          </Card>
-                          <Button className="mt-5 w-full" onClick={onNext}>
-                            {isLast ? "Ver mi resultado" : "Siguiente"}
-                          </Button>
-                        </div>
-                      </div>
+                      <AnswerFeedback
+                        wide
+                        correct={wasCorrect}
+                        correctLabel={`${String.fromCharCode(65 + current.correctIndex)}. ${current.choices[current.correctIndex]}`}
+                        explanation={
+                          current.explanation?.trim() ||
+                          `La respuesta es «${current.choices[current.correctIndex]}».`
+                        }
+                        chosenHint={
+                          selected !== null
+                            ? current.hints[current.choices[selected] ?? ""]
+                            : null
+                        }
+                        nextLabel={isLast ? "Ver mi resultado" : "Siguiente"}
+                        onNext={onNext}
+                      />
                     ) : null
                   }
                 >
                   <ul className="mt-3 flex flex-col gap-2">
                     {current.choices.map((choice, i) => {
                       const isCorrect = revealed && i === current.correctIndex;
-                      const isWrongPick = revealed && selected === i && !isCorrect;
+                      const isWrongPick =
+                        revealed && selected === i && !isCorrect;
                       return (
                         <li key={`${current.id}-${i}`}>
                           <button
@@ -512,22 +567,30 @@ export function GuestTrial() {
                 </FlashDeck>
               </div>
 
-              <Card
-                variant="flat"
-                padding="sm"
-                className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <p className="text-sm text-[var(--foreground-muted)]">
-                  <span className="font-semibold text-[var(--foreground)]">¿Te está gustando?</span>{" "}
-                  Con tu cuenta guardas tu avance y repasas lo que fallas.
-                </p>
-                <Link
-                  href={registerHref}
-                  className={cn(buttonVariants({ variant: "soft", size: "sm" }), "w-fit shrink-0")}
+              {index > 0 || revealed ? (
+                <Card
+                  variant="flat"
+                  padding="sm"
+                  className="mt-8 flex animate-fade-up flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  Crear cuenta
-                </Link>
-              </Card>
+                  <p className="text-sm text-[var(--foreground-muted)]">
+                    <span className="font-semibold text-[var(--foreground)]">
+                      ¿Te está gustando?
+                    </span>{" "}
+                    Con tu cuenta guardas tu avance y lo que fallas vuelve a
+                    salir hasta que lo domines.
+                  </p>
+                  <Link
+                    href={registerHref}
+                    className={cn(
+                      buttonVariants({ variant: "soft", size: "sm" }),
+                      "w-fit shrink-0",
+                    )}
+                  >
+                    Crear cuenta
+                  </Link>
+                </Card>
+              ) : null}
             </section>
           ) : null}
 
@@ -544,7 +607,9 @@ export function GuestTrial() {
                   <span className="text-4xl font-extrabold leading-none tabular-nums tracking-tight text-[var(--foreground)] md:text-5xl">
                     {correctCount}/{samples.length}
                   </span>
-                  <span className="mt-1.5 text-xs text-[var(--foreground-muted)]">correctas</span>
+                  <span className="mt-1.5 text-xs text-[var(--foreground-muted)]">
+                    correctas
+                  </span>
                 </ProgressRing>
               }
               title={resultCopy(correctCount, samples.length)}
@@ -554,7 +619,8 @@ export function GuestTrial() {
                 {primaryCta}
                 {remaining > 0 ? (
                   <Button variant="secondary" size="lg" onClick={start}>
-                    Otra prueba ({remaining})
+                    Otra prueba · te{" "}
+                    {remaining === 1 ? "queda 1" : `quedan ${remaining}`}
                   </Button>
                 ) : null}
               </div>

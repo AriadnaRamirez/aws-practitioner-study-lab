@@ -3,22 +3,18 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getStoredToken } from "@/lib/api";
+import { loginHref } from "@/lib/route-labels";
 import { ScreenLoader } from "@/components/ui/screen-loader";
 
 type Props = {
   children: React.ReactNode;
-  /**
-   * Where to send anonymous visitors.
-   * - `login` → /login?next=current (default)
-   * - `home` → marketing landing /
-   */
-  fallback?: "login" | "home";
 };
 
 /**
- * Avoids empty “solo Entrar” pages: if there’s no session, leave immediately.
+ * Avoids empty “solo Entrar” pages: anonymous visitors go straight to
+ * /login?next=<ruta+query> so they come back to exactly what they opened.
  */
-export function RequireAuth({ children, fallback = "login" }: Props) {
+export function RequireAuth({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [ok, setOk] = useState<boolean | null>(null);
@@ -29,28 +25,14 @@ export function RequireAuth({ children, fallback = "login" }: Props) {
       return;
     }
     setOk(false);
-    if (fallback === "home") {
-      router.replace("/");
-      return;
-    }
-    const next = pathname && pathname !== "/login" ? pathname : "/dashboard";
-    router.replace(`/login?next=${encodeURIComponent(next)}`);
-  }, [fallback, pathname, router]);
+    router.replace(loginHref(`${window.location.pathname}${window.location.search}`));
+  }, [pathname, router]);
 
   if (ok === null) {
     return <ScreenLoader pose="security" message="Comprobando tu sesión…" />;
   }
   if (!ok) {
-    return (
-      <ScreenLoader
-        pose="wave"
-        message={
-          fallback === "home"
-            ? "Te llevamos al inicio…"
-            : "Te llevamos a iniciar sesión…"
-        }
-      />
-    );
+    return <ScreenLoader pose="wave" message="Te llevamos a iniciar sesión…" />;
   }
 
   return <>{children}</>;

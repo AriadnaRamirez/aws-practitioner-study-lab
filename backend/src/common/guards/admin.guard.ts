@@ -18,7 +18,7 @@ type AuthedRequest = {
 
 /** Placeholders shipped in old `.env.example` files: never valid secrets. */
 const KNOWN_PLACEHOLDER_TOKENS = new Set(['dev-admin-token']);
-export const MIN_STATIC_ADMIN_TOKEN_LENGTH = 24;
+const MIN_STATIC_ADMIN_TOKEN_LENGTH = 24;
 
 /**
  * Static `x-admin-token` for non-browser tooling (scripts, CI). Disabled unless

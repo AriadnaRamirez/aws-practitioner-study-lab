@@ -23,6 +23,7 @@ import {
   submitExamTimed,
 } from "@/lib/study-api";
 import { cn } from "@/lib/utils";
+import { loginHref } from "@/lib/route-labels";
 
 function formatMinutes(sec: number): string {
   return `${Math.round(sec / 60)} min`;
@@ -141,7 +142,7 @@ export function ExamRunner() {
         <PageHeader
           title="Examen"
           actions={
-            <Link href="/login" className={buttonVariants()}>
+            <Link href={loginHref("/estudiar/examen")} className={buttonVariants()}>
               Entrar
             </Link>
           }

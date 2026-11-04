@@ -1,4 +1,4 @@
-import type { PodiumResponse } from "@aps/shared";
+import { MASTERY_STREAK, type PodiumResponse } from "@aps/shared";
 
 export function conceptos(n: number): string {
   return n === 1 ? "1 concepto" : `${n} conceptos`;
@@ -16,7 +16,7 @@ export function standingLine(data: PodiumResponse): string {
     return "Tu perfil está oculto del podio. Puedes mostrarlo desde Cuenta.";
   }
   if (me.rank === null) {
-    return "Domina tu primer concepto para entrar al podio.";
+    return `Entras al podio al dominar tu primer concepto: acierta la misma carta ${MASTERY_STREAK} veces seguidas, aunque sea en partidas distintas.`;
   }
   if (me.rank === 1) {
     const second = entries.find((e) => e.rank === 2);

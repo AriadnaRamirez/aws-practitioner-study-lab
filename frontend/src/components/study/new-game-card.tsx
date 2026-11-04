@@ -10,6 +10,7 @@ import type {
 } from "@aps/shared";
 import { STUDY_MODE_LABELS } from "@aps/shared";
 import { CustomizeSessionDialog } from "@/components/study/customize-session-dialog";
+import { DeckPanel } from "@/components/study/deck-panel";
 import { plural } from "@/components/study/session-builder/builder-model";
 import { SessionSizePicker } from "@/components/study/session-size-picker";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,11 @@ function lowerFirst(s: string): string {
 }
 
 /** "de todos los temas", "de servicios de seguridad", "de 3 temas elegidos"… */
-function scopePhrase(topicIds: string[], known: string[], count: number): string {
+function scopePhrase(
+  topicIds: string[],
+  known: string[],
+  count: number,
+): string {
   const scope = scopeForTopicIds(topicIds, known);
   if (scope.kind === "all") return "de todos los temas";
   if (scope.kind === "category") {
@@ -79,7 +84,8 @@ export function NewGameCard({
   className?: string;
 }) {
   const [gameSize, setGameSize] = useState<StudySize>(10);
-  const [selectedCats, setSelectedCats] = useState<string[]>(DEFAULT_CATEGORY_IDS);
+  const [selectedCats, setSelectedCats] =
+    useState<string[]>(DEFAULT_CATEGORY_IDS);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const closeCustomize = useCallback(() => setCustomizeOpen(false), []);
 
@@ -101,7 +107,10 @@ export function NewGameCard({
   const chosenTopicIds = chosenCats.flatMap((c) =>
     resolveCategoryTopicIds(c.id, knownTopicIds),
   );
-  const poolSize = chosenCats.reduce((sum, c) => sum + (cardCounts[c.id] ?? 0), 0);
+  const poolSize = chosenCats.reduce(
+    (sum, c) => sum + (cardCounts[c.id] ?? 0),
+    0,
+  );
   const isQuick = chosenCats.length === availableCats.length;
   const gameHref = studyStartHref(
     gameSize,
@@ -122,111 +131,100 @@ export function NewGameCard({
               Continuar partida
             </Link>
             <p className="text-center text-xs text-[var(--foreground-muted)]">
-              Tienes una partida en curso: {STUDY_MODE_LABELS[primarySession.mode]} ·{" "}
+              Tienes una partida en curso:{" "}
+              {STUDY_MODE_LABELS[primarySession.mode]} ·{" "}
               {primarySession.answered}/{primarySession.size}
             </p>
           </div>
         ) : null}
 
-        <section
-          aria-labelledby="nueva-partida"
+        <DeckPanel
+          id="nueva-partida"
           data-tour="new-game"
-          className="relative flex flex-1 flex-col pb-3 animate-deck-in"
+          title="Nueva partida"
+          subtitle={
+            <>
+              <span className="font-semibold tabular-nums text-[var(--foreground)]">
+                {plural(cardsInGame, "carta", "cartas")}
+              </span>{" "}
+              al azar{" "}
+              {scopePhrase(chosenTopicIds, knownTopicIds, chosenCats.length)}
+            </>
+          }
+          footer={
+            <Link
+              href={gameHref}
+              className={buttonVariants({
+                variant: primarySession ? "secondary" : "default",
+                size: "lg",
+                className: "w-full",
+              })}
+            >
+              {isQuick ? "Iniciar partida rápida" : "Iniciar partida"}
+            </Link>
+          }
         >
-          <div
-            aria-hidden
-            className="absolute inset-x-6 bottom-0 top-6 rounded-2xl bg-[var(--surface-hover)] opacity-35"
-          />
-          <div
-            aria-hidden
-            className="absolute inset-x-3 bottom-1.5 top-3 rounded-2xl bg-[var(--surface-hover)] opacity-70 shadow-[var(--shadow-float)]"
-          />
-
-          <div className="relative flex flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--deck-face)] shadow-[var(--shadow-float)]">
-            <div className="flex flex-1 flex-col px-5 pb-5 pt-6 sm:px-6">
-              <h2
-                id="nueva-partida"
-                className="text-3xl font-extrabold leading-none tracking-tight text-[var(--foreground)] sm:text-4xl"
+          <div className="mt-auto space-y-2 pt-5">
+            <Card variant="inset" padding="none" className="px-3 pb-2 pt-3">
+              <p
+                id="tamano-sesion"
+                className="px-1 text-sm font-semibold text-[var(--foreground)]"
               >
-                Nueva partida
-              </h2>
-              <p className="mt-2.5 text-sm text-[var(--foreground-muted)]">
-                <span className="font-semibold tabular-nums text-[var(--foreground)]">
-                  {plural(cardsInGame, "carta", "cartas")}
-                </span>{" "}
-                al azar {scopePhrase(chosenTopicIds, knownTopicIds, chosenCats.length)}
+                Tamaño de la sesión
               </p>
+              <SessionSizePicker
+                value={gameSize}
+                onChange={setGameSize}
+                labelledBy="tamano-sesion"
+                className="mt-1.5"
+              />
+            </Card>
 
-              <div className="mt-auto space-y-2 pt-5">
-                <Card variant="inset" padding="none" className="px-3 pb-2 pt-3">
-                  <p
-                    id="tamano-sesion"
-                    className="px-1 text-sm font-semibold text-[var(--foreground)]"
-                  >
-                    Tamaño de la sesión
-                  </p>
-                  <SessionSizePicker
-                    value={gameSize}
-                    onChange={setGameSize}
-                    labelledBy="tamano-sesion"
-                    className="mt-1.5"
-                  />
-                </Card>
-
-                <button
-                  type="button"
-                  onClick={() => setCustomizeOpen(true)}
-                  aria-haspopup="dialog"
-                  className={cn(
-                    cardVariants({ variant: "inset", padding: "none" }),
-                    "group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--surface-hover)]",
-                    FOCUS_RING,
-                  )}
-                >
-                  <SlidersHorizontal
-                    className="size-4 shrink-0 text-[var(--accent)]"
+            <button
+              type="button"
+              onClick={() => setCustomizeOpen(true)}
+              aria-haspopup="dialog"
+              className={cn(
+                cardVariants({ variant: "inset", padding: "none" }),
+                "group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--surface-hover)]",
+                FOCUS_RING,
+              )}
+            >
+              <SlidersHorizontal
+                className="size-4 shrink-0 text-[var(--accent)]"
+                aria-hidden
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-[var(--foreground)]">
+                  Personalizar sesión
+                </span>
+                <span className="block text-xs text-[var(--foreground-muted)]">
+                  Elige qué temas entran en tu partida
+                </span>
+                <Badge className="mt-1.5 max-w-full gap-1.5 text-[var(--foreground)] group-hover:bg-[var(--surface-elevated)]">
+                  <span
                     aria-hidden
+                    className="size-1.5 shrink-0 rounded-full bg-[var(--accent)]"
                   />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-[var(--foreground)]">
-                      Personalizar sesión
-                    </span>
-                    <span className="block text-xs text-[var(--foreground-muted)]">
-                      Elige qué temas entran en tu partida
-                    </span>
-                    <Badge className="mt-1.5 max-w-full gap-1.5 text-[var(--foreground)] group-hover:bg-[var(--surface-elevated)]">
-                      <span
-                        aria-hidden
-                        className="size-1.5 shrink-0 rounded-full bg-[var(--accent)]"
-                      />
-                      <span className="min-w-0 truncate">
-                        {selectionSummary(chosenTopicIds, knownTopicIds, chosenCats)}
-                        {poolSize ? ` · ${plural(poolSize, "carta", "cartas")}` : ""}
-                      </span>
-                    </Badge>
+                  <span className="min-w-0 truncate">
+                    {selectionSummary(
+                      chosenTopicIds,
+                      knownTopicIds,
+                      chosenCats,
+                    )}
+                    {poolSize
+                      ? ` · ${plural(poolSize, "carta", "cartas")}`
+                      : ""}
                   </span>
-                  <ChevronRight
-                    className="size-4 shrink-0 text-[var(--foreground-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--foreground)]"
-                    aria-hidden
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-[var(--card-face)] px-5 py-4 sm:px-6">
-              <Link
-                href={gameHref}
-                className={buttonVariants({
-                  variant: primarySession ? "secondary" : "default",
-                  size: "lg",
-                  className: "w-full",
-                })}
-              >
-                {isQuick ? "Iniciar partida rápida" : "Iniciar partida"}
-              </Link>
-            </div>
+                </Badge>
+              </span>
+              <ChevronRight
+                className="size-4 shrink-0 text-[var(--foreground-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--foreground)]"
+                aria-hidden
+              />
+            </button>
           </div>
-        </section>
+        </DeckPanel>
       </div>
 
       <CustomizeSessionDialog

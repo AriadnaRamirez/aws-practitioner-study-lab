@@ -8,7 +8,6 @@ import { SessionSizePicker } from "@/components/study/session-size-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardLabel } from "@/components/ui/card";
 import { FOCUS_RING } from "@/components/ui/focus";
-import { SectionTitle } from "@/components/ui/page";
 import { STUDY_GROUPS } from "@/lib/study-categories";
 import { cn } from "@/lib/utils";
 import {
@@ -36,25 +35,62 @@ export type BuilderPreselect = {
   size: StudySize | null;
 };
 
+const START_LABEL = "Iniciar con mis opciones";
+
+function StepNumber({ n }: { n: number }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] font-sans text-xs font-extrabold leading-none tracking-normal tabular-nums text-[var(--accent-foreground)]"
+    >
+      {n}
+    </span>
+  );
+}
+
+function StepLabel({
+  id,
+  n,
+  children,
+}: {
+  id: string;
+  n: number;
+  children: ReactNode;
+}) {
+  return (
+    <CardLabel id={id} className="text-[var(--foreground)]">
+      <StepNumber n={n} />
+      <span>
+        <span className="sr-only">Paso {n}: </span>
+        {children}
+      </span>
+    </CardLabel>
+  );
+}
+
 function Step({
   id,
+  n,
   title,
   children,
 }: {
   id: string;
+  n: number;
   title: string;
   children: ReactNode;
 }) {
   return (
-    <section
+    <Card
+      as="section"
+      padding="sm"
       aria-labelledby={id}
-      className="mt-6 [@media(max-height:500px)]:mt-4"
+      className="mt-3 md:mt-5 lg:mt-6 [@media(max-height:500px)]:mt-4"
     >
-      <SectionTitle as="h3" id={id}>
+      <StepLabel id={id} n={n}>
         {title}
-      </SectionTitle>
+      </StepLabel>
       <div className="mt-3.5">{children}</div>
-    </section>
+    </Card>
   );
 }
 
@@ -134,7 +170,8 @@ export function SessionBuilder({
     ? chosen.reduce((sum, o) => sum + (o.total ?? 0), 0)
     : null;
   const cards = pool !== null && chosen.length ? Math.min(size, pool) : size;
-  const shortPool = pool !== null && chosen.length > 0 && pool < size ? pool : null;
+  const shortPool =
+    pool !== null && chosen.length > 0 && pool < size ? pool : null;
   const canStart = chosen.length > 0 && !starting;
   const distributionLabel = distribution === "balanced" ? "parejo" : "al azar";
   const summaryMeta = [
@@ -187,7 +224,7 @@ export function SessionBuilder({
       aria-describedby={!chosen.length ? hintId : undefined}
       className={className}
     >
-      {starting ? "Iniciando…" : "Iniciar partida"}
+      {starting ? "Iniciando…" : START_LABEL}
     </Button>
   );
 
@@ -202,11 +239,15 @@ export function SessionBuilder({
       <div className={BUILDER_MAIN}>
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="font-sans text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
-              Arma tu partida
-            </h2>
-            <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-              Elige temas, cuántas cartas y cómo se reparten.
+            <h1 className="font-sans text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
+              Personaliza tu sesión de cartas
+            </h1>
+            <p className="mt-1 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
+              Sigue los 3 pasos y luego toca{" "}
+              <span className="font-semibold text-[var(--foreground)]">
+                {START_LABEL}
+              </span>
+              : tu sesión usará lo que elijas.
             </p>
           </div>
           <Mascot
@@ -224,7 +265,9 @@ export function SessionBuilder({
           )}
         >
           <Card as="section" padding="sm" aria-labelledby={`${uid}-cuantas`}>
-            <CardLabel id={`${uid}-cuantas`}>Cuántas cartas</CardLabel>
+            <StepLabel id={`${uid}-cuantas`} n={1}>
+              Cuántas cartas
+            </StepLabel>
             <SessionSizePicker
               value={size}
               onChange={setSize}
@@ -233,7 +276,9 @@ export function SessionBuilder({
             />
           </Card>
           <Card as="section" padding="sm" aria-labelledby={`${uid}-reparto`}>
-            <CardLabel id={`${uid}-reparto`}>Cómo se reparten</CardLabel>
+            <StepLabel id={`${uid}-reparto`} n={2}>
+              Cómo se reparten
+            </StepLabel>
             <div className="mt-3">
               <DistributionPicker
                 value={distribution}
@@ -250,7 +295,7 @@ export function SessionBuilder({
           </p>
         ) : null}
 
-        <Step id={`${uid}-que`} title="Qué temas entran">
+        <Step id={`${uid}-que`} n={3} title="Qué temas entran">
           <div
             className="flex flex-wrap gap-2"
             role="group"
@@ -280,19 +325,25 @@ export function SessionBuilder({
           </div>
           {preset === "weakest" ? (
             <p className="mt-2.5 text-xs text-[var(--foreground-muted)]">
-              Tus {WEAKEST_COUNT} temas con menor porcentaje de cartas dominadas.
+              Tus {WEAKEST_COUNT} temas con menor porcentaje de cartas
+              dominadas.
             </p>
           ) : null}
 
           {STUDY_GROUPS.map((group) => {
-            const groupOptions = options.filter((o) => o.cat.group === group.id);
+            const groupOptions = options.filter(
+              (o) => o.cat.group === group.id,
+            );
             if (!groupOptions.length) return null;
             const ids = groupOptions.map((o) => o.cat.id);
             const on = ids.filter((id) => selected.includes(id)).length;
             const allOn = on === ids.length;
             const headingId = `${uid}-grupo-${group.id}`;
             return (
-              <div key={group.id} className="mt-5 [@media(max-height:500px)]:mt-4">
+              <div
+                key={group.id}
+                className="mt-5 [@media(max-height:500px)]:mt-4"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                   <p
                     id={headingId}
@@ -316,7 +367,10 @@ export function SessionBuilder({
                 <div
                   role="group"
                   aria-labelledby={headingId}
-                  className={cn(BUILDER_HALVES, "mt-2 gap-1.5 md:gap-x-5 lg:gap-x-6")}
+                  className={cn(
+                    BUILDER_HALVES,
+                    "mt-2 gap-1.5 md:gap-x-5 lg:gap-x-6",
+                  )}
                 >
                   {groupOptions.map((o) => (
                     <TopicOptionRow
@@ -363,7 +417,7 @@ export function SessionBuilder({
         )}
       >
         <Card className="[@media(max-height:500px)]:p-4">
-          <CardLabel as="p">Tu partida</CardLabel>
+          <CardLabel as="p">Así quedará tu partida</CardLabel>
           <p
             className="mt-2 text-4xl font-extrabold leading-none tracking-tight tabular-nums text-[var(--foreground)] [@media(max-height:500px)]:mt-1.5 [@media(max-height:500px)]:text-3xl"
             aria-live="polite"
@@ -388,14 +442,17 @@ export function SessionBuilder({
             "lg",
             "mt-5 w-full [@media(max-height:500px)]:mt-3 [@media(max-height:500px)]:h-11",
           )}
-          {!chosen.length ? (
-            <p
-              id={`${uid}-hint`}
-              className="mt-2.5 text-center text-xs text-[var(--foreground-muted)]"
-            >
-              Elige al menos un tema para empezar.
-            </p>
-          ) : null}
+          <p
+            id={`${uid}-hint`}
+            className={cn(
+              "mt-2.5 text-center text-xs leading-relaxed text-[var(--foreground-muted)]",
+              chosen.length && "[@media(max-height:500px)]:hidden",
+            )}
+          >
+            {chosen.length
+              ? "Empieza con las cartas, el reparto y los temas que elegiste. Los recordamos para la próxima."
+              : "Elige al menos un tema para empezar."}
+          </p>
         </Card>
       </aside>
     </div>

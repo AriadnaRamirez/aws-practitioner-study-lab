@@ -27,14 +27,7 @@ Luego abre:
 - API health: http://127.0.0.1:43124/api/v1/health  
 - Swagger: http://127.0.0.1:43124/docs  
 
-Cuentas seed (login con **username o email** en el mismo campo):
-
-| Rol | Username | Password |
-| --- | --- | --- |
-| Admin | `admin` | `ChangeMeAdmin1!` |
-| Estudiante | `demo` o `estudiante` | `StudyPass1!` |
-
-En `/login` hay botones para rellenar demo/admin. Si fallan, corre `npm run db:seed`.
+El seed crea una cuenta admin y cuentas de estudiante de prueba; sus contraseñas salen de `ADMIN_PASSWORD` y `DEMO_PASSWORD` en `backend/.env`. El login acepta **username o email** en el mismo campo. Si el login falla, corre `npm run db:seed`.
 
 Alternativa en dos terminales: `npm run dev:backend` y `npm run dev:frontend`.
 
@@ -46,7 +39,6 @@ Tickets: Project Context → `docs/sistema-tickets.md`
 ```bash
 npm install
 cp backend/.env.example backend/.env
-echo 'NEXT_PUBLIC_API_URL=http://127.0.0.1:43124/api/v1' > frontend/.env.local
 docker compose up -d
 npm run db:migrate:deploy
 npm run db:seed

@@ -19,7 +19,7 @@ export type StepProps = {
 export type CheckPhase = "edit" | "wrong" | "done";
 
 /** Intentos fallidos antes de ofrecer "Ver solución". */
-export const ATTEMPTS_BEFORE_SOLUTION = 2;
+const ATTEMPTS_BEFORE_SOLUTION = 2;
 
 export function shuffle<T>(items: readonly T[]): T[] {
   const out = [...items];

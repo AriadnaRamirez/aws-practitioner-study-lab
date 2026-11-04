@@ -7,7 +7,7 @@ const TONE = {
   danger: "var(--danger)",
 } as const;
 
-export type ProgressTone = keyof typeof TONE;
+type ProgressTone = keyof typeof TONE;
 
 const VIEWBOX = 100;
 

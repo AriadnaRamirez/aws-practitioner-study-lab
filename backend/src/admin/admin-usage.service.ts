@@ -97,6 +97,7 @@ export class AdminUsageService {
         where: {
           startedAt: { gte: sinceWeek },
           endedAt: { not: null },
+          score: { not: null },
         },
       }),
     ]);
@@ -155,6 +156,7 @@ export class AdminUsageService {
           userId: true,
           startedAt: true,
           endedAt: true,
+          score: true,
           answeredCount: true,
           correctCount: true,
         },

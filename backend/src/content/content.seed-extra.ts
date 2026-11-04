@@ -9,7 +9,7 @@ import {
 
 const now = '2026-10-24T12:00:00.000Z';
 
-export type SeedFact = {
+type SeedFact = {
   topicId: string;
   key: string;
   stem: string;

@@ -348,6 +348,7 @@ describe('StudyService.startWeakReview', () => {
       getKnowledge: jest.fn((id: string) =>
         Promise.resolve(knowledge({ id, name: id })),
       ),
+      listTopics: jest.fn().mockResolvedValue([]),
     };
     const store = { sessions: new Map(), timedSessions: new Map() };
     const service = new StudyService(

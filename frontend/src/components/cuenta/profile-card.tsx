@@ -12,6 +12,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
 import { updateProfile } from "@/lib/api";
+import { timeZoneLabel } from "@/lib/time-zone-label";
 import { cn } from "@/lib/utils";
 import { errorMessage } from "./cuenta-ui";
 
@@ -188,7 +189,7 @@ export function ProfileCard({
         <div className="min-w-0">
           <dt className="text-xs text-[var(--foreground-muted)]">Zona horaria</dt>
           <dd className="mt-0.5 font-medium [overflow-wrap:anywhere]">
-            {user.timezone.replace(/_/g, " ")}
+            {timeZoneLabel(user.timezone)}
             <span className="block text-xs font-normal text-[var(--foreground-muted)]">
               Se detecta de tu dispositivo
             </span>

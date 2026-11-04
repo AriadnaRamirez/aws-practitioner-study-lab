@@ -24,7 +24,7 @@ fi
 
 if [[ ! -f frontend/.env.local ]]; then
   cat > frontend/.env.local <<'EOF'
-NEXT_PUBLIC_API_URL=http://127.0.0.1:43124/api/v1
+# Sin NEXT_PUBLIC_API_URL el navegador usa /api/v1 (mismo origen, proxy de Next → Nest).
 EOF
   echo "==> Creado frontend/.env.local"
 fi
@@ -52,5 +52,3 @@ echo ""
 echo "Listo. En dos terminales (o npm run local):"
 echo "  npm run dev:backend   → http://127.0.0.1:43124/docs"
 echo "  npm run dev:frontend  → http://127.0.0.1:43123"
-echo ""
-echo "Admin seed: admin / ChangeMeAdmin1!"

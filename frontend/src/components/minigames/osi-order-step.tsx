@@ -54,6 +54,8 @@ export function OrderStep({
   const [firstScore, setFirstScore] = React.useState(0);
   const [missed, setMissed] = React.useState<Missed[]>([]);
   const [solved, setSolved] = React.useState(false);
+  /** Comprobar waits for a move so an untouched shuffle isn't scored. */
+  const [moved, setMoved] = React.useState(false);
   const [dragId, setDragId] = React.useState<string | null>(null);
   const [overIndex, setOverIndex] = React.useState<number | null>(null);
   const buttons = React.useRef(new Map<string, HTMLButtonElement>());
@@ -80,6 +82,7 @@ export function OrderStep({
   }
 
   function swap(a: number, b: number) {
+    setMoved(true);
     setOrder((cur) => {
       const next = [...cur];
       [next[a], next[b]] = [next[b], next[a]];
@@ -108,6 +111,7 @@ export function OrderStep({
 
   function retry() {
     setLocked(new Set(order.filter((id, i) => id === items[i].id)));
+    setMoved(false);
     setPhase("edit");
   }
 
@@ -236,8 +240,8 @@ export function OrderStep({
 
       <CheckBar
         phase={phase}
-        ready
-        notReadyText=""
+        ready={moved}
+        notReadyText="Mueve al menos una tarjeta para comprobar."
         attempts={attempts}
         okCount={okCount}
         total={items.length}

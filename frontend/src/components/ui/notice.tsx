@@ -25,7 +25,7 @@ const TONE = {
   },
 } as const;
 
-export type NoticeTone = keyof typeof TONE;
+type NoticeTone = keyof typeof TONE;
 
 /**
  * Feedback message. `boxed` for page-level messages, plain for a line under a

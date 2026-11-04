@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronRight, Play, Target } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { ProgressOverview, UserExam } from "@aps/shared";
-import { getExamCatalogEntry } from "@aps/shared";
+import { getExamCatalogEntry, MASTERY_STREAK } from "@aps/shared";
 import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { ProgressBar, ProgressRing } from "@/components/ui/progress";
@@ -89,10 +89,12 @@ function AnswersBar({ done, goal }: { done: number; goal: number }) {
   return (
     <div className="mt-4">
       <div className="flex min-w-0 items-baseline justify-between gap-3 text-xs">
-        <span className="text-[var(--foreground-muted)]">Respondidas hoy</span>
+        <span className="text-[var(--foreground-muted)]">
+          Respuestas de hoy (para lograrlo, unas {goal})
+        </span>
         <span className="shrink-0 tabular-nums text-[var(--foreground)]">
           {done}{" "}
-          <span className="text-[var(--foreground-muted)]">de ~{goal} aprox.</span>
+          <span className="text-[var(--foreground-muted)]">de {goal}</span>
         </span>
       </div>
       <ProgressBar
@@ -105,7 +107,10 @@ function AnswersBar({ done, goal }: { done: number; goal: number }) {
   );
 }
 
-/** Starts a quick game right away, sized to what is left of today's goal. */
+/**
+ * Starts a quick game sized to what is left of today's goal. Only once the day is under way:
+ * otherwise the Nueva partida card is the one place to start.
+ */
 function PlayLink({ size, again = false }: { size: number; again?: boolean }) {
   return (
     <Link
@@ -113,7 +118,7 @@ function PlayLink({ size, again = false }: { size: number; again?: boolean }) {
       className={cn(buttonVariants({ variant: "soft", size: "sm" }), "gap-1.5")}
     >
       <Play className="size-3.5 fill-current" aria-hidden />
-      {again ? `Otra partida de ${size} cartas` : `Iniciar partida de ${size} cartas`}
+      {again ? `Otra partida de ${size} cartas` : `Completar mi meta: ${size} cartas`}
     </Link>
   );
 }
@@ -192,13 +197,15 @@ function ManualGoalBody({
       </p>
       <div className="mt-1">{note}</div>
       <div className="mt-4 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3">
-        <PlayLink size={sessionSizeFor(remaining)} again={remaining === 0} />
+        {answeredToday > 0 && remaining > 0 ? (
+          <PlayLink size={sessionSizeFor(remaining)} />
+        ) : null}
         <div className="flex flex-wrap items-center gap-2">
           <span
             id="meta-diaria-opciones"
             className="text-xs text-[var(--foreground-muted)]"
           >
-            Cartas al día
+            Cambiar meta (cartas al día)
           </span>
           <div
             role="radiogroup"
@@ -270,10 +277,18 @@ function PaceBody({
             ? `Meta: ${finish}.`
             : `Te ${cardsLeft === 1 ? "falta 1 carta" : `faltan ${cardsLeft} cartas`} hoy · meta: ${finish}.`}
       </p>
+      {!reached ? (
+        <p className="mt-1 text-xs leading-snug text-[var(--foreground-muted)]">
+          Una carta queda aprendida al acertarla {MASTERY_STREAK} veces seguidas; los fallos
+          vuelven a salir hasta que la domines.
+        </p>
+      ) : null}
       <AnswersBar done={answered} goal={answersGoal} />
-      <div className="mt-4">
-        <PlayLink size={reached ? 10 : sessionSizeFor(answersLeft)} again={reached} />
-      </div>
+      {answered > 0 && !reached ? (
+        <div className="mt-4">
+          <PlayLink size={sessionSizeFor(answersLeft)} />
+        </div>
+      ) : null}
     </GoalLayout>
   );
 }

@@ -20,6 +20,7 @@ import { Stat } from "@/components/ui/stat";
 import { getStoredToken } from "@/lib/api";
 import { answerStudy, startStudySession } from "@/lib/study-api";
 import { cn } from "@/lib/utils";
+import { loginHref } from "@/lib/route-labels";
 
 type Phase = "setup" | "prompt" | "feedback" | "summary";
 
@@ -119,7 +120,7 @@ export function ExamStudyPanel() {
       {error ? (
         <Notice tone="danger" boxed className="mt-6">
           {error}{" "}
-          <Link href="/login" className="font-semibold underline">
+          <Link href={loginHref("/estudiar/examen")} className="font-semibold underline">
             Entrar
           </Link>
         </Notice>

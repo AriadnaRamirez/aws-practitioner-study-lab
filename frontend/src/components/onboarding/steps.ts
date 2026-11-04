@@ -13,6 +13,8 @@ export type TourStep = {
   path?: string;
   /** Skip the step unless this anchor exists in the DOM (even if hidden). */
   requires?: string;
+  /** Last step only: primary action that ends the tour and navigates. */
+  cta?: { label: string; href: string };
 };
 
 /** Collapsed nav on phones: nav steps point at the "Menú" button instead. */
@@ -22,57 +24,40 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "bienvenida",
     title: "¡Hola! Te enseño cómo funciona",
-    body: "Un recorrido de un minuto por AWS Study Lab para preparar tu examen Cloud Practitioner. Puedes saltarlo y repetirlo desde Cuenta cuando quieras.",
+    body: "Un recorrido de 30 segundos para preparar tu examen Cloud Practitioner. Puedes saltarlo y repetirlo desde Cuenta cuando quieras.",
+    path: "/dashboard",
   },
   {
     id: "examen",
     title: "Tu examen, en cuenta regresiva",
-    body: "Agenda la fecha de tu examen y aquí verás cuántos días faltan. Toca la tarjeta para cambiarla cuando quieras.",
+    body: "Si ya sabes cuándo es tu examen, agéndalo aquí: verás cuántos días faltan y una meta diaria a tu medida.",
     anchors: ["exam-countdown"],
     path: "/dashboard",
   },
   {
     id: "partida",
-    title: "Empieza una partida",
-    body: "Elige cuántas cartas quieres y, si gustas, personaliza los temas. Cada carta es un concepto con 4 opciones: acierta 3 veces seguidas para dominarlo.",
+    title: "Así se estudia: partidas de cartas",
+    body: "Cada carta es un concepto del examen con 4 opciones. Si fallas, la carta vuelve a salir. Cuando aciertas la misma carta 3 veces seguidas, la dominas.",
     anchors: ["new-game"],
     path: "/dashboard",
   },
   {
-    id: "estudiar",
-    title: "Estudiar",
-    body: "Juega partidas de cartas a tu ritmo. Si fallas una carta, regresa más adelante en la misma partida para que la practiques otra vez.",
-    anchors: ["nav-estudiar", MENU_ANCHOR],
-  },
-  {
-    id: "mas-falladas",
-    title: "Más falladas",
-    body: "Reúne las cartas que se te resisten y con cuáles las confundes. Repásalas aquí hasta que salgan solas.",
-    anchors: ["nav-mas-falladas", MENU_ANCHOR],
-  },
-  {
-    id: "guias",
-    title: "Guías",
-    body: "Lee cada tema con calma o descárgalo en PDF para estudiar sin pantalla.",
-    anchors: ["nav-guias", MENU_ANCHOR],
-  },
-  {
-    id: "minijuegos",
-    title: "Minijuegos",
-    body: "Repasa conceptos de otra forma, en ratos cortos y sin presión.",
-    anchors: ["nav-minijuegos", MENU_ANCHOR],
-    requires: "nav-minijuegos",
+    id: "menu",
+    title: "Todo lo demás, en el menú",
+    body: "Estudiar: arma partidas con los temas que quieras. Más falladas: repasa las cartas que se te resisten. Guías: lee cada tema o bájalo en PDF. Minijuegos: practica jugando.",
+    anchors: ["nav-main", MENU_ANCHOR],
   },
   {
     id: "indicadores",
-    title: "Tus indicadores",
-    body: "Arriba ves tu % de conceptos dominados, tu racha de días seguidos y el trofeo con el podio. Tócalos para ver el detalle.",
+    title: "Tu avance, siempre a la vista",
+    body: "Arriba ves tu % de conceptos dominados, tu racha de días seguidos y el podio. Tócalos para ver el detalle.",
     anchors: ["header-stats"],
   },
   {
-    id: "cuenta",
-    title: "Cuenta",
-    body: "Tu perfil, la fecha de tu examen, tu progreso por tema y tu historial. Desde aquí puedes repetir este recorrido cuando quieras.",
-    anchors: ["nav-cuenta", MENU_ANCHOR],
+    id: "listo",
+    title: "¡Listo! Empieza jugando",
+    body: "Tu primera partida es de 10 cartas de todos los temas: no necesitas saber nada antes, aprendes de cada respuesta. Tu perfil y este recorrido están en Cuenta.",
+    path: "/dashboard",
+    cta: { label: "Jugar mi primera partida", href: "/estudiar?quick=1&start=10" },
   },
 ];

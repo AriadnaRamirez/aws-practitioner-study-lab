@@ -144,7 +144,10 @@ function masteredDates(total: number, recent: number): Date[] {
 }
 
 async function main() {
-  const password = process.env.DEMO_PASSWORD ?? 'StudyPass1!';
+  const password = process.env.DEMO_PASSWORD?.trim();
+  if (!password || password.length < 8) {
+    throw new Error('DEMO_PASSWORD must be set in backend/.env (at least 8 characters)');
+  }
   const passwordHash = await bcrypt.hash(password, 12);
   const classmates: { id: string; username: string }[] = [];
 
@@ -241,10 +244,10 @@ async function main() {
 
   // eslint-disable-next-line no-console
   console.log(
-    `Demo podium OK: ${STUDENTS.map((s) => `${s.username}(${s.mastered})`).join(', ')} / ${password}`,
+    `Demo podium OK: ${STUDENTS.map((s) => `${s.username}(${s.mastered})`).join(', ')} (password: DEMO_PASSWORD)`,
   );
   // eslint-disable-next-line no-console
-  console.log(`Demo showcase OK: demo / ${password}`);
+  console.log('Demo showcase OK: demo');
 }
 
 function hoursAgo(hours: number): Date {

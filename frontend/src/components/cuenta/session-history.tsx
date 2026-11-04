@@ -72,7 +72,7 @@ export function SessionHistory({
             </div>
             <div className="flex flex-wrap gap-3 text-xs text-[var(--foreground-muted)] sm:text-right">
               <span>
-                Puntaje{" "}
+                Aciertos{" "}
                 <strong className="tabular-nums text-[var(--foreground)]">
                   {formatScore(s)}
                 </strong>

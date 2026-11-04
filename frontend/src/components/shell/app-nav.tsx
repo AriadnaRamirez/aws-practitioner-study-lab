@@ -22,6 +22,7 @@ import {
   fetchProgressOverview,
   getStoredToken,
   getStoredUser,
+  PROGRESS_CHANGED_EVENT,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -122,21 +123,26 @@ export function AppNav() {
       return;
     }
     let cancelled = false;
-    fetchProgressOverview()
-      .then((overview) => {
-        if (cancelled) return;
-        setDailyStreak(overview.dailyStreak);
-        setMastery({
-          pct: Math.round(Math.min(100, Math.max(0, overview.masteryPct))),
-          mastered: overview.masteredItems,
-          total: overview.totalTrackableItems,
+    const loadStats = () =>
+      fetchProgressOverview()
+        .then((overview) => {
+          if (cancelled) return;
+          setStatsFailed(false);
+          setDailyStreak(overview.dailyStreak);
+          setMastery({
+            pct: Math.round(Math.min(100, Math.max(0, overview.masteryPct))),
+            mastered: overview.masteredItems,
+            total: overview.totalTrackableItems,
+          });
+        })
+        .catch(() => {
+          if (!cancelled) setStatsFailed(true);
         });
-      })
-      .catch(() => {
-        if (!cancelled) setStatsFailed(true);
-      });
+    void loadStats();
+    window.addEventListener(PROGRESS_CHANGED_EVENT, loadStats);
     return () => {
       cancelled = true;
+      window.removeEventListener(PROGRESS_CHANGED_EVENT, loadStats);
     };
   }, [pathname]);
 
@@ -186,7 +192,7 @@ export function AppNav() {
   }, [menuOpen]);
 
   const items: NavItem[] = !ready
-    ? GUEST_ITEMS
+    ? []
     : user
       ? user.role === "ADMIN"
         ? [
@@ -199,9 +205,7 @@ export function AppNav() {
   function isActive(item: NavItem) {
     if (item.href === "/") return pathname === "/";
     const prefixes = item.match ?? [item.href];
-    return prefixes.some(
-      (p) => pathname === p || pathname.startsWith(`${p}/`),
-    );
+    return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   }
 
   const linkClass = (active: boolean) =>
@@ -228,7 +232,10 @@ export function AppNav() {
         <div className="flex min-w-0 items-center gap-2.5 lg:gap-3">
           <Link
             href={user ? "/dashboard" : "/"}
-            className={cn("inline-flex min-w-0 items-center rounded-lg", FOCUS_RING)}
+            className={cn(
+              "inline-flex min-w-0 items-center rounded-lg",
+              FOCUS_RING,
+            )}
             aria-label="AWS Study Lab"
           >
             <Logo
@@ -242,6 +249,7 @@ export function AppNav() {
         <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-5 xl:gap-6">
           <nav
             aria-label="Principal"
+            data-tour="nav-main"
             className="hidden items-center gap-5 lg:flex xl:gap-6"
           >
             {items.map((item) => (
@@ -255,7 +263,7 @@ export function AppNav() {
                 {item.label}
               </Link>
             ))}
-            {user ? null : (
+            {!ready || user ? null : (
               <Link href="/login" className={linkClass(false)}>
                 Entrar
               </Link>

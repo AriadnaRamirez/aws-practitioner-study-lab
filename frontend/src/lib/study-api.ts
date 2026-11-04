@@ -9,7 +9,14 @@ import type {
   StartStudySessionRequest,
   StudySessionView,
 } from "@aps/shared";
-import { getApiUrl, getStoredToken } from "@/lib/api";
+import {
+  EXPIRED_MESSAGE,
+  expireSession,
+  getApiUrl,
+  getStoredToken,
+  isExpiredSession,
+  OFFLINE_MESSAGE,
+} from "@/lib/api";
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -43,9 +50,22 @@ async function studyFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
   headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${getApiUrl()}${path}`, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${getApiUrl()}${path}`, { ...init, headers });
+  } catch {
+    throw new Error(OFFLINE_MESSAGE);
+  }
   if (!res.ok) {
-    throw new Error(await parseError(res));
+    if (res.status >= 500) {
+      throw new Error("Algo falló de nuestro lado. Inténtalo de nuevo en un momento.");
+    }
+    const message = await parseError(res);
+    if (isExpiredSession(res.status, message)) {
+      expireSession();
+      throw new Error(EXPIRED_MESSAGE);
+    }
+    throw new Error(message);
   }
   return res.json() as Promise<T>;
 }

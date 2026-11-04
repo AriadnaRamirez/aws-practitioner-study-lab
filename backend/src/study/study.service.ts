@@ -54,7 +54,14 @@ import {
   civilDateInTz,
   countOnCivilDay,
 } from './civil-day';
-import { pickVariant, renderFlashVariant } from './flash-render';
+import {
+  describeWrongChoice,
+  flashExplanation,
+  pickVariant,
+  renderFlashVariant,
+  type TopicTypeOf,
+} from './flash-render';
+import { emptyLedger, ledgerSummary, recordOutcome } from './miss-ledger';
 import {
   RECENT_ACCURACY_SAMPLE,
   countMasteredToday,
@@ -121,6 +128,7 @@ function toExamPrompt(
     itemId: entry.itemId,
     stem: item.stem,
     choices: item.choices,
+    ...(entry.repeat ? { isRepeat: true } : {}),
   };
 }
 
@@ -133,6 +141,7 @@ function toFlashPrompt(
     variant: current.variant,
     stem: current.stem,
     choices: current.choices,
+    ...(current.repeat ? { isRepeat: true } : {}),
   };
 }
 
@@ -150,6 +159,7 @@ function summaryOf(session: StudySessionRecord): StudySessionSummary {
     incorrectAnswers: session.incorrectAnswers,
     missRepeats: session.missRepeats,
     maxSessionStreak: session.maxSessionStreak,
+    ...ledgerSummary(session.ledger ?? emptyLedger()),
     accuracyPct,
   };
 }
@@ -198,6 +208,7 @@ type TrackableItems = {
 @Injectable()
 export class StudyService {
   private knowledgeCache: { at: number; items: KnowledgeItem[] } | null = null;
+  private topicTypeCache: { at: number; types: Map<string, string> } | null = null;
   /** Serialize answer mutations per session (prevents queueItemId races). */
   private readonly sessionAnswerTail = new Map<string, Promise<unknown>>();
 
@@ -360,6 +371,7 @@ export class StudyService {
       correctAnswers: 0,
       incorrectAnswers: 0,
       missRepeats: 0,
+      ledger: emptyLedger(),
       status: 'active',
       createdAt: row.startedAt.toISOString(),
     };
@@ -421,6 +433,7 @@ export class StudyService {
           user.id,
           dto.queueItemId,
           dto.choiceIndex,
+          dto.latencyMs,
         );
       }
       return this.answerFlash(user, sessionId, dto);
@@ -448,6 +461,7 @@ export class StudyService {
     userId: string,
     queueItemId: string,
     choiceIndex: number,
+    latencyMs?: number,
   ): Promise<AnswerStudyResponse> {
     const session = this.requireExamSession(sessionId, userId);
     if (session.status !== 'active') {
@@ -477,6 +491,20 @@ export class StudyService {
       (session.itemTypes?.get(current.itemId) as StudyItemType | undefined) ??
       StudyItemType.EXAM_QUESTION;
 
+    await this.prisma.attempt.create({
+      data: {
+        sessionId: session.id,
+        userId,
+        itemType,
+        itemId: current.itemId,
+        correct,
+        latencyMs,
+        choiceIndex,
+        chosenText: item.choices[choiceIndex] ?? null,
+        variant: item.variant ?? null,
+      },
+    });
+
     const progress = await this.updateItemProgress(
       userId,
       current.itemId,
@@ -497,10 +525,14 @@ export class StudyService {
     } else {
       session.incorrectAnswers += 1;
       session.sessionStreak = 0;
+    }
+    session.ledger ??= emptyLedger();
+    if (recordOutcome(session.ledger, current.itemId, correct).requeue) {
       session.missRepeats += 1;
       const requeued: QueueEntry = {
         queueItemId: newId('qi'),
         itemId: current.itemId,
+        repeat: true,
       };
       session.queue = requeueMiss(session.queue, requeued);
     }
@@ -547,10 +579,20 @@ export class StudyService {
       },
     });
 
+    let chosenHint: string | null = null;
+    if (!correct && itemType === StudyItemType.KNOWLEDGE) {
+      const pool = await this.publishedKnowledge();
+      const knowledge = pool.find((k) => k.id === current.itemId);
+      chosenHint = knowledge
+        ? describeWrongChoice(item.choices[choiceIndex] ?? '', knowledge, pool)
+        : null;
+    }
+
     return {
       correct,
       correctIndex: item.correctIndex,
       explanation: item.explanation,
+      ...(chosenHint ? { chosenHint } : {}),
       itemMastered: Boolean(progress.masteredAt),
       itemConsecutiveCorrect: progress.consecutiveCorrect,
       sessionStreak: session.sessionStreak,
@@ -627,8 +669,9 @@ export class StudyService {
       current: null,
       masteredItemIds: [],
       ...(opts.balanced ? { balanced: true } : {}),
+      ledger: emptyLedger(),
     };
-    this.advanceFlashCurrent(state, allKnowledge);
+    this.advanceFlashCurrent(state, allKnowledge, await this.topicTypeOf());
 
     const tz = opts.timezone || user.timezone || 'UTC';
     const session = await this.prisma.studySession.create({
@@ -725,35 +768,42 @@ export class StudyService {
       }
     } else {
       sessionStreak = 0;
+    }
+    state.ledger ??= emptyLedger();
+    if (recordOutcome(state.ledger, current.itemId, correct).requeue) {
       missRepeatCount += 1;
       const requeue: FlashQueueEntry = {
         queueItemId: crypto.randomUUID(),
         itemId: current.itemId,
         variant: current.variant,
+        repeat: true,
       };
       const insertAt = Math.min(MISS_REPEAT_OFFSET, state.queue.length);
       state.queue.splice(insertAt, 0, requeue);
     }
 
     state.current = null;
-    this.advanceFlashCurrent(state, pool);
+    this.advanceFlashCurrent(state, pool, await this.topicTypeOf());
 
     const finished = state.current === null && state.queue.length === 0;
     let summary: StudySessionSummary | undefined;
 
     if (finished) {
       const streak = await this.bumpDailyStreak(user, session.timezone);
-      summary = this.buildFlashSummary(
-        session.id,
-        session.uniqueItems,
-        answeredCount,
-        correctCount,
-        missRepeatCount,
-        maxSessionStreak,
-        state.masteredItemIds.length,
-        streak.current,
-        streak.longest,
-      );
+      summary = {
+        ...this.buildFlashSummary(
+          session.id,
+          session.uniqueItems,
+          answeredCount,
+          correctCount,
+          missRepeatCount,
+          maxSessionStreak,
+          state.masteredItemIds.length,
+          streak.current,
+          streak.longest,
+        ),
+        ...ledgerSummary(state.ledger),
+      };
     }
 
     await this.prisma.studySession.update({
@@ -775,10 +825,17 @@ export class StudyService {
       },
     });
 
+    const answeredItem = pool.find((k) => k.id === current.itemId);
+    const chosenHint =
+      !correct && answeredItem
+        ? describeWrongChoice(current.choices[dto.choiceIndex] ?? '', answeredItem, pool)
+        : null;
+
     return {
       correct,
       correctIndex: current.correctIndex,
       explanation: current.explanation,
+      ...(chosenHint ? { chosenHint } : {}),
       itemMastered: Boolean(progress.masteredAt),
       itemConsecutiveCorrect: progress.consecutiveCorrect,
       sessionStreak,
@@ -803,12 +860,13 @@ export class StudyService {
   private advanceFlashCurrent(
     state: SessionRuntimeState,
     pool: KnowledgeItem[],
+    topicTypeOf?: TopicTypeOf,
   ): void {
     while (!state.current && state.queue.length) {
       const next = state.queue.shift()!;
       const item = pool.find((k) => k.id === next.itemId);
       if (!item) continue;
-      const rendered = renderFlashVariant(item, next.variant, pool);
+      const rendered = renderFlashVariant(item, next.variant, pool, topicTypeOf);
       state.current = {
         queueItemId: next.queueItemId,
         itemId: next.itemId,
@@ -817,8 +875,23 @@ export class StudyService {
         choices: rendered.choices,
         correctIndex: rendered.correctIndex,
         explanation: rendered.explanation,
+        ...(next.repeat ? { repeat: true } : {}),
       };
     }
+  }
+
+  /** SERVICE vs CONCEPT per topic, so fallback distractors stay in kind. */
+  private async topicTypeOf(): Promise<TopicTypeOf> {
+    const now = Date.now();
+    if (!this.topicTypeCache || now - this.topicTypeCache.at >= KNOWLEDGE_CACHE_TTL_MS) {
+      const topics = await this.content.listTopics({ allTracks: true });
+      this.topicTypeCache = {
+        at: now,
+        types: new Map(topics.map((t) => [t.id, t.type])),
+      };
+    }
+    const types = this.topicTypeCache.types;
+    return (topicId) => types.get(topicId);
   }
 
   private async updateItemProgress(
@@ -1355,7 +1428,11 @@ export class StudyService {
 
   /* —— APS-11: weak items / history / WEAK_REVIEW —— */
 
-  /** Mark open sessions of a mode as abandoned (ended without summary). */
+  /**
+   * Close open sessions of a mode before starting another. Untouched ones
+   * (no answers) are deleted so historial only lists real games; the rest
+   * end without summary (= abandoned).
+   */
   private async abandonOpenSessions(userId: string, mode: StudyMode) {
     const open = await this.prisma.studySession.findMany({
       where: {
@@ -1363,14 +1440,20 @@ export class StudyService {
         mode: mode as PrismaStudyMode,
         endedAt: null,
       },
-      select: { id: true },
+      select: { id: true, answeredCount: true },
     });
     if (!open.length) return;
-    const now = new Date();
-    await this.prisma.studySession.updateMany({
-      where: { id: { in: open.map((o) => o.id) } },
-      data: { endedAt: now },
-    });
+    const untouched = open.filter((o) => o.answeredCount === 0).map((o) => o.id);
+    const partial = open.filter((o) => o.answeredCount > 0).map((o) => o.id);
+    if (untouched.length) {
+      await this.prisma.studySession.deleteMany({ where: { id: { in: untouched } } });
+    }
+    if (partial.length) {
+      await this.prisma.studySession.updateMany({
+        where: { id: { in: partial } },
+        data: { endedAt: new Date() },
+      });
+    }
     for (const o of open) {
       this.store.sessions.delete(o.id);
       this.store.timedSessions.delete(o.id);
@@ -1484,6 +1567,11 @@ export class StudyService {
       ),
       masteredToday: countMasteredToday(masteredAt, now, timeZone || 'UTC'),
       recentAccuracy: recentAccuracy(lastResults.map((a) => a.correct)),
+      hasPlayed:
+        lastResults.length > 0 ||
+        masteredItems > 0 ||
+        weakItems > 0 ||
+        (streak?.longest ?? 0) > 0,
       activeSessions: activeRows.map((r) => ({
         id: r.id,
         mode: r.mode as StudyMode,
@@ -1602,7 +1690,8 @@ export class StudyService {
     limit = 50,
   ): Promise<StudyHistoryResponse> {
     const rows = await this.prisma.studySession.findMany({
-      where: { userId },
+      // Legacy rows: games closed before any answer are noise, not history.
+      where: { userId, NOT: { answeredCount: 0, endedAt: { not: null } } },
       orderBy: { startedAt: 'desc' },
       take: limit,
     });
@@ -1635,6 +1724,7 @@ export class StudyService {
     itemId: string;
     correct: boolean;
     choiceIndex: number | null;
+    chosenText?: string | null;
     variant: string | null;
     createdAt: Date;
   }): Promise<HistoryAttemptRow> {
@@ -1650,21 +1740,23 @@ export class StudyService {
           publishedOnly: false,
         });
         title = k.name;
-        explanation = k.explanation;
+        explanation = flashExplanation(k);
         const variant = (a.variant ?? 'DEFINITION_TO_NAME') as FlashVariant;
         // Do NOT re-run renderFlashVariant: it reshuffles choices and would
         // mislabel the historical choiceIndex. Use stable item fields.
-        if (variant === 'DEFINITION_TO_NAME') {
-          prompt = k.definition;
-          correctLabel = k.name;
-        } else {
+        if (variant === 'NAME_TO_DEFINITION') {
           prompt = `¿Qué es ${k.name}?`;
           correctLabel = k.definition;
+        } else {
+          prompt = k.definition;
+          correctLabel = k.name;
         }
         if (a.correct) {
           selectedLabel = correctLabel;
+        } else if (a.chosenText?.trim()) {
+          selectedLabel = a.chosenText.trim();
         } else if (a.choiceIndex != null) {
-          selectedLabel = `Opción ${a.choiceIndex + 1} (incorrecta)`;
+          selectedLabel = `Opción ${a.choiceIndex + 1}`;
         }
       } else {
         const q = await this.content.getQuestion(a.itemId, {
@@ -1730,6 +1822,7 @@ export class StudyService {
     const itemTypesMap = new Map<string, 'KNOWLEDGE' | 'EXAM_QUESTION'>();
     const playQueue: QueueEntry[] = [];
     const knowledgePool = await this.publishedKnowledge();
+    const topicTypeOf = await this.topicTypeOf();
 
     for (const w of round) {
       if (w.itemType === 'KNOWLEDGE') {
@@ -1738,13 +1831,14 @@ export class StudyService {
             publishedOnly: true,
           });
           const variant = pickVariant(k);
-          const rendered = renderFlashVariant(k, variant, knowledgePool);
+          const rendered = renderFlashVariant(k, variant, knowledgePool, topicTypeOf);
           bank.set(k.id, {
             stem: rendered.stem,
             choices: rendered.choices,
             correctIndex: rendered.correctIndex,
             explanation: rendered.explanation,
             topicId: k.topicId,
+            variant: rendered.variant,
           });
           itemTypesMap.set(k.id, 'KNOWLEDGE');
           playQueue.push({ queueItemId: newId('qi'), itemId: k.id });
@@ -1804,6 +1898,7 @@ export class StudyService {
       correctAnswers: 0,
       incorrectAnswers: 0,
       missRepeats: 0,
+      ledger: emptyLedger(),
       status: 'active',
       createdAt: row.startedAt.toISOString(),
     };

@@ -9,7 +9,7 @@ const TONE = {
   warning: "bg-[var(--warning-soft)] text-[var(--warning-text)]",
 } as const;
 
-export type BadgeTone = keyof typeof TONE;
+type BadgeTone = keyof typeof TONE;
 
 /** Short status tag: "Activo", "Admin", "Nuevo", "3 días". */
 export function Badge({

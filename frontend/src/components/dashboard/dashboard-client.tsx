@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type {
-  PodiumResponse,
   ProgressOverview,
   PublicUser,
   TopicProgressRow,
@@ -17,6 +16,8 @@ import {
   HERO_EXAM_PANE,
   HERO_EXAM_SKELETON,
   HERO_GREETING,
+  HERO_GREETING_TEXT,
+  HERO_MASCOT_CELL,
   HERO_MASCOT_SIZE,
   HERO_TILE,
 } from "./dashboard-hero";
@@ -32,7 +33,6 @@ import {
   clearAuth,
   fetchMe,
   fetchMyExams,
-  fetchPodium,
   fetchProgressOverview,
   fetchTopicProgress,
   getStoredToken,
@@ -53,13 +53,16 @@ function DashboardSkeleton() {
       <BentoGrid flowOnMobile className={DASHBOARD_TRACKS}>
         <div className={HERO_TILE}>
           <div className={HERO_GREETING}>
-            <div className="min-w-0 flex-1">
+            <div className={cn(HERO_GREETING_TEXT, "flex-1")}>
               <Skeleton className="block h-10 w-56 max-w-full sm:h-12 sm:w-72 xl:h-14 xl:w-96" />
               <p className="mt-2 text-base text-[var(--foreground-muted)] sm:text-lg">
                 Así vas con tu certificación.
               </p>
             </div>
-            <div aria-hidden className="shrink-0">
+            <div
+              aria-hidden
+              className={cn("shrink-0 lg:flex", HERO_MASCOT_CELL)}
+            >
               <Mascot
                 pose="wave"
                 size="lg"
@@ -81,8 +84,6 @@ function DashboardSkeleton() {
           progressError={false}
           topics={[]}
           topicsLoaded={false}
-          podium={null}
-          podiumError={false}
           exams={null}
           examsError={false}
           timeZone="America/Mexico_City"
@@ -98,49 +99,49 @@ export function DashboardClient() {
   const [progressError, setProgressError] = useState(false);
   const [topics, setTopics] = useState<TopicProgressRow[]>([]);
   const [topicsLoaded, setTopicsLoaded] = useState(false);
-  const [podium, setPodium] = useState<PodiumResponse | null>(null);
-  const [podiumError, setPodiumError] = useState(false);
   const [exams, setExams] = useState<UserExam[] | null>(null);
   const [examsError, setExamsError] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loadExams = useCallback(
+    () =>
+      fetchMyExams().then(
+        (next) => {
+          setExams(next);
+          setExamsError(false);
+        },
+        () => setExamsError(true),
+      ),
+    [],
+  );
 
   const load = useCallback(async () => {
     if (!getStoredToken()) {
       setUser(null);
       return;
     }
+    const me = fetchMe();
+    void loadExams();
+    Promise.all([fetchProgressOverview(), fetchTopicProgress()]).then(
+      ([ov, byTopic]) => {
+        setOverview(ov);
+        setTopics(byTopic.topics);
+        setTopicsLoaded(true);
+      },
+      () => setProgressError(true),
+    );
     try {
-      const me = await fetchMe();
-      setUser(me);
+      setUser(await me);
     } catch (err) {
       clearAuth();
       setUser(null);
       setError(err instanceof Error ? err.message : "Sesión inválida");
-      return;
     }
-    fetchPodium("all").then(setPodium, () => setPodiumError(true));
-    fetchMyExams().then(setExams, () => setExamsError(true));
-    try {
-      const [ov, byTopic] = await Promise.all([
-        fetchProgressOverview(),
-        fetchTopicProgress(),
-      ]);
-      setOverview(ov);
-      setTopics(byTopic.topics);
-      setTopicsLoaded(true);
-    } catch {
-      setProgressError(true);
-    }
-  }, []);
+  }, [loadExams]);
 
   useEffect(() => {
     void load();
   }, [load]);
-
-  const onExamsChange = useCallback((next: UserExam[]) => {
-    setExams(next);
-    setExamsError(false);
-  }, []);
 
   if (!user) {
     return error ? (
@@ -167,11 +168,15 @@ export function DashboardClient() {
       <BentoGrid flowOnMobile className={DASHBOARD_TRACKS}>
         <DashboardHero
           user={user}
+          exams={exams}
+          examsError={examsError}
           onUserChange={setUser}
-          onExamsChange={onExamsChange}
+          onReloadExams={loadExams}
         />
 
-        <div className={cn("flex flex-col gap-5 lg:gap-6", DASHBOARD_TILE.newGame)}>
+        <div
+          className={cn("flex flex-col gap-5 lg:gap-6", DASHBOARD_TILE.newGame)}
+        >
           <NewGameCard
             topics={topics}
             primarySession={primarySession}
@@ -211,8 +216,6 @@ export function DashboardClient() {
           progressError={progressError}
           topics={topics}
           topicsLoaded={topicsLoaded}
-          podium={podium}
-          podiumError={podiumError}
           exams={exams}
           examsError={examsError}
           timeZone={user.timezone || "America/Mexico_City"}

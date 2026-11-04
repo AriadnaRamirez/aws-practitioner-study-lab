@@ -4,12 +4,14 @@ import { civilDateInTz } from '../study/civil-day';
 /** Owner dashboards are read in Mexico City time. */
 export const METRICS_TIMEZONE = 'America/Mexico_City';
 export const METRICS_DAYS = 28;
-export const KPI_WINDOW_DAYS = 7;
+const KPI_WINDOW_DAYS = 7;
 
-export interface MetricsSessionRow {
+interface MetricsSessionRow {
   userId: string;
   startedAt: Date;
   endedAt: Date | null;
+  /** Null on a session that ended without finishing (abandoned). */
+  score?: number | null;
   answeredCount: number;
   correctCount: number;
 }
@@ -55,7 +57,7 @@ export function buildDaily(
     const day = byDate.get(civilDateInTz(s.startedAt, timeZone));
     if (!day) continue;
     day.sessions += 1;
-    if (s.endedAt) day.completedSessions += 1;
+    if (s.endedAt && s.score !== null) day.completedSessions += 1;
     day.answers += s.answeredCount;
     day.correctAnswers += s.correctCount;
     day.users.add(s.userId);

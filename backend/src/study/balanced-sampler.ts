@@ -1,6 +1,6 @@
 /** APS-24: partida rápida — reparto equitativo de cartas entre temas. */
 
-export type Rng = () => number;
+type Rng = () => number;
 
 function shuffleWith<T>(items: readonly T[], rng: Rng): T[] {
   const arr = [...items];

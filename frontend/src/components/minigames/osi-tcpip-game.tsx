@@ -21,33 +21,18 @@ import { MatchStep } from "@/components/minigames/osi-match-step";
 import { PlaceStep } from "@/components/minigames/osi-place-step";
 import type { StepResult } from "@/components/minigames/osi-lesson-ui";
 import { LayerNumber } from "@/components/minigames/osi-layer-board";
-import {
-  MNEMONIC,
-  OSI_LAYERS,
-  TCPIP_LAYERS,
-  type OsiLayerNumber,
-} from "@/lib/minigames/osi-tcpip";
+import { MNEMONIC, OSI_LAYERS, type OsiLayerNumber } from "@/lib/minigames/osi-tcpip";
 import { cn } from "@/lib/utils";
 
-type StepId =
-  | "aprende"
-  | "orden-osi"
-  | "orden-tcpip"
-  | "relaciona"
-  | "ubica-funcion"
-  | "ubica-fisico"
-  | "ubica-aws";
+type StepId = "aprende" | "orden-osi" | "relaciona" | "ubica";
 
 type View = StepId | "resumen";
 
 const STEPS: readonly { id: StepId; name: string }[] = [
   { id: "aprende", name: "Aprende" },
   { id: "orden-osi", name: "Ordena OSI" },
-  { id: "orden-tcpip", name: "Ordena TCP/IP" },
   { id: "relaciona", name: "Relaciona" },
-  { id: "ubica-funcion", name: "¿Qué hace?" },
-  { id: "ubica-fisico", name: "Sistema físico" },
-  { id: "ubica-aws", name: "AWS" },
+  { id: "ubica", name: "Ubica" },
 ];
 
 const PRACTICE = STEPS.filter((s) => s.id !== "aprende");
@@ -57,13 +42,6 @@ const OSI_ORDER: readonly OrderItem[] = OSI_LAYERS.map((l) => ({
   label: l.name,
   number: l.number,
   layer: l.number,
-}));
-
-const TCPIP_ORDER: readonly OrderItem[] = TCPIP_LAYERS.map((l) => ({
-  id: `tcp-${l.id}`,
-  label: l.name,
-  number: l.number,
-  layer: l.osi[0],
 }));
 
 const PLACE_INTRO = "Arrastra cada tarjeta a su capa, o tócala y luego toca la capa.";
@@ -104,7 +82,7 @@ function Stepper({
           </span>
         ) : null}
       </p>
-      <ol className="mt-2.5 grid grid-cols-7 gap-1.5">
+      <ol className="mt-2.5 grid grid-cols-4 gap-1.5">
         {STEPS.map((step, i) => {
           const isCurrent = i === current;
           const done = step.id === "aprende" ? reached > 0 : results[step.id] !== undefined;
@@ -118,7 +96,7 @@ function Stepper({
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`Paso ${i + 1}: ${step.name}${done ? " (hecho)" : ""}${reachable ? "" : " (aún no disponible)"}`}
                 className={cn(
-                  "group flex w-full flex-col gap-1.5 rounded-md pb-1 text-left disabled:cursor-default",
+                  "group flex min-h-6 w-full flex-col justify-center gap-1.5 rounded-md py-1.5 text-left disabled:cursor-default md:justify-start md:pt-2 md:pb-1",
                   FOCUS_RING,
                 )}
               >
@@ -232,7 +210,12 @@ function Summary({
                     >
                       <LayerNumber n={m.layer} />
                       <span className="min-w-0 flex-1 text-sm text-[var(--foreground)]">{m.label}</span>
-                      <Button variant="soft" size="xs" onClick={() => onStudy(m.layer)}>
+                      <Button
+                        variant="soft"
+                        size="xs"
+                        onClick={() => onStudy(m.layer)}
+                        aria-label={`Ver ficha de ${m.label}`}
+                      >
                         <BookOpen className="size-3.5" aria-hidden />
                         Ver ficha
                       </Button>
@@ -366,7 +349,7 @@ export function OsiTcpIpGame() {
     <PageContainer width="wide">
       <PageHeader
         title="OSI vs TCP/IP"
-        subtitle="Una lección paso a paso: primero aprendes las capas y luego practicas una cosa a la vez."
+        subtitle="Una lección corta: repasa las capas y luego 3 prácticas rápidas."
         actions={
           <Link href="/minijuegos" className={buttonVariants({ variant: "ghost", size: "sm" })}>
             <ArrowLeft className="size-4" aria-hidden />
@@ -429,57 +412,15 @@ export function OsiTcpIpGame() {
             onComplete={done("orden-osi")}
           />,
         )}
-        {panel(
-          "orden-tcpip",
-          <OrderStep
-            key={round["orden-tcpip"] ?? 0}
-            title="Ordena el modelo TCP/IP"
-            instruction={
-              <>
-                TCP/IP tiene solo 4 capas. Ordénalas <strong>de arriba (4) a abajo (1)</strong>.
-                Arrastra o usa las flechas ↑ ↓.
-              </>
-            }
-            hint={
-              <>
-                Piensa de abajo hacia arriba: primero el cable y la tarjeta de red, luego las
-                direcciones IP, luego los puertos TCP/UDP y arriba las apps.
-              </>
-            }
-            items={TCPIP_ORDER}
-            listLabel="Capas TCP/IP, de la 4 (arriba) a la 1 (abajo)"
-            onComplete={done("orden-tcpip")}
-          />,
-        )}
         {panel("relaciona", <MatchStep key={round.relaciona ?? 0} onComplete={done("relaciona")} />)}
         {panel(
-          "ubica-funcion",
+          "ubica",
           <PlaceStep
-            key={round["ubica-funcion"] ?? 0}
-            type="funcion"
-            title="Ubica: ¿qué hace cada capa?"
-            instruction={`Hay 7 tarjetas, una por capa, que dicen lo que hace cada una. ${PLACE_INTRO}`}
-            onComplete={done("ubica-funcion")}
-          />,
-        )}
-        {panel(
-          "ubica-fisico",
-          <PlaceStep
-            key={round["ubica-fisico"] ?? 0}
-            type="fisico"
-            title="Ubica: el sistema físico"
-            instruction={`Cada tarjeta es una pieza o protocolo de una red real. Una por capa. ${PLACE_INTRO}`}
-            onComplete={done("ubica-fisico")}
-          />,
-        )}
-        {panel(
-          "ubica-aws",
-          <PlaceStep
-            key={round["ubica-aws"] ?? 0}
-            type="aws"
-            title="Ubica: servicios de AWS"
-            instruction={`Cada tarjeta es algo de AWS que trabaja en una capa. Una por capa. ${PLACE_INTRO}`}
-            onComplete={done("ubica-aws")}
+            key={round.ubica ?? 0}
+            type="mixto"
+            title="Ubica cada tarjeta en su capa"
+            instruction={`7 tarjetas, una por capa: unas dicen qué hace la capa, otras son piezas de una red real y otras son servicios de AWS. ${PLACE_INTRO}`}
+            onComplete={done("ubica")}
           />,
         )}
         {panel(

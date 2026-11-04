@@ -10,18 +10,17 @@ import type {
   StudySessionView,
   WeakItem,
 } from "@aps/shared";
-import { CelebrateBurst } from "@/components/study/celebrate-burst";
+import { AnswerFeedback } from "@/components/study/answer-feedback";
 import { FlashDeck } from "@/components/study/flash-deck";
-import {
-  WeakListView,
-  WeakSignedOut,
-} from "./weak-list-view";
+import { WeakListView, WeakSignedOut } from "./weak-list-view";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { PageContainer, PageHeader } from "@/components/ui/page";
+import { ProgressBar } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Stat } from "@/components/ui/stat";
 import {
+  fetchProgressOverview,
   fetchWeakItems,
   getStoredToken,
   startWeakReview,
@@ -33,14 +32,15 @@ import { SessionSummary } from "@/components/study/session-summary";
 type Phase = "list" | "play" | "feedback" | "done";
 
 const VARIANT_LABEL: Record<string, string> = {
-  NAME_TO_DEFINITION: "Nombre → definición",
-  DEFINITION_TO_NAME: "Definición → nombre",
-  NAME_FOCUS: "Enfoque en el nombre",
+  NAME_TO_DEFINITION: "¿Qué es?",
+  DEFINITION_TO_NAME: "¿Cuál es?",
+  NAME_FOCUS: "Elige el nombre",
 };
 
 /** No auto-advance — user taps Siguiente after reading feedback. */
 export function MasFalladasClient() {
   const [items, setItems] = useState<WeakItem[] | null>(null);
+  const [hasPlayed, setHasPlayed] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [started, setStarted] = useState<StudyHistoryDetail | null>(null);
@@ -49,9 +49,10 @@ export function MasFalladasClient() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<StudyPrompt | null>(null);
   const [remaining, setRemaining] = useState(0);
-  const [sessionStreak, setSessionStreak] = useState(0);
   const [answered, setAnswered] = useState(0);
+  const [sessionStreak, setSessionStreak] = useState(0);
   const [feedback, setFeedback] = useState<AnswerStudyResponse | null>(null);
+  const [requeued, setRequeued] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [summary, setSummary] = useState<StudySessionSummary | null>(null);
   const answeringRef = useRef(false);
@@ -67,7 +68,11 @@ export function MasFalladasClient() {
     }
     setAuthed(true);
     try {
-      const res = await fetchWeakItems(50);
+      const [res, overview] = await Promise.all([
+        fetchWeakItems(50),
+        fetchProgressOverview().catch(() => null),
+      ]);
+      setHasPlayed(overview?.hasPlayed ?? true);
       setItems(res.items);
     } catch (err) {
       setError(
@@ -91,18 +96,15 @@ export function MasFalladasClient() {
     summaryRef.current = null;
     nextPromptRef.current = null;
     answeringRef.current = false;
-    setAnswered(0);
     try {
       const res = await startWeakReview({});
       setStarted(res.session);
-      const view = (await getStudySession(
-        res.session.id,
-      )) as StudySessionView;
+      const view = (await getStudySession(res.session.id)) as StudySessionView;
       setSessionId(view.sessionId);
       setPrompt(view.current);
       setRemaining(view.remaining);
-      setSessionStreak(view.sessionStreak);
       setAnswered(view.answered);
+      setSessionStreak(view.sessionStreak);
       setPhase(view.current ? "play" : "done");
     } catch (err) {
       setError(
@@ -129,6 +131,7 @@ export function MasFalladasClient() {
         choiceIndex,
       });
       setFeedback(res);
+      setRequeued(!res.correct && res.remaining >= remaining);
       setSessionStreak(res.sessionStreak);
       setRemaining(res.remaining);
       setAnswered((n) => n + 1);
@@ -196,166 +199,133 @@ export function MasFalladasClient() {
       (prompt.variant && VARIANT_LABEL[prompt.variant]) ||
       prompt.variant ||
       "Refuerzo";
-    const cardN = phase === "feedback" ? Math.max(answered, 1) : answered + 1;
+
+    const total = answered + remaining;
+    const progressPct = total ? Math.round((answered / total) * 100) : 0;
 
     return (
-      <PageContainer>
-        <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
-          <p className="font-semibold text-[var(--foreground)]">
-            Racha {sessionStreak}
-          </p>
-          <p className="text-[var(--foreground-muted)]">
-            quedan {remaining}
-          </p>
-        </div>
+      <PageContainer width="wide">
+        <section className="mx-auto w-full min-w-0 py-2 md:max-w-xl lg:max-w-4xl">
+          <div className="mb-2 flex min-w-0 items-center justify-between gap-3">
+            <h1 className="truncate text-xs font-semibold text-[var(--foreground-muted)]">
+              Ronda de refuerzo · Más falladas
+            </h1>
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => {
+                backToList();
+                void load();
+              }}
+            >
+              Salir de la ronda
+            </Button>
+          </div>
+          <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+            <p className="font-semibold text-[var(--foreground)]">
+              Racha {sessionStreak}
+            </p>
+            <p className="tabular-nums text-[var(--foreground-muted)]">
+              {remaining > 0
+                ? `Quedan ${remaining} ${remaining === 1 ? "carta" : "cartas"}`
+                : "¡Listo!"}
+            </p>
+          </div>
 
-        {error ? (
-          <Notice tone="danger" className="mt-4">
-            {error}
-          </Notice>
-        ) : null}
+          <ProgressBar
+            value={progressPct}
+            label="Progreso de la ronda"
+            className="mt-4"
+          />
 
-        <div key={prompt.queueItemId} className="mt-8">
-          <FlashDeck
-            eyebrow={eyebrow}
-            title={prompt.stem}
-            footer={`${cardN} · refuerzo`}
-            flipped={phase === "feedback" && Boolean(feedback)}
-            back={
-              feedback ? (
-                <div className="relative flex h-full flex-col" role="status">
-                  {feedback.correct ? <CelebrateBurst /> : null}
-                  <div className="flex items-start justify-between gap-3">
-                    <span
-                      className={cn(
-                        "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
-                        feedback.correct
-                          ? "bg-[var(--success)] text-[var(--success-fg)]"
-                          : "bg-[var(--danger)] text-[var(--danger-fg)]",
-                      )}
-                    >
-                      {feedback.correct ? (
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          aria-hidden
-                        >
-                          <path
-                            d="M5 12.5l4.5 4.5L19 7"
-                            stroke="currentColor"
-                            strokeWidth="2.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          aria-hidden
-                        >
-                          <path
-                            d="M7 7l10 10M17 7L7 17"
-                            stroke="currentColor"
-                            strokeWidth="2.6"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      )}
-                      {feedback.correct ? "¡Correcto!" : "Incorrecto"}
-                    </span>
-                  </div>
+          {error ? (
+            <Notice tone="danger" className="mt-4">
+              {error}
+            </Notice>
+          ) : null}
 
-                  <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)]">
-                    {feedback.correct
-                      ? feedback.itemMastered
-                        ? "¡Dominado!"
-                        : "Bien"
-                      : "Casi"}
-                  </p>
+          <div key={prompt.queueItemId} className="mt-8">
+            <FlashDeck
+              wide
+              eyebrow={eyebrow}
+              title={prompt.stem}
+              footer={
+                prompt.isRepeat
+                  ? "Otra vez: la fallaste hace un momento"
+                  : "Carta nueva"
+              }
+              flipped={phase === "feedback" && Boolean(feedback)}
+              back={
+                feedback ? (
+                  <AnswerFeedback
+                    correct={feedback.correct}
+                    correctLabel={`${String.fromCharCode(65 + feedback.correctIndex)}. ${prompt.choices[feedback.correctIndex]}`}
+                    explanation={
+                      feedback.explanation?.trim() ||
+                      (feedback.correct
+                        ? "Así se define este concepto."
+                        : `La correcta es «${prompt.choices[feedback.correctIndex]}».`)
+                    }
+                    chosenHint={feedback.chosenHint}
+                    requeued={requeued}
+                    itemMastered={Boolean(feedback.itemMastered)}
+                    streakTowardMastery={feedback.itemConsecutiveCorrect}
+                    nextLabel={
+                      summaryRef.current || feedback.finished
+                        ? "Ver resultado"
+                        : "Siguiente"
+                    }
+                    onNext={onNext}
+                  />
+                ) : null
+              }
+            >
+              <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
+                {prompt.choices.map((choice, idx) => {
+                  const i = idx as 0 | 1 | 2 | 3;
+                  const isSelected = selected === i;
+                  const showKey = phase === "feedback" && feedback;
+                  const isCorrect = Boolean(
+                    showKey && feedback.correctIndex === i,
+                  );
+                  const isWrongPick = Boolean(
+                    showKey && isSelected && !feedback.correct,
+                  );
 
-                  {!feedback.correct ? (
-                    <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
-                      <span className="text-[var(--foreground-muted)]">
-                        Correcta:{" "}
-                      </span>
-                      <span className="font-semibold">
-                        {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
-                        {prompt.choices[feedback.correctIndex]}
-                      </span>
-                    </p>
-                  ) : null}
-
-                  <div className="mt-4 rounded-xl bg-[var(--surface-elevated)] px-3.5 py-3">
-                    <p className="text-xs font-semibold text-[var(--foreground-muted)]">
-                      Explicación
-                    </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
-                      {feedback.explanation?.trim()
-                        ? feedback.explanation
-                        : feedback.correct
-                          ? "Así se define este concepto."
-                          : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
-                    </p>
-                  </div>
-
-                  <Button className="mt-5 w-full" onClick={onNext}>
-                    {summaryRef.current || feedback.finished
-                      ? "Ver resultado"
-                      : "Siguiente"}
-                  </Button>
-                </div>
-              ) : null
-            }
-          >
-            <ul className="mt-3 flex flex-col gap-2" aria-busy={pending}>
-              {prompt.choices.map((choice, idx) => {
-                const i = idx as 0 | 1 | 2 | 3;
-                const isSelected = selected === i;
-                const showKey = phase === "feedback" && feedback;
-                const isCorrect = Boolean(
-                  showKey && feedback.correctIndex === i,
-                );
-                const isWrongPick = Boolean(
-                  showKey && isSelected && !feedback.correct,
-                );
-
-                return (
-                  <li key={`${prompt.queueItemId}-${i}`}>
-                    <button
-                      type="button"
-                      disabled={pending || phase === "feedback"}
-                      onClick={() => {
-                        if (hasTextSelection()) return;
-                        void onAnswer(i);
-                      }}
-                      className={cn(
-                        "keycap keycap-option w-full select-text px-4 py-3 text-sm leading-snug normal-case disabled:cursor-wait",
-                        isCorrect && "keycap-correct",
-                        isWrongPick && "keycap-wrong",
-                        !showKey && isSelected && "keycap-accent",
-                      )}
-                    >
-                      <span className="mr-2 shrink-0 font-semibold opacity-45">
-                        {String.fromCharCode(65 + i)}.
-                      </span>
-                      <span>{choice}</span>
-                      {pending && isSelected ? (
-                        <span className="ml-2 inline-flex align-middle">
-                          <Spinner label="Enviando respuesta" />
+                  return (
+                    <li key={`${prompt.queueItemId}-${i}`}>
+                      <button
+                        type="button"
+                        disabled={pending || phase === "feedback"}
+                        onClick={() => {
+                          if (hasTextSelection()) return;
+                          void onAnswer(i);
+                        }}
+                        className={cn(
+                          "keycap keycap-option w-full select-text px-4 py-3 text-sm leading-snug normal-case disabled:cursor-wait",
+                          isCorrect && "keycap-correct",
+                          isWrongPick && "keycap-wrong",
+                          !showKey && isSelected && "keycap-accent",
+                        )}
+                      >
+                        <span className="mr-2 shrink-0 font-semibold opacity-45">
+                          {String.fromCharCode(65 + i)}.
                         </span>
-                      ) : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </FlashDeck>
-        </div>
+                        <span>{choice}</span>
+                        {pending && isSelected ? (
+                          <span className="ml-2 inline-flex align-middle">
+                            <Spinner label="Enviando respuesta" />
+                          </span>
+                        ) : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </FlashDeck>
+          </div>
+        </section>
       </PageContainer>
     );
   }
@@ -365,6 +335,7 @@ export function MasFalladasClient() {
       <PageContainer width="wide">
         <SessionSummary
           summary={summary}
+          autoReturn={false}
           extraAction={{ label: "Volver a la lista", onClick: backToList }}
         />
       </PageContainer>
@@ -416,6 +387,7 @@ export function MasFalladasClient() {
   return (
     <WeakListView
       items={items}
+      hasPlayed={hasPlayed}
       error={error}
       pending={pending}
       onStudyWeak={() => void onStudyWeak()}

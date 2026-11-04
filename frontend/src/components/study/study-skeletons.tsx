@@ -1,7 +1,6 @@
 import { Mascot } from "@/components/brand/mascot";
 import { FlashDeck } from "@/components/study/flash-deck";
 import { Card } from "@/components/ui/card";
-import { SectionTitle } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import {
@@ -10,14 +9,14 @@ import {
   BUILDER_MAIN,
 } from "./session-builder/builder-model";
 
-/** "Arma tu partida" while topics and progress load: same header, cards and topic grid. */
+/** Session builder while topics and progress load: same header, cards and topic grid. */
 export function BuilderSkeleton({
   message = "Cargando tus temas…",
 }: {
   message?: string;
 }) {
   return (
-    <div aria-busy="true" className={BUILDER_GRID}>
+    <div aria-busy="true" data-session-builder className={BUILDER_GRID}>
       <p className="sr-only" role="status">
         {message}
       </p>
@@ -25,10 +24,14 @@ export function BuilderSkeleton({
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="font-sans text-2xl font-extrabold leading-tight tracking-tight text-[var(--foreground)] sm:text-3xl">
-              Arma tu partida
+              Personaliza tu sesión de cartas
             </p>
-            <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-              Elige temas, cuántas cartas y cómo se reparten.
+            <p className="mt-1 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
+              Sigue los 3 pasos y luego toca{" "}
+              <span className="font-semibold text-[var(--foreground)]">
+                Iniciar con mis opciones
+              </span>
+              : tu sesión usará lo que elijas.
             </p>
           </div>
           <Mascot
@@ -48,8 +51,10 @@ export function BuilderSkeleton({
           ))}
         </div>
 
-        <section className="mt-6">
-          <SectionTitle as="h3">Qué temas entran</SectionTitle>
+        <Card padding="sm" className="mt-3 md:mt-5 lg:mt-6">
+          <p className="text-sm font-semibold text-[var(--foreground)]">
+            Qué temas entran
+          </p>
           <div className="mt-3.5 flex flex-wrap gap-2">
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-9 w-28 rounded-full" />
@@ -61,14 +66,19 @@ export function BuilderSkeleton({
                 <Skeleton className="block h-4 w-40" />
                 <Skeleton className="h-8 w-24 rounded-full" />
               </div>
-              <div className={cn(BUILDER_HALVES, "mt-2 gap-1.5 md:gap-x-5 lg:gap-x-6")}>
+              <div
+                className={cn(
+                  BUILDER_HALVES,
+                  "mt-2 gap-1.5 md:gap-x-5 lg:gap-x-6",
+                )}
+              >
                 {[0, 1, 2, 3].map((i) => (
                   <Skeleton key={i} className="block h-14 w-full rounded-xl" />
                 ))}
               </div>
             </div>
           ))}
-        </section>
+        </Card>
       </div>
 
       <div className="hidden lg:col-span-4 lg:block" aria-hidden>

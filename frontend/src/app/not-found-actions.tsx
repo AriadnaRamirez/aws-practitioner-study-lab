@@ -8,7 +8,7 @@ import { getStoredToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const TEXT_LINK = cn(
-  "rounded-sm text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline",
+  "inline-flex min-h-6 items-center rounded-sm text-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline",
   FOCUS_RING,
 );
 

@@ -19,7 +19,7 @@ const DENYLIST = new Set(
   ].map((s) => s.toLowerCase()),
 );
 
-export interface PasswordStrengthResult {
+interface PasswordStrengthResult {
   ok: boolean;
   errors: string[];
 }
@@ -44,10 +44,6 @@ export function validatePasswordStrength(password: string): PasswordStrengthResu
   }
 
   return { ok: errors.length === 0, errors };
-}
-
-export function hasRecommendedSymbol(password: string): boolean {
-  return /[^A-Za-z0-9]/.test(password);
 }
 
 export async function hashPassword(password: string): Promise<string> {

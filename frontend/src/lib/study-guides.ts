@@ -30,7 +30,10 @@ export type StudyGuide = {
   sections: StudyCategory[];
 };
 
-function moduleGuide(id: StudyGuideId, categoryId: StudyCategoryId): StudyGuide {
+function moduleGuide(
+  id: StudyGuideId,
+  categoryId: StudyCategoryId,
+): StudyGuide {
   const category = categoryById(categoryId);
   if (!category) throw new Error(`Unknown study category ${categoryId}`);
   return {
@@ -94,7 +97,6 @@ export function guideConceptCount(
 
 const MEANS_QUOTED = /significa\s+[“"']([^”"']+)[”"']/;
 const MEANS_PLAIN = /significa\s+([^.:\n]+)/;
-const TRADE_NAME = /es un nombre comercial, no una sigla/;
 
 /**
  * Sigla o “Nombre comercial”, para mostrarla junto al nombre y no como párrafo.
@@ -137,9 +139,10 @@ function sharedRatio(sentence: string, definition: string): number {
 function restatesDefinition(sentence: string, definition: string): boolean {
   const ratio = sharedRatio(sentence, definition);
   if (ratio >= 0.45) return true;
-  const copula = /^\s*(?:el |la |los |las |un |una )?\S+\s+es\s+(?:un|una|el|la)\b/i.test(
-    sentence,
-  );
+  const copula =
+    /^\s*(?:el |la |los |las |un |una )?\S+\s+es\s+(?:un|una|el|la)\b/i.test(
+      sentence,
+    );
   return copula && ratio >= 0.25;
 }
 
@@ -153,17 +156,24 @@ export function guideNote(item: KnowledgeItem): string | null {
   const definition = item.definition.trim().replace(/[.\s]+$/, "");
   let note = raw;
   if (definition) {
-    const at = note.toLocaleLowerCase("es").indexOf(definition.toLocaleLowerCase("es"));
+    const at = note
+      .toLocaleLowerCase("es")
+      .indexOf(definition.toLocaleLowerCase("es"));
     if (at !== -1) {
       note = `${note.slice(0, at)} ${note.slice(at + definition.length).replace(/^[.\s]+/, "")}`;
     }
   }
-  note = stripNaming(note).replace(/\s+/g, " ").trim().replace(/^[.\s]+/, "");
+  note = stripNaming(note)
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[.\s]+/, "");
 
   const kept = note
     .split(/(?<=[.!?])\s+/)
     .map((sentence) => sentence.trim())
-    .filter((sentence) => sentence && !restatesDefinition(sentence, item.definition));
+    .filter(
+      (sentence) => sentence && !restatesDefinition(sentence, item.definition),
+    );
   const text = kept.join(" ").trim();
   if (!text) return null;
   return text.charAt(0).toLocaleUpperCase("es") + text.slice(1);
@@ -179,8 +189,13 @@ export async function fetchGuideKnowledge(): Promise<KnowledgeItem[]> {
   try {
     res = await fetch(`${getApiUrl()}/knowledge-items`, { cache: "no-store" });
   } catch {
-    throw new Error("No se pudo contactar la API. Intenta de nuevo.");
+    throw new Error(
+      "No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.",
+    );
   }
-  if (!res.ok) throw new Error(`No se pudieron cargar los conceptos (${res.status})`);
+  if (!res.ok)
+    throw new Error(
+      "No pudimos cargar los conceptos. Inténtalo de nuevo en un momento.",
+    );
   return (await res.json()) as KnowledgeItem[];
 }

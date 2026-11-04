@@ -5,10 +5,13 @@ import type {
   StudyMode,
   TimedSessionStatus,
 } from '@aps/shared';
+import type { MissLedger } from './miss-ledger';
 
 export interface QueueEntry {
   queueItemId: string;
   itemId: string;
+  /** Miss-repeat of a card failed earlier in this session. */
+  repeat?: boolean;
 }
 
 export interface BankItem {
@@ -17,6 +20,8 @@ export interface BankItem {
   correctIndex: 0 | 1 | 2 | 3;
   explanation: string;
   topicId?: string;
+  /** Flash variant a knowledge card was rendered with (weak review). */
+  variant?: string;
 }
 
 /** In-memory study sessions (EXAM_STUDY / WEAK_REVIEW play queue). */
@@ -36,6 +41,7 @@ export interface StudySessionRecord {
   correctAnswers: number;
   incorrectAnswers: number;
   missRepeats: number;
+  ledger?: MissLedger;
   status: 'active' | 'completed';
   createdAt: string;
   endedAt?: string;

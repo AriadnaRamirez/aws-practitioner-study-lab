@@ -14,7 +14,7 @@ export type AwsGuideConcept = {
   wrongDefinitions: [string, string, string];
 };
 
-export type AwsGuideQuestion = {
+type AwsGuideQuestion = {
   number: number;
   conceptKey: string;
   stem: string;

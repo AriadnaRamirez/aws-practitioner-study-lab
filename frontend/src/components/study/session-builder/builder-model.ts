@@ -115,7 +115,7 @@ export function plural(n: number, one: string, many: string): string {
 
 const STORAGE_KEY = "aps:arma-tu-partida:v1";
 
-export type BuilderPrefs = {
+type BuilderPrefs = {
   categoryIds: string[];
   size: StudySize;
   distribution: Distribution;

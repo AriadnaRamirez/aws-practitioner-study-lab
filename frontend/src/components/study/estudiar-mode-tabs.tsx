@@ -108,6 +108,7 @@ function EstudiarHubInner() {
       width={mode === "flash" ? "wide" : "default"}
       className={cn(
         "[@media(max-height:500px)]:md:py-4",
+        "[&:has([data-session-builder])>header]:hidden [&:has([data-session-builder])>[role=tablist]]:mt-0 [&:has([data-session-builder]):not(:has([role=tablist]))>section]:mt-0",
         "[&:has([data-session-summary])>header]:hidden [&:has([data-session-summary])>section]:mt-0",
         "[@media(max-height:500px)]:[&:has([data-study-card])>header]:hidden [@media(max-height:500px)]:[&:has([data-study-card])>[role=tablist]]:hidden [@media(max-height:500px)]:[&:has([data-study-card])>section]:mt-0",
       )}
@@ -115,10 +116,13 @@ function EstudiarHubInner() {
       <PageHeader title="Estudiar" />
       {examModes ? <EstudiarModeTabs mode={mode} /> : null}
 
-      <section className="mt-8 min-w-0" aria-live="polite">
+      <section className="mt-8 min-w-0">
         {redirecting ? (
           parsed === "examen" ? (
-            <ScreenLoader message="Abriendo el modo examen…" className="py-10" />
+            <ScreenLoader
+              message="Abriendo el modo examen…"
+              className="py-10"
+            />
           ) : (
             <BuilderSkeleton message="Preparando tu modo de estudio…" />
           )
@@ -139,8 +143,7 @@ export function EstudiarHub() {
     <Suspense
       fallback={
         <PageContainer width="wide">
-          <PageHeader title="Estudiar" />
-          <section className="mt-8 min-w-0">
+          <section className="min-w-0">
             <BuilderSkeleton />
           </section>
         </PageContainer>

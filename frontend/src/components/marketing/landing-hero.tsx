@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
@@ -15,6 +16,12 @@ const TEXT_LINK = cn(
   "rounded-sm font-medium text-[var(--foreground)] underline-offset-4 hover:underline",
   FOCUS_RING,
 );
+
+const HOW_IT_WORKS = [
+  "Partidas cortas de cartas con los conceptos del examen",
+  "Cada respuesta te explica el porqué",
+  "Lo que fallas vuelve a salir hasta que lo domines",
+];
 
 function ByeBanner() {
   const params = useSearchParams();
@@ -77,32 +84,46 @@ export function LandingHero() {
           />
         </div>
 
-        <Link
-          href="/login"
-          prefetch={false}
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            "mt-8 w-full max-w-xs sm:mt-10 md:col-start-1 md:row-start-4 md:mt-8 [@media(max-height:500px)]:md:mt-5",
-          )}
-        >
-          Entrar
-        </Link>
-
-        <p className="mt-4 text-sm text-[var(--foreground-muted)] md:col-start-1 md:row-start-5 md:w-full md:max-w-xs md:text-center">
-          <Link href="/register" prefetch={false} className={TEXT_LINK}>
+        <div className="mt-8 flex w-full max-w-xs flex-col gap-3 sm:mt-10 md:col-start-1 md:row-start-4 md:mt-8 [@media(max-height:500px)]:md:mt-5">
+          <Link
+            href="/guest"
+            prefetch={false}
+            className={cn(buttonVariants({ size: "lg" }), "w-full")}
+          >
+            Probar sin cuenta
+          </Link>
+          <Link
+            href="/register"
+            prefetch={false}
+            className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "w-full")}
+          >
             Crear cuenta
           </Link>
-          <span className="mx-2 opacity-40" aria-hidden>
-            ·
-          </span>
-          <Link href="/guest" prefetch={false} className={TEXT_LINK}>
-            Probar
+        </div>
+
+        <p className="mt-4 text-sm text-[var(--foreground-muted)] md:col-start-1 md:row-start-5 md:w-full md:max-w-xs md:text-center">
+          ¿Ya tienes cuenta?{" "}
+          <Link href="/login" prefetch={false} className={cn(TEXT_LINK, "inline-flex min-h-6 items-center")}>
+            Entrar
           </Link>
         </p>
 
-        <p className="mt-8 max-w-[18rem] text-sm leading-snug text-[var(--foreground-muted)] sm:mt-10 md:col-start-1 md:row-start-3 md:mt-3 md:max-w-sm md:text-base lg:text-lg">
-          Prepárate para la certificación AWS Cloud Practitioner
-        </p>
+        <div className="mt-8 sm:mt-10 md:col-start-1 md:row-start-3 md:mt-3">
+          <p className="mx-auto max-w-[18rem] text-sm leading-snug text-[var(--foreground-muted)] md:mx-0 md:max-w-sm md:text-base lg:text-lg">
+            Prepárate para la certificación AWS Cloud Practitioner
+          </p>
+          <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left text-sm text-[var(--foreground)] md:mx-0">
+            {HOW_IT_WORKS.map((line) => (
+              <li key={line} className="flex items-start gap-2.5">
+                <Check
+                  className="mt-0.5 size-4 shrink-0 text-[var(--success-text)]"
+                  aria-hidden
+                />
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
       </main>
 
       <div className="relative z-10 mt-auto">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ScreenLoader } from "@/components/ui/screen-loader";
 import { clearAuth } from "@/lib/api";
 
-/** Client logout: clears JWT storage and returns to landing (CCST `?bye=1`). */
+/** Client logout: clears JWT storage and returns to landing with `?bye=1`. */
 export default function LogoutPage() {
   const router = useRouter();
 

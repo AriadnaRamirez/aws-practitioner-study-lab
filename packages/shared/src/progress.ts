@@ -146,6 +146,8 @@ export interface ProgressOverview {
   masteredToday: number;
   /** Share of correct answers over the latest attempts (0–1); null if too few. */
   recentAccuracy: number | null;
+  /** False until the user answers their first card. */
+  hasPlayed: boolean;
   activeSessions: ActiveSessionSummary[];
 }
 

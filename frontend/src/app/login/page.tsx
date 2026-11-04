@@ -15,12 +15,8 @@ import { PAGE_TITLE, PageContainer } from "@/components/ui/page";
 import { ScreenLoader } from "@/components/ui/screen-loader";
 import { cn } from "@/lib/utils";
 import { login, setStoredUser, storeAuth, updateProfile } from "@/lib/api";
+import { isSafeNextPath, routeLabel } from "@/lib/route-labels";
 import { detectTimezone } from "@/lib/timezone";
-
-const DEMO_ACCOUNTS = [
-  { label: "Demo", identifier: "demo", password: "StudyPass1!" },
-  { label: "Admin", identifier: "admin", password: "ChangeMeAdmin1!" },
-] as const;
 
 const LINK = cn(
   "rounded-sm font-semibold text-[var(--foreground)] underline-offset-4 hover:underline",
@@ -28,17 +24,17 @@ const LINK = cn(
 );
 
 function safeNextPath(raw: string | null, role: string): string {
-  if (role === "ADMIN") return "/admin";
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/login")) {
-    return "/dashboard";
+  if (role === "ADMIN") {
+    return isSafeNextPath(raw) && raw.startsWith("/admin") ? raw : "/admin";
   }
-  return raw;
+  return isSafeNextPath(raw) ? raw : "/dashboard";
 }
 
 /** Mobile: la mascota ocupa el alto libre; form y enlaces quedan abajo, al alcance del pulgar. */
 function LoginForm() {
   const searchParams = useSearchParams();
   const nextParam = searchParams.get("next");
+  const expired = searchParams.get("expired") === "1";
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,11 +42,15 @@ function LoginForm() {
   const [pending, setPending] = useState(false);
 
   const hint = useMemo(() => {
-    if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
-      return `Luego vuelves a ${nextParam}.`;
+    const lead = expired ? "Tu sesión expiró y tu progreso está a salvo. " : "";
+    if (!isSafeNextPath(nextParam)) {
+      return expired ? `${lead}Entra de nuevo para seguir.` : null;
     }
-    return null;
-  }, [nextParam]);
+    const label = routeLabel(nextParam);
+    return label
+      ? `${lead}Entra y te regresamos a ${label}.`
+      : `${lead}Entra y te regresamos a donde estabas.`;
+  }, [expired, nextParam]);
 
   async function doLogin(idValue: string, passwordValue: string) {
     setError(null);
@@ -180,27 +180,6 @@ function LoginForm() {
               Probar sin cuenta
             </Link>
           </p>
-
-          <ul className="mt-4 flex gap-2">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <li key={acc.identifier} className="flex-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  disabled={pending}
-                  onClick={() => {
-                    setIdentifier(acc.identifier);
-                    setPassword(acc.password);
-                    void doLogin(acc.identifier, acc.password);
-                  }}
-                  className="w-full"
-                >
-                  {acc.label}
-                </Button>
-              </li>
-            ))}
-          </ul>
         </PageContainer>
       </main>
     </div>

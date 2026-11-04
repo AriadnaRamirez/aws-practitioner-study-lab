@@ -3,7 +3,7 @@ import { FLASH_VARIANTS } from '@aps/shared';
 
 export type ExamChoicesTuple = [string, string, string, string];
 
-export interface RenderedFlash {
+interface RenderedFlash {
   variant: FlashVariant;
   stem: string;
   choices: ExamChoicesTuple;
@@ -59,11 +59,59 @@ function packChoices(
   };
 }
 
-/** Same-topic names make plausible distractors; fall back to the whole pool. */
-function otherNames(item: KnowledgeItem, pool: KnowledgeItem[]): string[] {
-  const others = pool.filter((k) => k.id !== item.id);
+/** Topic id → taxonomy kind (SERVICE / CONCEPT); undefined when unknown. */
+export type TopicTypeOf = (topicId: string) => string | undefined;
+
+/**
+ * Three plausible wrong names: same topic first, then same kind of topic,
+ * then anything. A service never competes only against concepts.
+ */
+function rankedNames(
+  item: KnowledgeItem,
+  pool: KnowledgeItem[],
+  topicTypeOf?: TopicTypeOf,
+): string[] {
+  const others = pool.filter((k) => k.id !== item.id && k.name.trim() !== item.name.trim());
+  const kind = topicTypeOf?.(item.topicId);
   const sameTopic = others.filter((k) => k.topicId === item.topicId);
-  return (sameTopic.length >= 3 ? sameTopic : others).map((k) => k.name);
+  const sameKind = others.filter(
+    (k) => k.topicId !== item.topicId && kind != null && topicTypeOf?.(k.topicId) === kind,
+  );
+  const rest = others.filter((k) => !sameTopic.includes(k) && !sameKind.includes(k));
+  const ranked = [
+    ...shuffleInPlace([...sameTopic]),
+    ...shuffleInPlace([...sameKind]),
+    ...shuffleInPlace([...rest]),
+  ].map((k) => k.name.trim());
+  return [...new Set(ranked)].slice(0, 3);
+}
+
+/**
+ * Every variant already shows the definition (stem or correct choice), so
+ * drop it from the explanation instead of reading it twice.
+ */
+export function flashExplanation(item: KnowledgeItem): string {
+  const definition = item.definition.trim();
+  const full = item.explanation.trim();
+  if (!definition || !full.includes(definition)) return full;
+  const rest = full.replace(definition, '').replace(/\s{2,}/g, ' ').trim();
+  return rest.length >= 12 ? rest : full;
+}
+
+/** What the wrong pick actually is, so the miss teaches a contrast. */
+export function describeWrongChoice(
+  chosen: string,
+  item: KnowledgeItem,
+  pool: KnowledgeItem[],
+): string | null {
+  const text = chosen.trim();
+  if (!text) return null;
+  const others = pool.filter((k) => k.id !== item.id);
+  const byName = others.find((k) => k.name.trim() === text);
+  if (byName) return `${byName.name}: ${byName.definition.trim()}`;
+  const byDefinition = others.find((k) => k.definition.trim() === text);
+  if (byDefinition) return `Esa descripción es de ${byDefinition.name}.`;
+  return null;
 }
 
 export function pickVariant(item: KnowledgeItem): FlashVariant {
@@ -81,6 +129,7 @@ export function renderFlashVariant(
   item: KnowledgeItem,
   variant: FlashVariant,
   pool: KnowledgeItem[],
+  topicTypeOf?: TopicTypeOf,
 ): RenderedFlash {
   switch (variant) {
     case 'NAME_TO_DEFINITION': {
@@ -93,13 +142,13 @@ export function renderFlashVariant(
       return {
         variant,
         stem: `¿Qué es ${item.name}?`,
-        explanation: item.explanation,
+        explanation: flashExplanation(item),
         ...packed,
       };
     }
     case 'DEFINITION_TO_NAME': {
       const distractors = padDistractors(
-        pickThree(otherNames(item, pool), item.name),
+        rankedNames(item, pool, topicTypeOf),
         item.distractors,
         item.name,
       );
@@ -107,13 +156,13 @@ export function renderFlashVariant(
       return {
         variant,
         stem: item.definition,
-        explanation: item.explanation,
+        explanation: flashExplanation(item),
         ...packed,
       };
     }
     case 'NAME_FOCUS': {
       const distractors = padDistractors(
-        pickThree(otherNames(item, pool), item.name),
+        rankedNames(item, pool, topicTypeOf),
         item.distractors,
         item.name,
       );
@@ -121,7 +170,7 @@ export function renderFlashVariant(
       return {
         variant,
         stem: `Identifica el nombre correcto: «${item.definition.trim()}»`,
-        explanation: item.explanation,
+        explanation: flashExplanation(item),
         ...packed,
       };
     }

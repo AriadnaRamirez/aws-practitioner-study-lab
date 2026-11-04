@@ -21,6 +21,7 @@ import type {
   WeakItemsResponse,
 } from '@aps/shared';
 import { GUEST_PROBE_STORAGE_KEY } from '@aps/shared';
+import { loginHref } from '@/lib/route-labels';
 
 // Relative by default so Try Live / port-forward use the same host as the UI
 // (Next rewrites /api/v1 → Nest). Override with NEXT_PUBLIC_API_URL if needed.
@@ -106,6 +107,32 @@ export function getStoredUser(): PublicUser | null {
   }
 }
 
+export const OFFLINE_MESSAGE =
+  'No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo.';
+export const EXPIRED_MESSAGE = 'Tu sesión expiró. Vuelve a entrar para seguir.';
+
+/**
+ * 401 from the JWT guard (bad/expired token). Wrong-password 401s carry their
+ * own message and must stay on the form.
+ */
+export function isExpiredSession(status: number, message: string): boolean {
+  return (
+    status === 401 &&
+    (message === 'Unauthorized' || message.startsWith('Sesión'))
+  );
+}
+
+/** Drops the dead token and sends the student to login, back here afterwards. */
+export function expireSession() {
+  if (typeof window === 'undefined') return;
+  clearAuth();
+  const here = `${window.location.pathname}${window.location.search}`;
+  const href = loginHref(here);
+  window.location.assign(`${href}${href.includes('?') ? '&' : '?'}expired=1`);
+}
+const SERVER_ERROR_MESSAGE =
+  'Algo falló de nuestro lado. Inténtalo de nuevo en un momento.';
+
 async function parseError(res: Response): Promise<string> {
   try {
     const body = (await res.json()) as {
@@ -127,10 +154,23 @@ async function parseError(res: Response): Promise<string> {
   return `Error ${res.status}`;
 }
 
-async function apiFetch<T>(
-  path: string,
-  init?: RequestInit & { auth?: boolean },
-): Promise<T> {
+type ApiInit = RequestInit & { auth?: boolean };
+
+/** Identical GETs issued while one is still pending share a single request. */
+const inflight = new Map<string, Promise<unknown>>();
+
+function apiFetch<T>(path: string, init?: ApiInit): Promise<T> {
+  const method = (init?.method ?? 'GET').toUpperCase();
+  if (method !== 'GET' || init?.body) return request<T>(path, init);
+  const key = `${init?.auth ? getStoredToken() : ''}|${path}`;
+  const pending = inflight.get(key);
+  if (pending) return pending as Promise<T>;
+  const promise = request<T>(path, init).finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
+}
+
+async function request<T>(path: string, init?: ApiInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (!headers.has('Content-Type') && init?.body) {
     headers.set('Content-Type', 'application/json');
@@ -144,12 +184,16 @@ async function apiFetch<T>(
   try {
     res = await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
-    throw new Error(
-      'No se pudo contactar la API. ¿Está corriendo el backend en :43124?',
-    );
+    throw new Error(OFFLINE_MESSAGE);
   }
   if (!res.ok) {
-    throw new Error(await parseError(res));
+    if (res.status >= 500) throw new Error(SERVER_ERROR_MESSAGE);
+    const message = await parseError(res);
+    if (headers.has('Authorization') && isExpiredSession(res.status, message)) {
+      expireSession();
+      throw new Error(EXPIRED_MESSAGE);
+    }
+    throw new Error(message);
   }
   return res.json() as Promise<T>;
 }
@@ -235,6 +279,13 @@ export function changePassword(body: ChangePasswordRequest) {
     auth: true,
     body: JSON.stringify(body),
   });
+}
+
+/** Dispatched on `window` when a session ends so header stats refetch. */
+export const PROGRESS_CHANGED_EVENT = 'aps:progress-changed';
+
+export function notifyProgressChanged() {
+  window.dispatchEvent(new Event(PROGRESS_CHANGED_EVENT));
 }
 
 export function fetchProgressOverview() {

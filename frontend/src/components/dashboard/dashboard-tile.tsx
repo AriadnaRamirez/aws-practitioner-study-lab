@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /** Secondary text action inside a tile ("Ir a Cuenta"). */
 export const tileLinkClass = cn(
-  "inline-flex items-center gap-1 rounded-md text-sm font-semibold text-[var(--accent)] underline-offset-4 transition-colors hover:text-[var(--accent-hover)] hover:underline",
+  "inline-flex min-h-6 items-center gap-1 rounded-md text-sm font-semibold text-[var(--accent)] underline-offset-4 transition-colors hover:text-[var(--accent-hover)] hover:underline",
   FOCUS_RING,
 );
 

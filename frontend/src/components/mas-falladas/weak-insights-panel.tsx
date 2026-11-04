@@ -3,8 +3,8 @@
 import Link from "next/link";
 import {
   ArrowLeftRight,
-  ArrowRight,
   CalendarClock,
+  ChevronRight,
   Mountain,
   RotateCcw,
   Target,
@@ -12,10 +12,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { MASTERY_STREAK, type WeakItem } from "@aps/shared";
-import { BENTO_LIST, bentoFill } from "@/components/ui/bento-tile";
+import { tileLinkClass } from "@/components/dashboard/dashboard-tile";
 import { Card, CardLabel } from "@/components/ui/card";
-import { FOCUS_RING } from "@/components/ui/focus";
-import { SectionTitle } from "@/components/ui/page";
 import { cn } from "@/lib/utils";
 import {
   confusedWithName,
@@ -50,26 +48,13 @@ const ICONS = {
   recent: CalendarClock,
 } satisfies Record<string, LucideIcon>;
 
-const actionClass = cn(
-  "group/action inline-flex w-fit items-center gap-1 rounded-md text-sm font-semibold text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)] disabled:pointer-events-none disabled:opacity-50",
-  FOCUS_RING,
-);
-
-function ActionLabel({ children }: { children: string }) {
-  return (
-    <>
-      {children}
-      <ArrowRight
-        aria-hidden
-        className="size-3.5 transition-transform group-hover/action:translate-x-0.5"
-      />
-    </>
-  );
-}
-
 const titles = (items: WeakItem[]) => joinNames(items.map((it) => it.title));
 
-function buildInsights(items: WeakItem[], pending: WeakItem[]): Insight[] {
+/** Up to three things worth acting on, most useful first. */
+export function buildInsights(
+  items: WeakItem[],
+  pending: WeakItem[],
+): Insight[] {
   const out: Insight[] = [];
 
   const topic = hardestTopic(items);
@@ -79,7 +64,11 @@ function buildInsights(items: WeakItem[], pending: WeakItem[]): Insight[] {
       label: "Tema más difícil",
       value: topic.topicName,
       meta: `${topic.cards} de ${plural(items.length, "carta fallada", "cartas falladas")}`,
-      action: { kind: "link", href: topicPracticeHref(topic.topicId), label: "Practicar tema" },
+      action: {
+        kind: "link",
+        href: topicPracticeHref(topic.topicId),
+        label: "Practicar tema",
+      },
     });
   }
 
@@ -107,14 +96,19 @@ function buildInsights(items: WeakItem[], pending: WeakItem[]): Insight[] {
     });
   }
 
-  const almost = pending.filter((it) => it.consecutiveCorrect === MASTERY_STREAK - 1);
+  const almost = pending.filter(
+    (it) => it.consecutiveCorrect === MASTERY_STREAK - 1,
+  );
   if (almost.length) {
     out.push({
       id: "almost",
-      label: "A 1 acierto",
+      label: "Casi dominadas",
       value: plural(almost.length, "carta", "cartas"),
       meta: titles(almost),
-      action: { kind: "study", label: almost.length === 1 ? "Remátala" : "Remátalas" },
+      action: {
+        kind: "study",
+        label: almost.length === 1 ? "Remátala" : "Remátalas",
+      },
     });
   }
 
@@ -156,10 +150,17 @@ function InsightActionButton({
   onStudyWeak: () => void;
   onOpenItem: (item: WeakItem) => void;
 }) {
+  const content = (
+    <>
+      {action.label}
+      <ChevronRight className="size-4" aria-hidden />
+    </>
+  );
+
   if (action.kind === "link") {
     return (
-      <Link href={action.href} className={actionClass}>
-        <ActionLabel>{action.label}</ActionLabel>
+      <Link href={action.href} className={tileLinkClass}>
+        {content}
       </Link>
     );
   }
@@ -170,10 +171,10 @@ function InsightActionButton({
       <button
         type="button"
         aria-haspopup="dialog"
-        className={actionClass}
+        className={tileLinkClass}
         onClick={() => onOpenItem(item)}
       >
-        <ActionLabel>{action.label}</ActionLabel>
+        {content}
       </button>
     );
   }
@@ -181,68 +182,77 @@ function InsightActionButton({
   return (
     <button
       type="button"
-      className={actionClass}
+      className={cn(
+        tileLinkClass,
+        "disabled:pointer-events-none disabled:opacity-50",
+      )}
       disabled={studyPending}
       onClick={onStudyWeak}
     >
-      <ActionLabel>{action.label}</ActionLabel>
+      {content}
     </button>
   );
 }
 
-export function WeakInsightsPanel({
-  items,
-  pending,
+/** "Pistas": the insights side by side in one quiet band, split by hairlines. */
+export function InsightsStrip({
+  insights,
   studyPending,
   onStudyWeak,
   onOpenItem,
   className,
 }: {
-  items: WeakItem[];
-  pending: WeakItem[];
+  insights: Insight[];
   studyPending: boolean;
   onStudyWeak: () => void;
   onOpenItem: (item: WeakItem) => void;
   className?: string;
 }) {
-  const insights = buildInsights(items, pending);
   if (!insights.length) return null;
-
   return (
-    <section aria-labelledby="para-ti" className={className}>
-      <SectionTitle id="para-ti">Para ti</SectionTitle>
-      <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-        Lo que noté en tus fallos y por dónde seguir.
-      </p>
-      <ul className={cn(BENTO_LIST, "mt-4")}>
-        {insights.map((insight, i) => {
+    <Card
+      as="section"
+      aria-labelledby="pistas"
+      padding="none"
+      className={className}
+    >
+      <h2 id="pistas" className="sr-only">
+        Pistas sobre tus fallos
+      </h2>
+      <ul
+        className={cn(
+          "grid divide-y divide-[var(--border)] md:divide-x md:divide-y-0",
+          insights.length === 3
+            ? "md:grid-cols-3"
+            : insights.length === 2
+              ? "md:grid-cols-2"
+              : "",
+        )}
+      >
+        {insights.map((insight) => {
           const Icon = ICONS[insight.id];
           return (
-            <Card
-              as="li"
+            <li
               key={insight.id}
-              className={cn(
-                bentoFill(i, insights.length, { md: 3 }),
-                "flex flex-col",
-              )}
+              className="flex min-w-0 flex-col px-5 py-4 sm:px-6"
             >
               <CardLabel as="p" icon={<Icon aria-hidden />}>
                 {insight.label}
               </CardLabel>
               <p
-                className="mt-3 line-clamp-2 break-words text-xl font-extrabold leading-tight tracking-tight text-[var(--foreground)]"
+                className="mt-2 line-clamp-2 break-words text-lg font-extrabold leading-tight tracking-tight text-[var(--foreground)]"
                 title={insight.value}
               >
                 {insight.value}
               </p>
               <p
-                className="mt-1 truncate text-sm text-[var(--foreground-muted)]"
+                className="mt-0.5 truncate text-sm text-[var(--foreground-muted)]"
                 title={insight.meta}
               >
                 {insight.meta}
               </p>
               {insight.action ? (
-                <div className="mt-auto pt-4">
+                <div className="mt-auto pt-3">
                   <InsightActionButton
                     action={insight.action}
                     studyPending={studyPending}
@@ -251,10 +261,10 @@ export function WeakInsightsPanel({
                   />
                 </div>
               ) : null}
-            </Card>
+            </li>
           );
         })}
       </ul>
-    </section>
+    </Card>
   );
 }

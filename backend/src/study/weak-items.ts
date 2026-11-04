@@ -15,7 +15,7 @@ export interface WeakItemContent {
   explanation: string | null;
 }
 
-export interface WeakProgressRow {
+interface WeakProgressRow {
   itemType: string;
   itemId: string;
   failCount: number;
@@ -73,13 +73,13 @@ export interface FailedAttemptRow {
   variant: string | null;
 }
 
-export interface Confusion {
+interface Confusion {
   text: string;
   variant: string | null;
   count: number;
 }
 
-export interface FailureStats {
+interface FailureStats {
   lastFailedAt: Date;
   confusion: Confusion | null;
 }

@@ -221,12 +221,6 @@ export const TCPIP_LAYERS: readonly TcpIpLayer[] = [
 
 export type ChipType = "funcion" | "fisico" | "aws";
 
-export const CHIP_TYPE_LABEL: Record<ChipType, string> = {
-  funcion: "Qué hace",
-  fisico: "Sistema físico",
-  aws: "AWS",
-};
-
 export type PlaceChip = {
   id: string;
   label: string;
@@ -374,14 +368,30 @@ export const PLACE_CHIPS: Record<ChipType, readonly PlaceChip[]> = {
   ],
 };
 
+export type MixedChip = PlaceChip & { type: ChipType };
+
+/**
+ * Una tarjeta por capa, con los tres tipos repartidos (2–3 de cada uno) al azar,
+ * para practicar todo en una sola ronda.
+ */
+export function mixedPlaceChips(random: () => number = Math.random): MixedChip[] {
+  const types: ChipType[] = ["funcion", "fisico", "aws"];
+  const pool: ChipType[] = [...types, ...types, types[Math.floor(random() * types.length)]];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return OSI_LAYERS.map((layer, i) => {
+    const type = pool[i];
+    const chip = PLACE_CHIPS[type].find((c) => c.layer === layer.number)!;
+    return { ...chip, type };
+  });
+}
+
 export function osiLayer(n: OsiLayerNumber): OsiLayer {
   return OSI_LAYERS.find((l) => l.number === n)!;
 }
 
 export function tcpIpForOsi(n: OsiLayerNumber): TcpIpLayer {
   return TCPIP_LAYERS.find((l) => l.osi.includes(n))!;
-}
-
-export function tcpIpLayer(id: TcpIpLayerId): TcpIpLayer {
-  return TCPIP_LAYERS.find((l) => l.id === id)!;
 }

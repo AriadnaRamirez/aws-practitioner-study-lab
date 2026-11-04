@@ -308,11 +308,11 @@ export function OnboardingTour({ onFinish }: { onFinish: () => void }) {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {isLast ? (
+          {isLast && !step.cta ? (
             <span />
           ) : (
             <Button type="button" variant="ghost" size="sm" onClick={onFinish}>
-              Saltar
+              {isLast ? "Ahora no" : "Saltar"}
             </Button>
           )}
           <div className="flex gap-2">
@@ -321,9 +321,22 @@ export function OnboardingTour({ onFinish }: { onFinish: () => void }) {
                 Anterior
               </Button>
             )}
-            <Button type="button" size="sm" onClick={next}>
-              {isLast ? "Terminar" : "Siguiente"}
-            </Button>
+            {isLast && step.cta ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  onFinish();
+                  router.push(step.cta!.href);
+                }}
+              >
+                {step.cta.label}
+              </Button>
+            ) : (
+              <Button type="button" size="sm" onClick={next}>
+                {isLast ? "Terminar" : "Siguiente"}
+              </Button>
+            )}
           </div>
         </div>
       </div>

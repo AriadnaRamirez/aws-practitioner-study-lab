@@ -46,7 +46,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
   },
   {
     label: "Sistema",
-    items: [{ href: "/admin/flags", label: "Feature flags", icon: Flag }],
+    items: [{ href: "/admin/flags", label: "Banderas de función", icon: Flag }],
   },
 ];
 

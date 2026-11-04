@@ -19,7 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, cardVariants } from "@/components/ui/card";
 import { FOCUS_RING } from "@/components/ui/focus";
 import { Notice } from "@/components/ui/notice";
-import { PageContainer, PageHeader } from "@/components/ui/page";
+import { PageContainer, PageHeader, SectionTitle } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/spinner";
 import {
   fetchGuideKnowledge,
@@ -40,13 +40,11 @@ const GUIDE_ICONS: Record<StudyGuideId, LucideIcon> = {
 };
 
 /**
- * lg and up, 12 tracks: the services guide takes 7 and the concept list 5, same height;
- * below lg they stack in this order.
+ * One card, two concept guides per row from lg. The 1px gap over the border color draws the
+ * dividers between cells (one column below lg reads as the usual row list); an odd last guide
+ * takes the whole row.
  */
-const GUIDES_GRID = "mt-8 lg:grid-cols-12";
-
-const GUIDE_TITLE = "text-base font-semibold tracking-tight text-[var(--foreground)]";
-
+const CONCEPT_LIST = "grid gap-px bg-[var(--border)] lg:grid-cols-2";
 function conceptLabel(n: number) {
   return `${n} ${n === 1 ? "concepto" : "conceptos"}`;
 }
@@ -65,32 +63,36 @@ function GuideIcon({ id }: { id: StudyGuideId }) {
 
 function Count({ n }: { n: number | null }) {
   if (n === null) return <Skeleton className="h-4 w-8" />;
-  return <span className="tabular-nums">{n}</span>;
+  return (
+    <span className="tabular-nums">
+      {n}
+      <span className="hidden font-normal text-[var(--foreground-muted)] sm:inline">
+        {n === 1 ? " concepto" : " conceptos"}
+      </span>
+    </span>
+  );
 }
 
 function ServiceGuide({
   guide,
   items,
-  className,
 }: {
   guide: StudyGuide;
   items: KnowledgeItem[] | null;
-  className?: string;
 }) {
   const count = items ? guideConceptCount(guide, items) : null;
   const sections = items ? guideSections(guide, items) : null;
 
   return (
-    <Card
-      as="article"
-      aria-labelledby="guia-servicios"
-      className={cn("flex flex-col", className)}
-    >
+    <Card as="article" aria-labelledby="guia-servicios">
       <div className="flex items-start gap-3">
         <GuideIcon id={guide.id} />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 id="guia-servicios" className={GUIDE_TITLE}>
+            <h2
+              id="guia-servicios"
+              className="text-base font-semibold tracking-tight text-[var(--foreground)]"
+            >
               {guide.title}
             </h2>
             <span className="shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]">
@@ -128,7 +130,7 @@ function ServiceGuide({
         </div>
       )}
 
-      <div className="mt-auto flex flex-wrap gap-2.5 pt-5">
+      <div className="mt-5 flex flex-wrap gap-2.5">
         <Link
           href={`/guias/${guide.id}?print=1`}
           className={buttonVariants({ size: "sm" })}
@@ -160,7 +162,7 @@ function ConceptRow({
   const count = items ? guideConceptCount(guide, items) : null;
 
   return (
-    <li className="flex items-center gap-1 pr-2 sm:pr-3">
+    <li className="flex items-center gap-1 bg-[var(--surface)] pr-2 sm:pr-3 lg:odd:last:col-span-2">
       <Link
         href={`/guias/${guide.id}`}
         aria-label={
@@ -245,7 +247,8 @@ export function GuidesIndexClient() {
       ) : null}
 
       <BentoGrid
-        className={GUIDES_GRID}
+        flowOnMobile
+        className="mt-8"
         aria-busy={items || error ? undefined : true}
       >
         {!items && !error ? (
@@ -254,25 +257,18 @@ export function GuidesIndexClient() {
           </p>
         ) : null}
         {services.map((guide) => (
-          <ServiceGuide
-            key={guide.id}
-            guide={guide}
-            items={items}
-            className="lg:col-span-7"
-          />
+          <ServiceGuide key={guide.id} guide={guide} items={items} />
         ))}
 
-        <section
-          aria-labelledby="guias-conceptos"
-          className={cn(
-            cardVariants({ padding: "none" }),
-            "flex flex-col overflow-hidden lg:col-span-5",
-          )}
-        >
-          <h2 id="guias-conceptos" className={cn(GUIDE_TITLE, "px-3 pt-4 sm:px-4 sm:pt-5")}>
-            Conceptos
-          </h2>
-          <ul className="mt-1 flex flex-1 flex-col justify-between divide-y divide-[var(--border)]">
+        <section aria-labelledby="guias-conceptos" className="mt-10 md:mt-0">
+          <SectionTitle id="guias-conceptos">Conceptos</SectionTitle>
+          <ul
+            className={cn(
+              cardVariants({ padding: "none" }),
+              CONCEPT_LIST,
+              "mt-4 overflow-hidden",
+            )}
+          >
             {concepts.map((guide) => (
               <ConceptRow key={guide.id} guide={guide} items={items} />
             ))}

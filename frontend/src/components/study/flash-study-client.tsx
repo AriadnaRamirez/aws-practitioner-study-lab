@@ -18,7 +18,7 @@ import {
   type StudySize,
   type TopicProgressRow,
 } from "@aps/shared";
-import { CelebrateBurst } from "@/components/study/celebrate-burst";
+import { AnswerFeedback } from "@/components/study/answer-feedback";
 import { FlashDeck } from "@/components/study/flash-deck";
 import {
   SessionBuilder,
@@ -29,8 +29,7 @@ import {
   BuilderSkeleton,
   DeckSkeleton,
 } from "@/components/study/study-skeletons";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardLabel } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { ProgressBar } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
@@ -48,6 +47,7 @@ import {
   getStudySession,
   startFlashSession,
 } from "@/lib/study-api";
+import { loginHref } from "@/lib/route-labels";
 import { cn, hasTextSelection } from "@/lib/utils";
 
 type Phase =
@@ -95,7 +95,6 @@ export function FlashStudyClient() {
   const [sessionStreak, setSessionStreak] = useState(0);
   const [answered, setAnswered] = useState(0);
   const [dailyStreak, setDailyStreak] = useState(0);
-  const [uniqueItems, setUniqueItems] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{
     correct: boolean;
@@ -104,7 +103,12 @@ export function FlashStudyClient() {
     itemMastered: boolean;
     /** Consecutive correct on this item toward dominio (API `itemConsecutiveCorrect`). */
     itemConsecutiveCorrect: number;
+    chosenHint: string | null;
+    /** The miss was re-queued in this round. */
+    requeued: boolean;
   } | null>(null);
+  /** Notice when a deep link asked for topics that don't exist. */
+  const [scopeNotice, setScopeNotice] = useState<string | null>(null);
   const [summary, setSummary] = useState<StudySessionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -129,7 +133,6 @@ export function FlashStudyClient() {
       sessionStreak: number;
       answered: number;
       dailyStreak: number;
-      uniqueItems: number;
     }) => {
       setSessionId(view.sessionId);
       setPrompt(view.current);
@@ -138,7 +141,6 @@ export function FlashStudyClient() {
       setSessionStreak(view.sessionStreak);
       setAnswered(view.answered);
       setDailyStreak(view.dailyStreak);
-      setUniqueItems(view.uniqueItems);
       setFeedback(null);
       setSummary(null);
       summaryRef.current = null;
@@ -234,6 +236,20 @@ export function FlashStudyClient() {
       } else if (categoryParam && categoryById(categoryParam)) {
         topicIds = resolveCategoryTopicIds(categoryParam, knownIds);
       }
+      const requested = topicsParam
+        ? topicsParam.split(",").filter(Boolean)
+        : topicParam
+          ? [topicParam]
+          : [];
+      const unknownCount = requested.filter((id) => !knownIds.includes(id)).length;
+      const unknownCategory = Boolean(categoryParam && !categoryById(categoryParam));
+      if (unknownCategory || unknownCount > 0) {
+        setScopeNotice(
+          topicIds.length
+            ? "Algunos temas del enlace ya no existen; usaremos solo los que sí."
+            : "Los temas de ese enlace ya no existen. Elige tus temas aquí abajo.",
+        );
+      }
       if (topicIds.length) {
         setSelectedTopics(topicIds);
       }
@@ -243,12 +259,18 @@ export function FlashStudyClient() {
         : null;
       if (urlSize) setSize(urlSize);
       const startParam = Number(params.get("start"));
-      if ((STUDY_SIZES as readonly number[]).includes(startParam)) {
-        const n = startParam as StudySize;
-        setSize(n);
-        await onStart(n, topicIds, balanced && topicIds.length > 0);
-      } else if (topicIds.length || urlSize) {
-        setPreselect({ topicIds: topicIds.length ? topicIds : null, size: urlSize });
+      const nothingValid = (unknownCategory || unknownCount > 0) && topicIds.length === 0;
+      const startSize = (STUDY_SIZES as readonly number[]).includes(startParam)
+        ? (startParam as StudySize)
+        : null;
+      if (startSize && !nothingValid) {
+        setSize(startSize);
+        await onStart(startSize, topicIds, balanced && topicIds.length > 0);
+      } else if (topicIds.length || urlSize || startSize) {
+        setPreselect({
+          topicIds: topicIds.length ? topicIds : null,
+          size: urlSize ?? startSize,
+        });
       }
     },
     [applyView, onStart],
@@ -260,7 +282,10 @@ export function FlashStudyClient() {
     (async () => {
       const token = getStoredToken();
       if (!token) {
-        if (!cancelled) setPhase("auth");
+        if (!cancelled) {
+          router.replace(loginHref(`${window.location.pathname}${window.location.search}`));
+          setPhase("auth");
+        }
         return;
       }
       try {
@@ -362,6 +387,9 @@ export function FlashStudyClient() {
           explanation: res.explanation,
           itemMastered: Boolean(res.itemMastered),
           itemConsecutiveCorrect: streakTowardMastery,
+          chosenHint: res.chosenHint ?? null,
+          // Re-queued miss: the queue didn't shrink although this card left it.
+          requeued: !res.correct && res.remaining >= remaining,
         });
         setSessionStreak(res.sessionStreak);
         setRemaining(res.remaining);
@@ -391,7 +419,7 @@ export function FlashStudyClient() {
         // cannot race the auto-advance timer.
       }
     },
-    [goNext, phase, prompt, sessionId],
+    [phase, prompt, remaining, sessionId],
   );
 
   // Keyboard: 1-4 / A-D answer; Enter/Space continue
@@ -442,11 +470,11 @@ export function FlashStudyClient() {
     };
   }, []);
 
+  /** Answered vs still queued (misses re-enter the queue, so not vs. size). */
   const progressPct = useMemo(() => {
-    if (!uniqueItems) return 0;
-    const done = Math.min(answered, uniqueItems);
-    return Math.round((done / uniqueItems) * 100);
-  }, [answered, uniqueItems]);
+    const total = answered + remaining;
+    return total ? Math.round((answered / total) * 100) : 0;
+  }, [answered, remaining]);
 
   if (phase === "boot" || phase === "starting") {
     const resuming = Boolean(searchParams.get("session"));
@@ -464,10 +492,10 @@ export function FlashStudyClient() {
     return (
       <section className="py-8">
         <p className="text-sm text-[var(--foreground-muted)]">
-          Entra para estudiar.
+          Entra para estudiar. Si ya tenías sesión, puede que haya expirado.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/login" className={buttonVariants()}>
+          <Link href={loginHref("/estudiar")} className={buttonVariants()}>
             Entrar
           </Link>
           <Link
@@ -487,6 +515,11 @@ export function FlashStudyClient() {
         {error ? (
           <Notice tone="danger" boxed className="mb-6">
             {error}
+          </Notice>
+        ) : null}
+        {scopeNotice ? (
+          <Notice tone="info" boxed className="mb-6">
+            {scopeNotice}
           </Notice>
         ) : null}
         <SessionBuilder
@@ -529,8 +562,10 @@ export function FlashStudyClient() {
       ) : null}
       <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
         <p className="font-semibold text-[var(--foreground)]">Racha {sessionStreak}</p>
-        <p className="text-[var(--foreground-muted)]">
-          {answered}/{uniqueItems || size}
+        <p className="tabular-nums text-[var(--foreground-muted)]">
+          {remaining > 0
+            ? `Quedan ${remaining} ${remaining === 1 ? "carta" : "cartas"}`
+            : "¡Listo!"}
         </p>
       </div>
 
@@ -550,119 +585,29 @@ export function FlashStudyClient() {
               "Carta"
             }
             title={prompt.stem}
-            footer={`${answered + 1} de ${uniqueItems || size}`}
+            footer={
+              prompt.isRepeat
+                ? "Otra vez: la fallaste hace un momento"
+                : "Carta nueva"
+            }
             flipped={phase === "feedback" && Boolean(feedback)}
             back={
               feedback ? (
-                <div
-                  className="relative flex h-full flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8 [@media(max-height:500px)]:md:grid [@media(max-height:500px)]:md:grid-cols-2 [@media(max-height:500px)]:md:items-start [@media(max-height:500px)]:md:gap-x-6"
-                  role="status"
-                >
-                  {feedback.correct ? <CelebrateBurst /> : null}
-                  <div className="min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <span
-                        className={cn(
-                          "animate-celebrate inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold",
-                          feedback.correct
-                            ? "bg-[var(--success)] text-[var(--success-fg)]"
-                            : "bg-[var(--danger)] text-[var(--danger-fg)]",
-                        )}
-                      >
-                        {feedback.correct ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                            <path
-                              d="M5 12.5l4.5 4.5L19 7"
-                              stroke="currentColor"
-                              strokeWidth="2.6"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        ) : (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                            <path
-                              d="M7 7l10 10M17 7L7 17"
-                              stroke="currentColor"
-                              strokeWidth="2.6"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        )}
-                        {feedback.correct ? "¡Correcto!" : "Incorrecto"}
-                      </span>
-                    </div>
-
-                    <p className="font-display animate-celebrate mt-4 text-lg font-semibold tracking-tight text-[var(--foreground)] [@media(max-height:500px)]:mt-2">
-                      {feedback.correct
-                        ? feedback.itemMastered
-                          ? "¡Dominado!"
-                          : "Bien"
-                        : "Casi"}
-                    </p>
-
-                    <div
-                      className="mt-3 flex items-center gap-3 [@media(max-height:500px)]:mt-2"
-                      aria-label={`${feedback.itemConsecutiveCorrect} de ${MASTERY_STREAK} para dominarlo`}
-                    >
-                      <p className="text-sm font-semibold text-[var(--foreground)]">
-                        {feedback.itemConsecutiveCorrect}/{MASTERY_STREAK}
-                      </p>
-                      <ol className="flex gap-1.5" aria-hidden>
-                        {Array.from({ length: MASTERY_STREAK }, (_, i) => {
-                          const filled = i < feedback.itemConsecutiveCorrect;
-                          return (
-                            <li
-                              key={i}
-                              className={cn(
-                                "size-2.5 rounded-full transition-colors",
-                                filled
-                                  ? feedback.itemMastered
-                                    ? "bg-[var(--success)]"
-                                    : "bg-[var(--foreground)]"
-                                  : "bg-[var(--border-strong)]",
-                              )}
-                            />
-                          );
-                        })}
-                      </ol>
-                    </div>
-
-                    {!feedback.correct ? (
-                      <p className="mt-2 text-sm leading-snug text-[var(--foreground)]">
-                        <span className="text-[var(--foreground-muted)]">Correcta: </span>
-                        <span className="font-semibold">
-                          {String.fromCharCode(65 + feedback.correctIndex)}.{" "}
-                          {prompt.choices[feedback.correctIndex]}
-                        </span>
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="min-w-0">
-                    <Card
-                      variant="inset"
-                      padding="sm"
-                      className="mt-4 lg:mt-0 [@media(max-height:500px)]:md:mt-0"
-                    >
-                      <CardLabel as="p">Explicación</CardLabel>
-                      <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground)]">
-                        {feedback.explanation?.trim()
-                          ? feedback.explanation
-                          : feedback.correct
-                            ? "Así se define este concepto."
-                            : `La correcta es «${prompt.choices[feedback.correctIndex]}».`}
-                      </p>
-                    </Card>
-
-                    <Button
-                      className="mt-5 w-full [@media(max-height:500px)]:mt-3"
-                      onClick={goNext}
-                    >
-                      {summaryRef.current ? "Ver resultado" : "Siguiente"}
-                    </Button>
-                  </div>
-                </div>
+                <AnswerFeedback
+                  wide
+                  correct={feedback.correct}
+                  correctLabel={`${String.fromCharCode(65 + feedback.correctIndex)}. ${prompt.choices[feedback.correctIndex]}`}
+                  explanation={
+                    feedback.explanation?.trim() ||
+                    `La correcta es «${prompt.choices[feedback.correctIndex]}».`
+                  }
+                  chosenHint={feedback.chosenHint}
+                  requeued={feedback.requeued}
+                  itemMastered={feedback.itemMastered}
+                  streakTowardMastery={feedback.itemConsecutiveCorrect}
+                  nextLabel={summaryRef.current ? "Ver resultado" : "Siguiente"}
+                  onNext={goNext}
+                />
               ) : null
             }
           >

@@ -14,17 +14,22 @@ import { syncLegacyExamFromUser } from '../src/user-exams/exam-date.util';
 
 const prisma = new PrismaClient();
 
+/** Seed passwords live only in backend/.env (gitignored); the repo is public. */
+function envPassword(name: 'ADMIN_PASSWORD' | 'DEMO_PASSWORD'): string {
+  const value = process.env[name]?.trim();
+  if (!value || value.length < 8) {
+    throw new Error(`${name} must be set in backend/.env (at least 8 characters)`);
+  }
+  return value;
+}
+
 async function seedAdmin() {
   const email = (process.env.ADMIN_EMAIL ?? 'admin@example.com')
     .trim()
     .toLowerCase();
   const username = (process.env.ADMIN_USERNAME ?? 'admin').trim();
-  const password = process.env.ADMIN_PASSWORD ?? 'ChangeMeAdmin1!';
+  const password = envPassword('ADMIN_PASSWORD');
   const timezone = process.env.ADMIN_TIMEZONE ?? 'America/Mexico_City';
-
-  if (password.length < 8) {
-    throw new Error('ADMIN_PASSWORD must be at least 8 characters');
-  }
 
   const passwordHash = await bcrypt.hash(password, 12);
 
@@ -161,8 +166,7 @@ async function seedContent() {
 }
 
 async function seedDemoStudents() {
-  const password = process.env.DEMO_PASSWORD ?? 'StudyPass1!';
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await bcrypt.hash(envPassword('DEMO_PASSWORD'), 12);
   const timezone = 'America/Mexico_City';
   // ~23 days out so the dashboard countdown looks real for demos.
   const examDate = new Date();
@@ -205,7 +209,7 @@ async function seedDemoStudents() {
 
   // eslint-disable-next-line no-console
   console.log(
-    `Demo students OK: demo|estudiante / ${password} (email: demo@example.com | estudiante@example.com)`,
+    'Demo students OK: demo, estudiante (password: DEMO_PASSWORD)',
   );
 }
 

@@ -1,6 +1,6 @@
 import { Network, type LucideIcon } from "lucide-react";
 
-export type Minigame = {
+type Minigame = {
   /** Ruta: /minijuegos/<slug>. Crea la carpeta con el mismo nombre en app/(app)/minijuegos. */
   slug: string;
   title: string;
@@ -16,14 +16,10 @@ export const MINIGAMES: readonly Minigame[] = [
     slug: "osi-vs-tcp-ip",
     title: "OSI vs TCP/IP",
     description:
-      "Lección paso a paso: aprende las capas, ordénalas, relaciona OSI con TCP/IP y ubica qué hace cada una, su pieza física y su servicio de AWS.",
+      "Lección corta: repasa las capas, ordena OSI, relaciónalo con TCP/IP y ubica tarjetas de funciones, piezas de red y servicios de AWS.",
     topic: "Redes",
-    format: "Lección guiada en 7 pasos",
-    minutes: 12,
+    format: "Lección guiada en 4 pasos",
+    minutes: 6,
     icon: Network,
   },
 ];
-
-export function minigameBySlug(slug: string): Minigame | undefined {
-  return MINIGAMES.find((g) => g.slug === slug);
-}

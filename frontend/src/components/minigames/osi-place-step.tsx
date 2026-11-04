@@ -1,15 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Cloud, Cpu, Lightbulb, X, type LucideIcon } from "lucide-react";
+import { Cloud, Cpu, Lightbulb, Shuffle, X, type LucideIcon } from "lucide-react";
 import { FOCUS_RING } from "@/components/ui/focus";
 import {
   OSI_LAYERS,
   PLACE_CHIPS,
+  mixedPlaceChips,
   osiLayer,
   type ChipType,
+  type MixedChip,
   type OsiLayerNumber,
-  type PlaceChip,
 } from "@/lib/minigames/osi-tcpip";
 import { cn } from "@/lib/utils";
 import {
@@ -24,7 +25,7 @@ import {
 } from "@/components/minigames/osi-lesson-ui";
 import { LayerNumber } from "@/components/minigames/osi-layer-board";
 
-export const CHIP_ICON: Record<ChipType, LucideIcon> = {
+const CHIP_ICON: Record<ChipType, LucideIcon> = {
   funcion: Lightbulb,
   fisico: Cpu,
   aws: Cloud,
@@ -44,8 +45,10 @@ export function PlaceStep({
   title,
   instruction,
   onComplete,
-}: StepProps & { type: ChipType; title: string; instruction: React.ReactNode }) {
-  const chips = PLACE_CHIPS[type];
+}: StepProps & { type: ChipType | "mixto"; title: string; instruction: React.ReactNode }) {
+  const [chips] = React.useState<readonly MixedChip[]>(() =>
+    type === "mixto" ? mixedPlaceChips() : PLACE_CHIPS[type].map((c) => ({ ...c, type })),
+  );
   const [poolOrder] = React.useState(() => shuffle(chips.map((c) => c.id)));
   const [slots, setSlots] = React.useState<Slots>({});
   const [locked, setLocked] = React.useState<ReadonlySet<OsiLayerNumber>>(() => new Set());
@@ -69,7 +72,7 @@ export function PlaceStep({
     return id !== undefined && byId.get(id)!.layer === n;
   };
   const okCount = OSI_LAYERS.filter((l) => isOk(l.number)).length;
-  const Icon = CHIP_ICON[type];
+  const PoolIcon = type === "mixto" ? Shuffle : CHIP_ICON[type];
 
   React.useEffect(() => {
     if (!selectedId) return;
@@ -135,7 +138,7 @@ export function PlaceStep({
     setPhase("done");
   }
 
-  function dragProps(chip: PlaceChip) {
+  function dragProps(chip: MixedChip) {
     return {
       draggable: editing,
       onDragStart: (e: React.DragEvent) => {
@@ -181,7 +184,7 @@ export function PlaceStep({
     >
       <p className="flex min-h-6 items-center justify-between gap-2 text-sm font-semibold text-[var(--foreground-muted)]">
         <span className="flex items-center gap-1.5">
-          <Icon className="size-4 text-[var(--accent)]" aria-hidden />
+          <PoolIcon className="size-4 text-[var(--accent)]" aria-hidden />
           {pool.length > 0 ? `Tarjetas por colocar: ${pool.length}` : "¡Todas colocadas!"}
         </span>
       </p>
@@ -189,6 +192,7 @@ export function PlaceStep({
         <ul aria-label="Tarjetas por colocar" className="mt-2.5 grid gap-2">
           {pool.map((chip) => {
             const isSel = selectedId === chip.id;
+            const Icon = CHIP_ICON[chip.type];
             return (
               <li key={chip.id}>
                 <button
@@ -250,6 +254,7 @@ export function PlaceStep({
           {OSI_LAYERS.map((layer) => {
             const n = layer.number;
             const chip = slots[n] ? byId.get(slots[n]!)! : null;
+            const Icon = chip ? CHIP_ICON[chip.type] : null;
             const isLocked = locked.has(n);
             const showMark = chip !== null && (phase !== "edit" || isLocked);
             const ok = isOk(n);
@@ -302,7 +307,9 @@ export function PlaceStep({
                           dragId === chip.id && "opacity-40",
                         )}
                       >
-                        <Icon className="size-4 shrink-0 text-[var(--foreground-muted)]" aria-hidden />
+                        {Icon ? (
+                          <Icon className="size-4 shrink-0 text-[var(--foreground-muted)]" aria-hidden />
+                        ) : null}
                         <span className="min-w-0 flex-1">{chip.label}</span>
                         {showMark ? <Mark ok={ok} /> : null}
                       </button>

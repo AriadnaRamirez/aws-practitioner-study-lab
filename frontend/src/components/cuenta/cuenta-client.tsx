@@ -180,7 +180,9 @@ function HistoryPanel({ timezone }: { timezone?: string }) {
     <section aria-label="Historial de partidas">
       <p className="text-sm text-[var(--foreground-muted)]">
         {sessions && sessions.length > 0
-          ? `Tus últimas ${sessions.length === 1 ? "partida" : `${sessions.length} partidas`}. Toca una para ver cada respuesta.`
+          ? sessions.length === 1
+            ? "Tu primera partida. Tócala para ver cada respuesta. Las cartas que fallas vuelven a salir, por eso suele haber más respuestas que conceptos."
+            : `Tus últimas ${sessions.length} partidas. Toca una para ver cada respuesta. Las cartas que fallas vuelven a salir, por eso suele haber más respuestas que conceptos.`
           : "Tus partidas aparecerán aquí."}
       </p>
       {error ? (

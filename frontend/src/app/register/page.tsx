@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN } from "@aps/shared";
+import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN, USERNAME_PATTERN } from "@aps/shared";
 import { Mascot } from "@/components/brand/mascot";
 import { AuthAside } from "@/components/shell/auth-aside";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,24 @@ const LINK = cn(
   FOCUS_RING,
 );
 
+function FieldError({
+  id,
+  message,
+  children,
+}: {
+  id: string;
+  message: string | null;
+  children?: React.ReactNode;
+}) {
+  if (!message) return null;
+  return (
+    <span id={id} className="block text-xs font-normal text-[var(--danger-text)]">
+      {message}
+      {children}
+    </span>
+  );
+}
+
 function strengthHints(password: string) {
   return [
     {
@@ -37,6 +55,51 @@ function strengthHints(password: string) {
   ];
 }
 
+/** "Lucía Pérez" → "lucia_perez": what a valid username for that name would look like. */
+function suggestUsername(raw: string): string {
+  const base = raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, USERNAME_MAX);
+  return base.length >= USERNAME_MIN ? base : "";
+}
+
+type Field = "email" | "username" | "password" | "confirm";
+
+function fieldErrors(
+  email: string,
+  username: string,
+  password: string,
+  confirm: string,
+): Partial<Record<Field, string>> {
+  const out: Partial<Record<Field, string>> = {};
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    out.email = "Escribe un correo válido, por ejemplo nombre@correo.com.";
+  }
+  const u = username.trim();
+  if (u.length < USERNAME_MIN || u.length > USERNAME_MAX) {
+    out.username = `Usa entre ${USERNAME_MIN} y ${USERNAME_MAX} caracteres.`;
+  } else if (!USERNAME_PATTERN.test(u)) {
+    out.username = "Sin espacios, acentos ni ñ: solo letras, números y guion bajo (_).";
+  }
+  if (
+    password.length < PASSWORD_MIN ||
+    !/[a-z]/.test(password) ||
+    !/[A-Z]/.test(password) ||
+    !/[0-9]/.test(password)
+  ) {
+    out.password = "Tu contraseña aún no cumple los requisitos de la lista.";
+  }
+  if (confirm !== password) {
+    out.confirm = "Las contraseñas no coinciden.";
+  }
+  return out;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -46,12 +109,27 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [doneUser, setDoneUser] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
 
   const hints = useMemo(() => strengthHints(password), [password]);
+  const errors = fieldErrors(email, username, password, confirmPassword);
+  const shown = (f: Field) => ((submitted || touched[f]) && errors[f]) || null;
+  const usernameSuggestion =
+    shown("username") && suggestUsername(username) !== username
+      ? suggestUsername(username)
+      : "";
+  const blur = (f: Field) => () => setTouched((t) => ({ ...t, [f]: true }));
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSubmitted(true);
+    const first = (["email", "username", "password", "confirm"] as const).find((f) => errors[f]);
+    if (first) {
+      document.getElementById(`registro-${first}`)?.focus();
+      return;
+    }
     setPending(true);
     try {
       const res = await register({
@@ -68,7 +146,7 @@ export default function RegisterPage() {
       storeAuth(res);
       forceOnboardingOnce();
       setDoneUser(res.user.username);
-      router.push("/estudiar");
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo registrar");
     } finally {
@@ -114,51 +192,88 @@ export default function RegisterPage() {
               tone="success"
               boxed
               action={
-                <Link className={LINK} href="/estudiar">
-                  Ir a Estudiar
+                <Link className={LINK} href="/dashboard">
+                  Ir a Inicio
                 </Link>
               }
             >
               Cuenta creada. Bienvenido/a, <strong>{doneUser}</strong>. Te
-              llevamos a Estudiar con la guía «Así funciona…».
+              llevamos a Inicio para enseñarte cómo funciona.
             </Notice>
           ) : (
-            <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
               <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
                 Correo
                 <Input
+                  id="registro-email"
                   type="email"
                   required
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={blur("email")}
+                  aria-invalid={Boolean(shown("email"))}
+                  aria-describedby={shown("email") ? "registro-email-error" : undefined}
                 />
+                <FieldError id="registro-email-error" message={shown("email")} />
               </label>
-              <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
-                Usuario ({USERNAME_MIN}–{USERNAME_MAX}, letras/números/_)
+              <div className="flex flex-col gap-1.5 text-left text-sm font-medium">
+                <label htmlFor="registro-username">Nombre de usuario</label>
+                <p id="registro-username-ayuda" className="text-xs font-normal text-[var(--foreground-muted)]">
+                  Así te verán en el podio. Sin espacios ni acentos, por ejemplo: lucia_perez.
+                </p>
                 <Input
+                  id="registro-username"
                   type="text"
                   required
-                  minLength={USERNAME_MIN}
                   maxLength={USERNAME_MAX}
-                  pattern="[a-zA-Z0-9_]+"
                   autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  onBlur={blur("username")}
+                  aria-invalid={Boolean(shown("username"))}
+                  aria-describedby={
+                    shown("username")
+                      ? "registro-username-ayuda registro-username-error"
+                      : "registro-username-ayuda"
+                  }
                 />
-              </label>
+                <FieldError id="registro-username-error" message={shown("username")}>
+                  {usernameSuggestion ? (
+                    <>
+                      {" "}
+                      <button
+                        type="button"
+                        className={cn(LINK, "inline-flex min-h-6 items-center")}
+                        onClick={() => setUsername(usernameSuggestion)}
+                      >
+                        Usar «{usernameSuggestion}»
+                      </button>
+                    </>
+                  ) : null}
+                </FieldError>
+              </div>
               <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
                 Contraseña
                 <Input
+                  id="registro-password"
                   type="password"
                   required
-                  minLength={PASSWORD_MIN}
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={blur("password")}
+                  aria-invalid={Boolean(shown("password"))}
+                  aria-describedby="registro-password-requisitos"
                 />
+                <FieldError id="registro-password-error" message={shown("password")} />
               </label>
-              <ul className="space-y-1 text-left text-xs text-[var(--foreground-muted)]">
+              <ul
+                id="registro-password-requisitos"
+                className="space-y-1 text-left text-xs text-[var(--foreground-muted)]"
+              >
                 {hints.map((h) => (
                   <li
                     key={h.label}
@@ -171,13 +286,17 @@ export default function RegisterPage() {
               <label className="flex flex-col gap-1.5 text-left text-sm font-medium">
                 Confirmar contraseña
                 <Input
+                  id="registro-confirm"
                   type="password"
                   required
-                  minLength={PASSWORD_MIN}
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onBlur={blur("confirm")}
+                  aria-invalid={Boolean(shown("confirm"))}
+                  aria-describedby={shown("confirm") ? "registro-confirm-error" : undefined}
                 />
+                <FieldError id="registro-confirm-error" message={shown("confirm")} />
               </label>
 
               {error ? <Notice tone="danger">{error}</Notice> : null}

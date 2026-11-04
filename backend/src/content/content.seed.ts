@@ -160,14 +160,14 @@ export function buildSeedKnowledge(): KnowledgeItem[] {
       trackId: DEFAULT_TRACK_ID,
       name: 'Modelo de responsabilidad compartida',
       definition:
-        'AWS gestiona la seguridad *de* la nube; el cliente gestiona la seguridad *en* la nube (datos, identidad, configuración).',
+        'AWS protege la nube en sí (hardware, red e instalaciones) y el cliente protege lo que pone en ella (datos, accesos y configuración).',
       distractors: [
         'AWS es responsable de todo, incluido el cifrado de datos del cliente',
         'El cliente opera los hipervisores y el hardware físico',
         'Solo aplica a cuentas Enterprise Support',
       ],
       explanation:
-        'División clásica CLF: AWS = infraestructura; cliente = uso, IAM, datos, SO en EC2, etc.',
+        'Sale mucho en el examen. Regla rápida: lo físico y la infraestructura base son de AWS; tus datos, quién entra (IAM) y el sistema operativo de tus servidores EC2 son tuyos.',
       allowedVariants: ['NAME_TO_DEFINITION', 'DEFINITION_TO_NAME'],
       status: 'published',
       externalKey: 'clf.shared-responsibility',

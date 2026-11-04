@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { Mascot } from "@/components/brand/mascot";
@@ -5,6 +6,10 @@ import { FOCUS_RING } from "@/components/ui/focus";
 import { PAGE_TITLE } from "@/components/ui/page";
 import { cn } from "@/lib/utils";
 import { NotFoundActions } from "./not-found-actions";
+
+export const metadata: Metadata = {
+  title: "Página no encontrada",
+};
 
 export default function NotFound() {
   return (

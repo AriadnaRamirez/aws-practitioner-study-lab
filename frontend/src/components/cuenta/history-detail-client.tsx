@@ -14,10 +14,12 @@ import { fetchSessionHistoryDetail, getStoredToken } from "@/lib/api";
 import {
   formatDuration,
   formatScore,
+  formatSessionDay,
   formatSessionWhen,
   modeLabel,
 } from "@/lib/format-study";
 import { cn } from "@/lib/utils";
+import { loginHref } from "@/lib/route-labels";
 
 const HISTORY_HREF = "/cuenta?tab=historial";
 
@@ -48,7 +50,7 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
     return (
       <PageContainer>
         <PageHeader title="Sesión" subtitle="Entra para ver el detalle." />
-        <Link href="/login" className={cn(buttonVariants(), "mt-8")}>
+        <Link href={loginHref(`/cuenta/historial/${sessionId}`)} className={cn(buttonVariants(), "mt-8")}>
           Entrar
         </Link>
       </PageContainer>
@@ -58,9 +60,11 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
   if (error) {
     return (
       <PageContainer>
+        <PageHeader title="No pudimos abrir esta partida" />
         <Notice
           tone="danger"
           boxed
+          className="mt-6"
           action={
             <Link
               href={HISTORY_HREF}
@@ -121,8 +125,8 @@ export function HistoryDetailClient({ sessionId }: { sessionId: string }) {
       {backLink}
       <PageHeader
         className="mt-4"
-        title={modeLabel(detail.mode)}
-        subtitle={`${formatSessionWhen(detail, detail.timezone)} · ${detail.size} conceptos · puntaje ${formatScore(detail)} · ${formatDuration(detail.durationMs)}`}
+        title={`${modeLabel(detail.mode)} · ${formatSessionDay(detail, detail.timezone)}`}
+        subtitle={`${formatSessionWhen(detail, detail.timezone)} · ${detail.size} conceptos · aciertos ${formatScore(detail)} · ${formatDuration(detail.durationMs)}`}
       />
 
       {attempts.length === 0 ? (

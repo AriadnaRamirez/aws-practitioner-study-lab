@@ -27,7 +27,7 @@ const ADMIN: Record<string, string> = {
   flash: "Cartas",
   banco: "Banco de examen",
   import: "Importar / exportar",
-  flags: "Feature flags",
+  flags: "Banderas de función",
 };
 
 function labelFor(part: string, href: string): string {
@@ -110,7 +110,7 @@ export function Breadcrumbs({ scope }: { scope: "student" | "admin" }) {
                 <Link
                   href={crumb.href}
                   className={cn(
-                    "truncate rounded-sm text-[var(--foreground-muted)] underline-offset-4 hover:text-[var(--foreground)] hover:underline",
+                    "inline-flex min-h-6 items-center truncate rounded-sm text-[var(--foreground-muted)] underline-offset-4 hover:text-[var(--foreground)] hover:underline",
                     FOCUS_RING,
                   )}
                 >

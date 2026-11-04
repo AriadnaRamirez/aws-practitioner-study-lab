@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import type { ExamTimedSummary } from "@aps/shared";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { PAGE_TITLE, PageContainer, SectionTitle } from "@/components/ui/page";
+import { notifyProgressChanged } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 function formatDuration(sec: number): string {
@@ -24,6 +26,10 @@ type Props = {
 };
 
 export function ExamSummary({ summary, onAgain }: Props) {
+  useEffect(() => {
+    notifyProgressChanged();
+  }, []);
+
   return (
     <PageContainer>
       <header className="animate-fade-up">

@@ -34,7 +34,7 @@ export function SiteCredits({ className, compact = false }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "inline-flex h-5 w-[6.5rem] items-center justify-center rounded-sm opacity-[0.38] transition-opacity duration-300 hover:opacity-60 focus-visible:opacity-60",
+              "inline-flex h-6 w-[6.5rem] items-center py-0.5 justify-center rounded-sm opacity-[0.38] transition-opacity duration-300 hover:opacity-60 focus-visible:opacity-60",
               FOCUS_RING,
             )}
             title="Generation México"
@@ -58,7 +58,7 @@ export function SiteCredits({ className, compact = false }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "rounded-sm underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:underline",
+              "inline-flex min-h-6 items-center rounded-sm underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:underline",
               FOCUS_RING,
             )}
           >

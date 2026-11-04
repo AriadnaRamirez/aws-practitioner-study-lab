@@ -45,7 +45,9 @@ function ForgotPasswordForm() {
     try {
       const res = await forgotPassword({ email });
       setMessage(
-        `${res.message} (En desarrollo el enlace se imprime en el log de la API.)`,
+        process.env.NODE_ENV === 'development'
+          ? `${res.message} (En desarrollo el enlace se imprime en el log de la API.)`
+          : res.message,
       );
     } catch (err) {
       setError(

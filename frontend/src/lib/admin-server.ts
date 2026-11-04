@@ -20,7 +20,7 @@ async function sessionToken(): Promise<string | null> {
   return store.get(AUTH_COOKIE)?.value || null;
 }
 
-export type AdminSession =
+type AdminSession =
   | { status: "admin"; user: PublicUser }
   | { status: "anonymous" }
   | { status: "forbidden" }
