@@ -1,122 +1,68 @@
-# AWS Practitioner Study Lab
+# AWS Study Lab
 
-Se corre en **tu laptop** (`localhost`) con los scripts de abajo, o en producción con el plan gratuito de Vercel + Render + Neon (ver [Deploy](#deploy)).
+Laboratorio para preparar la certificación **AWS Cloud Practitioner**. Quien estudia practica con cartas, repasa lo que se le dificulta y se mide con un examen contra reloj.
 
-Frontend y backend van **por separado** en la raíz (mismo monorepo npm).
+**En vivo:** [aws-practitioner-study-lab.vercel.app](https://aws-practitioner-study-lab.vercel.app)
 
-| Carpeta | Rol | Stack | Puerto |
-| --- | --- | --- | --- |
-| [`frontend/`](./frontend) | UI | Next.js (App Router) + TypeScript + Tailwind | `43123` |
-| [`backend/`](./backend) | API | Nest.js + TypeScript + Prisma + Swagger | `43124` |
-| [`packages/shared/`](./packages/shared) | Contratos compartidos (tipos / constantes) | TypeScript | — |
+Hay 356 cartas y 208 preguntas originales, escritas como casos del examen. Una carta se domina con tres aciertos seguidos. Lo que fallas vuelve a salir. El examen sigue el formato real: hasta 65 preguntas y 90 minutos. También hay guías para leer o bajar en PDF, un crucigrama para recordar los nombres de los servicios y un podio. Quien llega sin cuenta puede probar unas cartas. Quien se registra guarda su avance.
 
-## En tu máquina (localhost)
+El navegador solo habla con Next.js. Next reenvía `/api/v1` a Nest. Los tipos compartidos viven en `packages/shared`.
 
-Requisitos: Node ≥ 20, npm 10+, Docker (Postgres) o Postgres local.
+Material de estudio. No oficial y no afiliado a AWS ni a Generation México.
+
+## Qué hay en la web
+
+| Ruta | Qué es |
+| --- | --- |
+| `/estudiar` | Cartas y las que más se dificultan |
+| `/examen` | Examen contra reloj. Se enciende desde Administración |
+| `/guias` | Guías para leer o descargar en PDF |
+| `/minijuegos` | Crucigramas |
+| `/cuenta` | Perfil, progreso, historial y fecha de examen |
+| `/admin` | Contenido, usuarios, podio y banderas |
+
+## Stack
+
+TypeScript, Next.js (App Router), NestJS, Prisma, PostgreSQL y Tailwind.
+
+| Pieza | Dónde |
+| --- | --- |
+| Web | [Vercel](https://aws-practitioner-study-lab.vercel.app) |
+| API | [Render](https://aps-api-8tap.onrender.com) |
+| Base | Neon, región Virginia (`us-east-1`) |
+
+El plan gratuito de Render duerme la API tras 15 minutos sin visitas. El workflow [`.github/workflows/keep-api-warm.yml`](./.github/workflows/keep-api-warm.yml) la despierta cada 14 minutos. La variable del repo `API_HEALTH_URL` apunta a `https://aps-api-8tap.onrender.com/api/v1/health`.
+
+## Correrlo en local
+
+Hace falta Node 20+, npm 10 y Docker.
 
 ```bash
 git clone https://github.com/AriadnaRamirez/aws-practitioner-study-lab.git
 cd aws-practitioner-study-lab
-npm run setup:local    # install, .env, docker Postgres, migrate, seed
-npm run local          # Nest :43124 + Next :43123 a la vez
+npm run setup:local
+npm run local
 ```
 
-Luego abre:
+- Web: http://127.0.0.1:43123
+- API: http://127.0.0.1:43124/api/v1/health
+- Swagger: http://127.0.0.1:43124/docs
 
-- UI: http://127.0.0.1:43123  
-- API health: http://127.0.0.1:43124/api/v1/health  
-- Swagger: http://127.0.0.1:43124/docs  
+El login acepta usuario o correo. La cuenta de admin sale de `ADMIN_EMAIL`, `ADMIN_USERNAME` y `ADMIN_PASSWORD` en `backend/.env`. Si `DEMO_PASSWORD` está vacío, el seed no crea cuentas de prueba.
 
-El seed crea una cuenta admin y cuentas de estudiante de prueba; sus contraseñas salen de `ADMIN_PASSWORD` y `DEMO_PASSWORD` en `backend/.env`. El login acepta **username o email** en el mismo campo. Si el login falla, corre `npm run db:seed`.
-
-Alternativa en dos terminales: `npm run dev:backend` y `npm run dev:frontend`.
-
-Producto: Project Context → `docs/documento-maestro.md`  
-Tickets: Project Context → `docs/sistema-tickets.md`
-
-## Setup manual (si no usas setup:local)
-
-```bash
-npm install
-cp backend/.env.example backend/.env
-docker compose up -d
-npm run db:migrate:deploy
-npm run db:seed
-npm run build -w @aps/shared
-```
-
-## Deploy
-
-| Pieza | Plataforma | Configuración |
+| Carpeta | Rol | Puerto |
 | --- | --- | --- |
-| PostgreSQL | [Neon](https://neon.tech) (región AWS us-east-1) | connection string directa (sin `-pooler`) |
-| API Nest | [Render](https://render.com) (Blueprint) | [`render.yaml`](./render.yaml): aplica migraciones al arrancar |
-| Web Next | [Vercel](https://vercel.com), Root Directory `frontend` | [`frontend/vercel.json`](./frontend/vercel.json) |
+| `frontend/` | Next.js | `43123` |
+| `backend/` | NestJS, Prisma | `43124` |
+| `packages/shared/` | Tipos compartidos | — |
 
-Variables:
+## Producción
 
-- Render: `DATABASE_URL` (Neon) y `WEB_ORIGIN` (URL de Vercel). `JWT_SECRET` se genera solo.
-- Vercel: `APS_API_PROXY_TARGET` = URL de Render (sin `/api/v1`). El navegador sigue usando `/api/v1` y Next lo reenvía.
-- GitHub → Settings → Variables: `API_HEALTH_URL` = `https://<api>.onrender.com/api/v1/health` activa [`keep-api-warm`](./.github/workflows/keep-api-warm.yml) para que la API gratuita no se duerma.
-
-Seed de producción (una vez, desde tu laptop; sin `DEMO_PASSWORD` no crea cuentas demo):
-
-```bash
-cd backend
-DATABASE_URL="<neon>" ADMIN_EMAIL="<tu-email>" ADMIN_PASSWORD="<segura>" DEMO_PASSWORD= npx prisma db seed
-```
-
-### Auth
-
-| Tema | Detalle |
-| --- | --- |
-| Registro / login | email **o** username + password |
-| Tokens | JWT access Bearer; cambiar la contraseña cierra las demás sesiones |
-| Contraseña olvidada | no hay recuperación por correo; la admin asigna una temporal desde el panel |
-| Límite de intentos | login y registro por IP, y login también por cuenta (429 en español) |
-
-### Contenido
-
-| Qué | Dónde |
-| --- | --- |
-| Tipos | `packages/shared` |
-| Persistencia | Prisma en `backend/prisma` |
-| API pública | `GET /api/v1/topics`, `/knowledge-items`, `/exam-questions` |
-| Admin CRUD | `/api/v1/admin/...` + `Authorization: Bearer <JWT>` de un usuario `ADMIN` (`x-admin-token` solo si `ADMIN_TOKEN` está definido, para scripts) |
-| UI admin | `/admin` en el frontend |
-| Seed | `npm run db:seed` ← `backend/src/content/content.seed.ts` |
-
-### Estudio (Nest `StudyModule`)
-
-- `FLASH_STUDY` (APS-8), `EXAM_STUDY` (APS-9), `EXAM_TIMED` (APS-10), `WEAK_REVIEW` (APS-11)
-- UI: `/estudiar` (pestañas Cartas · Más falladas), `/examen`, `/cuenta` (historial)
-
-### Wave 2 (APS-11 / 12 / 14 / 16)
-
-| Ticket | Qué | Dónde |
+| Variable | Dónde | Valor |
 | --- | --- | --- |
-| APS-11 | Más falladas + historial + `WEAK_REVIEW` | `/estudiar?mode=repaso`, `/cuenta`, `GET /progress/weak-items` |
-| APS-12 | Podio (ítems dominados, all/week) | `/podio`, `GET /podium` |
-| APS-14 | Import / export CSV·JSON (dry-run) | `/admin/import`, `/api/v1/admin/import|export` |
-| APS-16 | Feature flag `exam_track_ai` | `/admin/flags`, `/api/v1/feature-flags` |
-| APS-18 | Integración Wave 2 | este README / rama `mvp-local` |
+| `DATABASE_URL` | Render | Cadena directa de Neon, sin `-pooler`, con `sslmode=require` |
+| `WEB_ORIGIN` | Render | `https://aws-practitioner-study-lab.vercel.app` |
+| `APS_API_PROXY_TARGET` | Vercel | `https://aps-api-8tap.onrender.com` |
+| `API_HEALTH_URL` | GitHub Actions | `https://aps-api-8tap.onrender.com/api/v1/health` |
 
-## Alcance actual
-
-- Frontend Next + backend Nest separados
-- Auth JWT, shell/tema, content Prisma, flash + modos examen, guest analytics
-- Podio, más falladas, import/export, feature flags (Wave 2)
-
-**Fuera de alcance aún:** Google OAuth.
-
-## Scripts raíz
-
-| Script | Qué hace |
-| --- | --- |
-| `npm run dev:frontend` | Next en `:43123` |
-| `npm run dev:backend` | Nest watch en `:43124` |
-| `npm run db:up` | Postgres (Docker) |
-| `npm run db:migrate` | Prisma migrate (backend) |
-| `npm run db:seed` | Seed admin + content |
-| `npm run build` | shared → backend → frontend |
-| `npm run test:backend` | unit tests Nest |
+Render aplica las migraciones al arrancar. El contenido (cartas y preguntas) se carga una vez, desde la laptop, con `npx prisma db seed` apuntando a Neon. Sin `DEMO_PASSWORD` no se crean estudiantes de prueba.
